@@ -24,14 +24,15 @@ button{cursor:pointer;font-weight:700}
 .muted{color:var(--muted)}
 .ok{color:var(--ok)} .bad{color:var(--bad)}
 
-/* 히어로(메인 첫 화면) */
+/* 메인 히어로 */
 .hero{
+  min-height:calc(100dvh - 80px);
   display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
-  min-height:calc(100dvh - 80px); /* 헤더 제외 */
   padding-top:24px;
 }
-.hero .hero-img{
+.hero-img{
   width:min(520px,80vw);height:auto;display:block;object-fit:contain;
+  pointer-events:none; /* 이미지가 클릭을 가로채지 않도록 */
 }
 .hero .btn-wrap{
   width:min(520px,80vw);
@@ -40,14 +41,15 @@ button{cursor:pointer;font-weight:700}
 }
 .hero .hero-btn{
   flex:0 0 auto; padding:12px 14px; border-radius:12px; border:1px solid var(--line); background:#111726;
+  position:relative; z-index:2; /* 이미지 위로 */
 }
 
-/* 아이템 그리드(정중앙 정렬) */
+/* 아이템 그리드: 중앙 정렬 + 반응형 */
 .item-grid{
   display:grid;
   grid-template-columns:repeat(5, minmax(0,1fr)); /* PC 5열 */
   gap:12px;
-  justify-items:center; /* 카드 중앙 정렬 */
+  justify-items:center;
 }
 @media (max-width:900px){
   .item-grid{ grid-template-columns:repeat(3, minmax(0,1fr)); } /* 모바일 3열 */
@@ -55,7 +57,7 @@ button{cursor:pointer;font-weight:700}
 
 .item-card{
   width:100%;
-  max-width:210px; /* 중앙 정렬 감각적 폭 제한 */
+  max-width:210px;
   display:grid;grid-template-rows:auto auto;
   border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#121826;
   justify-items:center;text-align:center;
@@ -68,7 +70,7 @@ button{cursor:pointer;font-weight:700}
 .item-check{display:flex;justify-content:flex-end;padding-right:6px}
 .item-check input{width:22px;height:22px}
 
-/* 입력 영역 그리드 반응형 */
+/* 입력 영역 반응형 */
 @media (max-width:900px){
   .cols-3,.cols-2{grid-template-columns:1fr}
   input,select,button{padding:14px;font-size:16px}
