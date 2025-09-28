@@ -1,322 +1,375 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>개척상점 계산기 · 층/구역 보상</title>
-  <style>
-    :root{--bg:#0b0d11;--card:#141821;--muted:#9aa4b2;--text:#e8eef6;--accent:#6ee7ff;--ok:#7cf29a;--bad:#ff8a8a}
-    *{box-sizing:border-box} body{margin:0;font-family:ui-sans-serif,system-ui,AppleSDGothicNeo,Segoe UI,Roboto,Pretendard,Apple Color Emoji,Noto Color Emoji}
-    body{background:var(--bg);color:var(--text)}
-    .wrap{max-width:1050px;margin:24px auto;padding:0 16px}
-    h1{font-size:22px;margin:0 0 16px}
-    .tabs{display:flex;gap:8px;margin:16px 0}
-    .tab{padding:10px 14px;background:#111520;border:1px solid #1f2633;border-radius:12px;cursor:pointer}
-    .tab.active{border-color:#2b3547;box-shadow:0 0 0 1px #2b3547 inset;background:#121a29}
-    .grid{display:grid;gap:12px}
-    .grid.cols-3{grid-template-columns:repeat(3,1fr)}
-    .card{background:var(--card);border:1px solid #1f2633;border-radius:16px;padding:16px}
-    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
-    input,select,button{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #2b3547;background:#0f1420;color:var(--text)}
-    button{cursor:pointer}
-    .row{display:flex;gap:10px}
-    .row > *{flex:1}
-    table{width:100%;border-collapse:collapse;font-size:14px}
-    th,td{padding:10px;border-bottom:1px solid #222b3a;text-align:right}
-    th:first-child,td:first-child{text-align:left}
-    .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#0f1420;border:1px solid #2b3547;color:var(--muted);font-size:12px}
-    .muted{color:var(--muted)}
-    .big{font-size:22px;font-weight:700}
-    .ok{color:var(--ok)}
-    .bad{color:var(--bad)}
-    .note{font-size:12px;color:var(--muted);margin-top:6px}
-    .footer{margin:24px 0 8px;color:var(--muted);font-size:12px}
-    @media (max-width:900px){.grid.cols-3{grid-template-columns:1fr}}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>신의탑:새로운세계 블러연합용 계산기</title>
+<style>
+  :root{
+    --bg:#0b0d11;--card:#141821;--muted:#9aa4b2;--text:#e8eef6;
+    --accent:#6ee7ff;--ok:#7cf29a;--bad:#ff8a8a;--line:#1f2633
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font-family:ui-sans-serif,system-ui,AppleSDGothicNeo,Segoe UI,Roboto,Pretendard}
+  .wrap{max-width:1100px;margin:20px auto;padding:0 14px}
+  h1{margin:0 0 10px;font-size:20px}
+  .tabs{display:flex;gap:8px;margin:12px 0 16px}
+  .tab{padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#111520;cursor:pointer}
+  .tab.active{box-shadow:0 0 0 1px #2b3547 inset;background:#121a29}
+  .card{background:#141821;border:1px solid var(--line);border-radius:16px;padding:14px}
+  .grid{display:grid;gap:12px}
+  .cols-3{grid-template-columns:2fr 1fr 1fr}
+  .cols-2{grid-template-columns:1fr 1fr}
+  label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+  input,select,button{width:100%;padding:12px;border-radius:12px;border:1px solid #2b3547;background:#0f1420;color:var(--text)}
+  button{cursor:pointer;font-weight:700}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#0f1420;border:1px solid #2b3547;color:var(--muted);font-size:12px}
+  .muted{color:var(--muted)}
+  .big{font-size:22px;font-weight:800}
+  .ok{color:var(--ok)} .bad{color:var(--bad)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:10px;border-bottom:1px solid #222b3a;text-align:right}
+  th:first-child,td:first-child{text-align:left}
+  .items{display:grid;grid-template-columns:1fr 150px 120px;gap:6px;align-items:center}
+  .itemline{display:contents}
+  .itemname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sticky{position:sticky;bottom:10px;z-index:2}
+  .share{margin-top:8px}
+  @media (max-width:900px){
+    .cols-3{grid-template-columns:1fr}
+    .cols-2{grid-template-columns:1fr}
+    .items{grid-template-columns:1fr 120px 100px}
+    input,select,button{padding:14px;font-size:16px}
+  }
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>개척상점 계산기 · 층/구역 보상</h1>
+<div class="wrap">
+  <h1>신의탑:새로운세계 블러연합용 계산기</h1>
 
-    <div class="tabs">
-      <div class="tab active" data-tab="calc">구매 계산</div>
-      <div class="tab" data-tab="info">기본 정보</div>
-      <div class="tab" data-tab="shop">개척상점 총합</div>
-    </div>
-
-    <!-- 구매 계산 -->
-    <section id="calc" class="card">
-      <div class="grid cols-3">
-        <div>
-          <label>현재 층수</label>
-          <input id="floor" type="number" value="171" min="1" />
-        </div>
-        <div>
-          <label>구역</label>
-          <select id="zone">
-            <option value="A">A (1–20)</option>
-            <option value="B">B (21–40)</option>
-            <option value="C">C (41–60)</option>
-          </select>
-        </div>
-        <div>
-          <label>구매 항목</label>
-          <select id="item"></select>
-        </div>
-      </div>
-      <div class="row" style="margin-top:12px">
-        <button id="btnRun">계산하기</button>
-        <button id="btnNeed">부족 시 필요한 최소 층 계산</button>
-      </div>
-
-      <div id="result" style="margin-top:16px" class="grid">
-        <div class="card">
-          <div class="pill">현재 위치</div>
-          <div style="margin-top:6px"><span id="curLabel" class="big"></span></div>
-          <div class="muted" id="perHour"></div>
-        </div>
-        <div class="card">
-          <div class="pill">2주(336h) 누적</div>
-          <div class="big" id="twoWeeks"></div>
-          <div class="note">시급 × 336h</div>
-        </div>
-        <div class="card">
-          <div class="pill">구매 항목</div>
-          <div><b id="itemName"></b></div>
-          <div class="big" id="itemCost"></div>
-        </div>
-        <div class="card">
-          <div class="pill">결과</div>
-          <div id="judge" class="big"></div>
-          <div id="lack" class="muted"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 기본 정보 -->
-    <section id="info" class="card" style="display:none">
-      <div class="grid cols-3">
-        <div class="card">
-          <div class="pill">규칙</div>
-          <ul class="muted" style="margin-top:8px;line-height:1.6">
-            <li>141층 이하: 구역당 +1.20/h</li>
-            <li>151층 A까지 위 규칙 유지</li>
-            <li>151층 B부터: 구역당 +1.50/h</li>
-            <li>층 A→다음층 A: 141~150 = +3.6/h, 152~ = +4.5/h</li>
-            <li>앵커: 141A=856.50/h, 151A=892.50/h</li>
-            <li>2주 = 336시간</li>
-          </ul>
-        </div>
-        <div class="card">
-          <div class="pill">층/구역별 시급 계산</div>
-          <div class="row" style="margin-top:8px">
-            <input id="qFloor" type="number" value="171" />
-            <select id="qZone">
-              <option value="A">A</option><option value="B">B</option><option value="C">C</option>
-            </select>
-          </div>
-          <div id="qAns" style="margin-top:8px"></div>
-        </div>
-        <div class="card">
-          <div class="pill">2주 누적 계산</div>
-          <div class="row" style="margin-top:8px">
-            <input id="qFloor2" type="number" value="171" />
-            <select id="qZone2">
-              <option value="A">A</option><option value="B">B</option><option value="C">C</option>
-            </select>
-          </div>
-          <div id="qAns2" style="margin-top:8px"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 상점 총합 -->
-    <section id="shop" class="card" style="display:none">
-      <div class="pill">항목별 총합 (금액 / 총개수)</div>
-      <table style="margin-top:8px" id="shopTable">
-        <thead>
-          <tr><th>항목</th><th>총 금액</th><th>총 개수</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <div class="row" style="margin-top:10px">
-        <div class="card">
-          <div class="pill">전체 합계</div>
-          <div class="big" id="shopGrand"></div>
-        </div>
-      </div>
-    </section>
-
-    <div class="footer">※ 수치/가격은 사용자 제공 데이터 기반. 항목/가격 바뀌면 아래 shopData만 수정.</div>
+  <div class="tabs">
+    <div class="tab active" data-tab="calc">구매 계산</div>
+    <div class="tab" data-tab="info">기본 정보</div>
+    <div class="tab" data-tab="shop">개척상점 총합</div>
   </div>
 
-  <script>
-    // ======= 상점 데이터(총합·총개수) =======
-    const shopSummary = {
-      "비밀모집": { total: 300000, count: 300 },
-      "레볼(초록)": { total: 112400, count: 5600 },
-      "빛레볼(빨강)": { total: 180000, count: 15000 },
-      "레볼 원석(보라)": { total: 19000, count: 200 },
-      "링경": { total: 31200, count: 25 },
-      "시무 주사위": { total: 558000, count: 90 },
-      "시무 열쇠": { total: 51000, count: 150 },
-      "고급숯돌": { total: 25500, count: 15 },
-      "힘/민/지 수정": { total: 147000, count: 45000 },
-      "강화액": { total: 154000, count: 3000 },
-      "최고급 강화액 선택상자": { total: 200000, count: 2500 },
-      "데이터 파편": { total: 72000, count: 3000 },
-      "클래스 파편": { total: 388800, count: 9000 }
-    };
+  <!-- 구매 계산 -->
+  <section id="calc" class="card">
+    <div class="grid cols-3">
+      <div>
+        <label>현재 층수</label>
+        <input id="floor" type="number" value="171" min="1" />
+      </div>
+      <div>
+        <label>구역</label>
+        <select id="zone">
+          <option value="A">A (1–20)</option>
+          <option value="B">B (21–40)</option>
+          <option value="C">C (41–60)</option>
+        </select>
+      </div>
+      <div>
+        <label>2주(336h)</label>
+        <input value="336" disabled />
+      </div>
+    </div>
 
-    // ======= 세부 표 (원하면 가성비 분석도 가능) =======
-    const shopData = {
-      "비밀모집":[{qty:10, price:10000, times:20},{qty:10, price:10000, times:10}],
-      "레볼(초록)":[
-        {qty:100, price:1600, times:14},{qty:100, price:1800, times:14},
-        {qty:100, price:2000, times:14},{qty:100, price:2200, times:14}
-      ],
-      "빛레볼(빨강)":[
-        {qty:100, price:1080, times:50},{qty:100, price:1200, times:50},{qty:100, price:1320, times:50}
-      ],
-      "레볼 원석(보라)":[{qty:10, price:900, times:10},{qty:10, price:1000, times:10}],
-      "링경":[{qty:1, price:1280, times:15},{qty:1, price:1440, times:10}],
-      "시무 주사위":[{qty:1, price:2900, times:50},{qty:1, price:4100, times:30},{qty:1, price:29000, times:10}],
-      "시무 열쇠":[{qty:1, price:300, times:100},{qty:1, price:420, times:50}],
-      "고급숯돌":[{qty:1, price:1500, times:10},{qty:1, price:2100, times:5}],
-      "힘/민/지 수정":[
-        {qty:500, price:500, times:50},{qty:500, price:600, times:40},
-        {qty:500, price:500, times:50},{qty:500, price:600, times:40},
-        {qty:500, price:500, times:50},{qty:500, price:600, times:40}
-      ],
-      "강화액":[{qty:50, price:2000, times:20},{qty:50, price:2500, times:20},{qty:50, price:3200, times:20}],
-      "최고급 강화액 선택상자":[{qty:50, price:4000, times:50}],
-      "데이터 파편":[{qty:100, price:2400, times:30}],
-      "클래스 파편":[
-        {qty:100, price:4320, times:10},{qty:100, price:4320, times:5}, // 탱커
-        {qty:100, price:4320, times:10},{qty:100, price:4320, times:5}, // 전사
-        {qty:100, price:4320, times:10},{qty:100, price:4320, times:5}, // 암살자
-        {qty:100, price:4320, times:10},{qty:100, price:4320, times:5}, // 원거리
-        {qty:100, price:4320, times:10},{qty:100, price:4320, times:5}, // 마력
-        {qty:100, price:4320, times:10},{qty:100, price:4320, times:5}  // 서포터
-      ]
-    };
+    <!-- A/B/C 자동 표시 -->
+    <div class="grid cols-3" style="margin-top:12px">
+      <div class="card">
+        <div class="pill">현재 층 시급</div>
+        <div id="abcHour" class="big" style="margin-top:6px"></div>
+        <div id="abcHourSub" class="muted"></div>
+      </div>
+      <div class="card">
+        <div class="pill">2주 누적</div>
+        <div id="abcTwo" class="big" style="margin-top:6px"></div>
+        <div id="abcTwoSub" class="muted"></div>
+      </div>
+      <div class="card">
+        <div class="pill">선택 구역</div>
+        <div id="curLabel" class="big" style="margin-top:6px"></div>
+        <div id="curHour" class="muted"></div>
+      </div>
+    </div>
 
-    // ======= 규칙에 따른 시급 계산 =======
-    function hourlyFor(floor, zone){
-      floor = Number(floor);
-      const z = zone.toUpperCase();
-      const a = (floor <= 150)
-        ? 856.50 + (floor - 141) * 3.6
-        : (floor === 151 ? 892.50 : 892.50 + (floor - 151) * 4.5);
-      const offset = (floor >= 151 ? {A:0,B:1.5,C:3.0} : {A:0,B:1.2,C:2.4});
-      return +(a + offset[z]).toFixed(2);
-    }
-    const TWO_WEEKS = 336;
+    <hr style="border:none;border-top:1px solid #222b3a;margin:14px 0" />
 
-    // ======= UI 채움 =======
-    const itemSel = document.getElementById('item');
-    const shopTableBody = document.querySelector('#shopTable tbody');
-    function number(n){ return n.toLocaleString('ko-KR'); }
-    function populateItems(){
-      itemSel.innerHTML = '';
-      Object.keys(shopSummary).forEach(k=>{
-        const opt = document.createElement('option');
-        opt.value = k; opt.textContent = `${k} (총 ${number(shopSummary[k].total)} / ${number(shopSummary[k].count)}개)`;
-        itemSel.appendChild(opt);
-      });
-      // 표
-      shopTableBody.innerHTML = '';
-      let grand = 0;
-      Object.entries(shopSummary).forEach(([name, {total, count}])=>{
-        grand += total;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${name}</td><td>${number(total)}</td><td>${number(count)}</td>`;
-        shopTableBody.appendChild(tr);
-      });
-      document.getElementById('shopGrand').textContent = number(grand);
-    }
-    populateItems();
+    <!-- 복수 아이템 선택 -->
+    <div class="pill">아이템 선택 (복수 선택 가능)</div>
+    <div class="items" id="items" style="margin-top:8px"></div>
 
-    // ======= 계산 동작 =======
-    function runCalc(){
-      const floor = document.getElementById('floor').value;
-      const zone = document.getElementById('zone').value;
-      const item = itemSel.value;
-      const perH = hourlyFor(floor, zone);
-      const income = Math.round(perH * TWO_WEEKS);
-      const price = shopSummary[item].total;
+    <div class="row" style="margin-top:10px">
+      <button id="btnAll">전체 선택/해제</button>
+      <button id="btnRun" class="sticky">계산하기</button>
+      <button id="btnNeed" class="sticky">부족 시 최소 층 계산</button>
+      <button id="btnCopy" class="sticky">결과 복사</button>
+    </div>
 
-      document.getElementById('curLabel').textContent = `${floor}층 ${zone}구역`;
-      document.getElementById('perHour').textContent = `시급: ${number(perH)} / h`;
-      document.getElementById('twoWeeks').textContent = `${number(income)}`;
-      document.getElementById('itemName').textContent = item;
-      document.getElementById('itemCost').textContent = number(price);
+    <div id="result" class="grid cols-2" style="margin-top:12px">
+      <div class="card">
+        <div class="pill">선택 항목 합계</div>
+        <div id="needSum" class="big"></div>
+        <div id="needDetail" class="muted"></div>
+      </div>
+      <div class="card">
+        <div class="pill">판정</div>
+        <div id="judge" class="big"></div>
+        <div id="lack" class="muted"></div>
+      </div>
+    </div>
 
-      const judge = document.getElementById('judge');
-      const lack = document.getElementById('lack');
-      if(income >= price){
-        judge.textContent = '구매 가능'; judge.className = 'big ok';
-        lack.textContent = '';
-      }else{
-        judge.textContent = '부족'; judge.className = 'big bad';
-        lack.textContent = `부족분: ${number(price - income)}`;
-      }
-    }
-    document.getElementById('btnRun').addEventListener('click', runCalc);
-    runCalc();
+    <div class="share">
+      <div class="pill">복사 미리보기</div>
+      <pre id="copyText" class="muted" style="white-space:pre-wrap"></pre>
+    </div>
+  </section>
 
-    // ======= 부족 시 필요한 최소 층(같은 구역 기준) =======
-    function neededFloor(){
-      let floor = Number(document.getElementById('floor').value);
-      const zone = document.getElementById('zone').value;
-      const item = itemSel.value;
-      const need = shopSummary[item].total;
+  <!-- 기본 정보 -->
+  <section id="info" class="card" style="display:none">
+    <div class="grid cols-2">
+      <div class="card">
+        <div class="pill">규칙</div>
+        <ul class="muted" style="line-height:1.6;margin-top:8px">
+          <li>141층 이하: 구역당 +1.20/h</li>
+          <li>151층 A까지 위 규칙 유지</li>
+          <li>151층 B부터: 구역당 +1.50/h</li>
+          <li>층 A→다음층 A: 141~150 = +3.6/h, 152~ = +4.5/h</li>
+          <li>앵커: 141A=856.50/h, 151A=892.50/h</li>
+          <li>2주 = 336시간</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="pill">빠른 조회</div>
+        <div class="row" style="margin-top:8px">
+          <input id="qFloor" type="number" value="171" />
+          <select id="qZone"><option>A</option><option>B</option><option>C</option></select>
+        </div>
+        <div id="qAns" style="margin-top:8px"></div>
+        <div class="row" style="margin-top:8px">
+          <input id="qFloor2" type="number" value="171" />
+          <select id="qZone2"><option>A</option><option>B</option><option>C</option></select>
+        </div>
+        <div id="qAns2" style="margin-top:8px"></div>
+      </div>
+    </div>
+  </section>
 
-      function enough(f){ return hourlyFor(f, zone) * TWO_WEEKS >= need; }
+  <!-- 상점 총합 -->
+  <section id="shop" class="card" style="display:none">
+    <div class="pill">항목별 총합 (금액 / 총개수)</div>
+    <table style="margin-top:8px" id="shopTable">
+      <thead><tr><th>항목</th><th>총 금액</th><th>총 개수</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="row" style="margin-top:10px">
+      <div class="card">
+        <div class="pill">전체 합계</div>
+        <div class="big" id="shopGrand"></div>
+      </div>
+    </div>
+  </section>
+</div>
 
-      let f = floor;
-      while(f <= 1000 && !enough(f)) f++;
-      const perH = hourlyFor(floor, zone);
-      const income = Math.round(perH * TWO_WEEKS);
-      document.getElementById('judge').textContent = (income >= need) ? '구매 가능' : '부족';
-      document.getElementById('judge').className = (income >= need) ? 'big ok' : 'big bad';
+<script>
+  // ===== 데이터(요약) =====
+  const shopSummary = {
+    "비밀모집": { total: 300000, count: 300 },
+    "레볼(초록)": { total: 112400, count: 5600 },
+    "빛레볼(빨강)": { total: 180000, count: 15000 },
+    "레볼 원석(보라)": { total: 19000, count: 200 },
+    "링경": { total: 31200, count: 25 },
+    "시무 주사위": { total: 558000, count: 90 },
+    "시무 열쇠": { total: 51000, count: 150 },
+    "고급숯돌": { total: 25500, count: 15 },
+    "힘/민/지 수정": { total: 147000, count: 45000 },
+    "강화액": { total: 154000, count: 3000 },
+    "최고급 강화액 선택상자": { total: 200000, count: 2500 },
+    "데이터 파편": { total: 72000, count: 3000 },
+    "클래스 파편": { total: 388800, count: 9000 }
+  };
 
-      const lack = Math.max(0, need - income);
-      document.getElementById('lack').textContent =
-        (lack>0)
-        ? `부족분: ${number(lack)} → 최소 ${f}층 ${zone}구역에서 가능`
-        : '';
-    }
-    document.getElementById('btnNeed').addEventListener('click', neededFloor);
+  // ===== 시급 계산 규칙 =====
+  function hourlyFor(floor, zone){
+    floor = Number(floor); const z = zone.toUpperCase();
+    const a = (floor <= 150)
+      ? 856.50 + (floor - 141) * 3.6
+      : (floor === 151 ? 892.50 : 892.50 + (floor - 151) * 4.5);
+    const offset = (floor >= 151 ? {A:0,B:1.5,C:3.0} : {A:0,B:1.2,C:2.4});
+    return +(a + offset[z]).toFixed(2);
+  }
+  const TWO_WEEKS = 336;
+  const nf = (n)=> n.toLocaleString('ko-KR');
 
-    // ======= 기본정보 섹션 작은 계산기 =======
-    function miniQueries(){
-      const f = Number(document.getElementById('qFloor').value);
-      const z = document.getElementById('qZone').value;
-      const perH = hourlyFor(f, z);
-      document.getElementById('qAns').textContent = `시급: ${number(perH)} / h`;
+  // ===== A/B/C 자동 블럭 =====
+  function renderABC(){
+    const f = Number(document.getElementById('floor').value);
+    const selZ = document.getElementById('zone').value;
+    const A = hourlyFor(f,'A'), B = hourlyFor(f,'B'), C = hourlyFor(f,'C');
+    const At = Math.round(A*TWO_WEEKS), Bt = Math.round(B*TWO_WEEKS), Ct = Math.round(C*TWO_WEEKS);
+    document.getElementById('abcHour').textContent = `A ${nf(A)} /h | B ${nf(B)} /h | C ${nf(C)} /h`;
+    document.getElementById('abcHourSub').textContent = `${f}층 기준`;
+    document.getElementById('abcTwo').textContent = `A ${nf(At)} | B ${nf(Bt)} | C ${nf(Ct)}`;
+    document.getElementById('abcTwoSub').textContent = `2주 누적 (336h)`;
+    document.getElementById('curLabel').textContent = `${f}층 ${selZ}구역`;
+    document.getElementById('curHour').textContent = `시급: ${nf(hourlyFor(f,selZ))} / h, 2주: ${nf(Math.round(hourlyFor(f,selZ)*TWO_WEEKS))}`;
+  }
 
-      const f2 = Number(document.getElementById('qFloor2').value);
-      const z2 = document.getElementById('qZone2').value;
-      const perH2 = hourlyFor(f2, z2);
-      document.getElementById('qAns2').textContent = `2주 누적: ${number(Math.round(perH2*336))}`;
-    }
-    ['qFloor','qZone','qFloor2','qZone2'].forEach(id=>{
-      document.getElementById(id).addEventListener('input', miniQueries);
+  // ===== 아이템 체크리스트 =====
+  const itemsDiv = document.getElementById('items');
+  let toggleAll = false;
+  function renderItems(){
+    itemsDiv.innerHTML = `
+      <div class="itemline">
+        <div class="itemname muted">항목명</div>
+        <div class="muted" style="text-align:right">총 금액</div>
+        <div class="muted" style="text-align:right">선택</div>
+      </div>`;
+    Object.entries(shopSummary).forEach(([name, {total, count}], i)=>{
+      const line = document.createElement('div'); line.className = 'itemline';
+      line.innerHTML = `
+        <div class="itemname">${name} <span class="muted">/ ${nf(count)}개</span></div>
+        <div style="text-align:right">${nf(total)}</div>
+        <div style="text-align:right">
+          <input type="checkbox" class="pick" id="pick_${i}" data-name="${name}" />
+        </div>`;
+      itemsDiv.appendChild(line);
     });
-    miniQueries();
+  }
+  renderItems();
+  document.getElementById('btnAll').addEventListener('click', ()=>{
+    toggleAll = !toggleAll;
+    document.querySelectorAll('.pick').forEach(cb=> cb.checked = toggleAll);
+  });
 
-    // ======= 탭 =======
-    document.querySelectorAll('.tab').forEach(el=>{
-      el.addEventListener('click', ()=>{
-        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-        el.classList.add('active');
-        const tab = el.dataset.tab;
-        document.getElementById('calc').style.display = (tab==='calc')?'block':'none';
-        document.getElementById('info').style.display = (tab==='info')?'block':'none';
-        document.getElementById('shop').style.display = (tab==='shop')?'block':'none';
+  function selectedTotal(){
+    let sum = 0; let lines=[];
+    document.querySelectorAll('.pick:checked').forEach(cb=>{
+      const nm = cb.dataset.name; const t = shopSummary[nm].total;
+      sum += t; lines.push(`${nm}: ${nf(t)}`);
+    });
+    return {sum, lines};
+  }
+
+  // ===== 계산 / 최소층 =====
+  function runCalc(){
+    const f = Number(document.getElementById('floor').value);
+    const z = document.getElementById('zone').value;
+    const perH = hourlyFor(f,z), income = Math.round(perH*TWO_WEEKS);
+    const {sum, lines} = selectedTotal();
+
+    document.getElementById('needSum').textContent = nf(sum);
+    document.getElementById('needDetail').textContent = lines.length? lines.join(' / ') : '선택된 항목이 없습니다.';
+    const judgeEl = document.getElementById('judge');
+    const lackEl = document.getElementById('lack');
+
+    if(sum === 0){
+      judgeEl.textContent = '항목을 선택하세요'; judgeEl.className='big';
+      lackEl.textContent = ''; buildCopy('', '', '', ''); return;
+    }
+
+    if(income >= sum){
+      judgeEl.textContent = '구매 가능'; judgeEl.className='big ok';
+      lackEl.textContent = `2주 누적: ${nf(income)} ≥ 필요: ${nf(sum)}`;
+    }else{
+      judgeEl.textContent = '부족'; judgeEl.className='big bad';
+      lackEl.textContent = `부족분: ${nf(sum - income)} (2주 누적: ${nf(income)})`;
+    }
+    buildCopy(`${f}층 ${z}구역`, nf(perH), nf(income), `${nf(sum)} (${lines.join(' / ')})`);
+  }
+
+  function neededFloor(){
+    const start = Number(document.getElementById('floor').value);
+    const z = document.getElementById('zone').value;
+    const {sum} = selectedTotal();
+    if(sum===0){ alert('항목을 먼저 선택하세요.'); return; }
+    let f = start;
+    while(f <= 2000 && (hourlyFor(f,z)*TWO_WEEKS) < sum) f++;
+    const incomeAtStart = Math.round(hourlyFor(start,z)*TWO_WEEKS);
+    const lack = Math.max(0, sum - incomeAtStart);
+    const judgeEl = document.getElementById('judge');
+    const ok = (lack===0);
+    judgeEl.textContent = ok ? '구매 가능' : '부족';
+    judgeEl.className = ok ? 'big ok' : 'big bad';
+    document.getElementById('lack').textContent =
+      ok ? `현재 층에서 구매 가능` :
+           `부족분: ${nf(lack)} → 최소 ${f}층 ${z}구역에서 가능 (2주 기준)`;
+    buildCopy(`${start}층 ${z}구역`, nf(hourlyFor(start,z)), nf(incomeAtStart),
+              `${nf(sum)} / 최소 필요 층: ${f}층 ${z}구역`);
+  }
+
+  // ===== 복사 공유 =====
+  function buildCopy(loc, perH, two, need){
+    const f = Number(document.getElementById('floor').value);
+    const A = hourlyFor(f,'A'), B = hourlyFor(f,'B'), C = hourlyFor(f,'C');
+    const At = Math.round(A*TWO_WEEKS), Bt = Math.round(B*TWO_WEEKS), Ct = Math.round(C*TWO_WEEKS);
+    const text =
+`[신의탑:새로운세계 블러연합용 계산]
+현재 위치: ${loc}
+시급: ${perH} / h
+2주 누적: ${two}
+
+현재 층 시급: A ${nf(A)} /h | B ${nf(B)} /h | C ${nf(C)} /h
+현재 층 2주:  A ${nf(At)} | B ${nf(Bt)} | C ${nf(Ct)}
+
+선택 항목 합계: ${need}`;
+    document.getElementById('copyText').textContent = text;
+  }
+  document.getElementById('btnRun').addEventListener('click', ()=>{ renderABC(); runCalc(); });
+  document.getElementById('btnNeed').addEventListener('click', ()=>{ renderABC(); neededFloor(); });
+  document.getElementById('btnCopy').addEventListener('click', async ()=>{
+    const t = document.getElementById('copyText').textContent;
+    try{ await navigator.clipboard.writeText(t); alert('복사되었습니다. 카톡에 붙여넣기 하세요.'); }
+    catch(e){ alert('복사 실패: 브라우저 권한을 확인하세요.'); }
+  });
+
+  // ===== 기본 정보 미니 계산기 =====
+  function mini(){
+    const f = Number(document.getElementById('qFloor').value);
+    const z = document.getElementById('qZone').value;
+    const p = hourlyFor(f,z);
+    document.getElementById('qAns').textContent = `시급: ${nf(p)} / h`;
+
+    const f2 = Number(document.getElementById('qFloor2').value);
+    const z2 = document.getElementById('qZone2').value;
+    const p2 = hourlyFor(f2,z2);
+    document.getElementById('qAns2').textContent = `2주 누적: ${nf(Math.round(p2*336))}`;
+  }
+  ['qFloor','qZone','qFloor2','qZone2'].forEach(id=>{
+    document.getElementById(id).addEventListener('input', mini);
+  });
+
+  // ===== 상점 표 =====
+  function buildShop(){
+    const tbody = document.querySelector('#shopTable tbody'); tbody.innerHTML = '';
+    let grand = 0;
+    Object.entries(shopSummary).forEach(([name, {total, count}])=>{
+      grand += total;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${name}</td><td>${nf(total)}</td><td>${nf(count)}</td>`;
+      tbody.appendChild(tr);
+    });
+    document.getElementById('shopGrand').textContent = nf(grand);
+  }
+
+  // ===== 탭 =====
+  document.querySelectorAll('.tab').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      el.classList.add('active');
+      const tab = el.dataset.tab;
+      ['calc','info','shop'].forEach(id=>{
+        document.getElementById(id).style.display = (id===tab)?'block':'none';
       });
     });
-  </script>
+  });
+
+  // 초기 렌더
+  buildShop(); renderABC(); mini(); runCalc();
+  document.getElementById('floor').addEventListener('input', ()=>{ renderABC(); });
+  document.getElementById('zone').addEventListener('change', ()=>{ renderABC(); });
+</script>
 </body>
 </html>
