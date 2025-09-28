@@ -1,4 +1,4 @@
-import { mountShop } from './hardmode.shop.js';
+import { mountShop } from './hardmode_shop.js';
 
 const app = document.getElementById('app');
 const navBtns = document.querySelectorAll('.nav-btn');
