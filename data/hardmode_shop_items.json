@@ -1,64 +1,62 @@
-[
-  { "cat": "비밀모집", "name": "10개=10,000", "price": 10000, "times": 20, "img": "assets/img/recruit.png" },
-  { "cat": "비밀모집", "name": "10개=10,000", "price": 10000, "times": 10, "img": "assets/img/recruit.png" },
-  
-  { "cat": "레볼(초록)", "name": "100개=1,600", "price": 1600, "times": 14, "img": "assets/img/revol_green.png" },
-  { "cat": "레볼(초록)", "name": "100개=1,800", "price": 1800, "times": 14, "img": "assets/img/revol_green.png" },
-  { "cat": "레볼(초록)", "name": "100개=2,000", "price": 2000, "times": 14, "img": "assets/img/revol_green.png" },
-  { "cat": "레볼(초록)", "name": "100개=2,200", "price": 2200, "times": 14, "img": "assets/img/revol_green.png" },
+{ "cat": "비밀모집", "name": "10개=10,000", "price": 10000, "times": 20, "img": "assets/img/recruit.jpg" },
+{ "cat": "비밀모집", "name": "10개=10,000", "price": 10000, "times": 10, "img": "assets/img/recruit.jpg" },
 
-  { "cat": "빛레볼(빨강)", "name": "100개=1,080", "price": 1080, "times": 50, "img": "assets/img/revol_red.png" },
-  { "cat": "빛레볼(빨강)", "name": "100개=1,200", "price": 1200, "times": 50, "img": "assets/img/revol_red.png" },
-  { "cat": "빛레볼(빨강)", "name": "100개=1,320", "price": 1320, "times": 50, "img": "assets/img/revol_red.png" },
+{ "cat": "레볼(초록)", "name": "100개=1,600", "price": 1600, "times": 14, "img": "assets/img/revol_green.jpg" },
+{ "cat": "레볼(초록)", "name": "100개=1,800", "price": 1800, "times": 14, "img": "assets/img/revol_green.jpg" },
+{ "cat": "레볼(초록)", "name": "100개=2,000", "price": 2000, "times": 14, "img": "assets/img/revol_green.jpg" },
+{ "cat": "레볼(초록)", "name": "100개=2,200", "price": 2200, "times": 14, "img": "assets/img/revol_green.jpg" },
 
-  { "cat": "레볼 원석(보라)", "name": "10개=900", "price": 900, "times": 10, "img": "assets/img/revol_core.png" },
-  { "cat": "레볼 원석(보라)", "name": "10개=1,000", "price": 1000, "times": 10, "img": "assets/img/revol_core.png" },
+{ "cat": "빛레볼(빨강)", "name": "100개=1,080", "price": 1080, "times": 50, "img": "assets/img/revol_red.jpg" },
+{ "cat": "빛레볼(빨강)", "name": "100개=1,200", "price": 1200, "times": 50, "img": "assets/img/revol_red.jpg" },
+{ "cat": "빛레볼(빨강)", "name": "100개=1,320", "price": 1320, "times": 50, "img": "assets/img/revol_red.jpg" },
 
-  { "cat": "링경", "name": "1개=1,280", "price": 1280, "times": 15, "img": "assets/img/ring.png" },
-  { "cat": "링경", "name": "1개=1,440", "price": 1440, "times": 10, "img": "assets/img/ring.png" },
+{ "cat": "레볼 원석(보라)", "name": "10개=900", "price": 900, "times": 10, "img": "assets/img/revol_core.jpg" },
+{ "cat": "레볼 원석(보라)", "name": "10개=1,000", "price": 1000, "times": 10, "img": "assets/img/revol_core.jpg" },
 
-  { "cat": "시무 주사위", "name": "파랑 1개=2,900", "price": 2900, "times": 50, "img": "assets/img/dice_blue.png" },
-  { "cat": "시무 주사위", "name": "파랑 1개=4,100", "price": 4100, "times": 30, "img": "assets/img/dice_blue.png" },
-  { "cat": "시무 주사위", "name": "빨강 1개=29,000", "price": 29000, "times": 10, "img": "assets/img/dice_red.png" },
+{ "cat": "링경", "name": "1개=1,280", "price": 1280, "times": 15, "img": "assets/img/ring.jpg" },
+{ "cat": "링경", "name": "1개=1,440", "price": 1440, "times": 10, "img": "assets/img/ring.jpg" },
 
-  { "cat": "시무 열쇠", "name": "1개=300", "price": 300, "times": 100, "img": "assets/img/key.png" },
-  { "cat": "시무 열쇠", "name": "1개=420", "price": 420, "times": 50, "img": "assets/img/key.png" },
+{ "cat": "시무 주사위", "name": "파랑 1개=2,900", "price": 2900, "times": 50, "img": "assets/img/dice_blue.jpg" },
+{ "cat": "시무 주사위", "name": "파랑 1개=4,100", "price": 4100, "times": 30, "img": "assets/img/dice_blue.jpg" },
+{ "cat": "시무 주사위", "name": "빨강 1개=29,000", "price": 29000, "times": 10, "img": "assets/img/dice_red.jpg" },
 
-  { "cat": "고급숯돌", "name": "1개=1,500", "price": 1500, "times": 10, "img": "assets/img/whetstone.png" },
-  { "cat": "고급숯돌", "name": "1개=2,100", "price": 2100, "times": 5, "img": "assets/img/whetstone.png" },
+{ "cat": "시무 열쇠", "name": "1개=300", "price": 300, "times": 100, "img": "assets/img/key.jpg" },
+{ "cat": "시무 열쇠", "name": "1개=420", "price": 420, "times": 50, "img": "assets/img/key.jpg" },
 
-  { "cat": "힘 수정(빨강)", "name": "1개=500", "price": 500, "times": 50, "img": "assets/img/shard_red.png" },
-  { "cat": "힘 수정(빨강)", "name": "1개=600", "price": 600, "times": 40, "img": "assets/img/shard_red.png" },
+{ "cat": "고급숯돌", "name": "1개=1,500", "price": 1500, "times": 10, "img": "assets/img/whetstone.jpg" },
+{ "cat": "고급숯돌", "name": "1개=2,100", "price": 2100, "times": 5, "img": "assets/img/whetstone.jpg" },
 
-  { "cat": "민 수정(초록)", "name": "1개=500", "price": 500, "times": 50, "img": "assets/img/shard_green.png" },
-  { "cat": "민 수정(초록)", "name": "1개=600", "price": 600, "times": 40, "img": "assets/img/shard_green.png" },
+{ "cat": "힘 수정(빨강)", "name": "1개=500", "price": 500, "times": 50, "img": "assets/img/shard_red.jpg" },
+{ "cat": "힘 수정(빨강)", "name": "1개=600", "price": 600, "times": 40, "img": "assets/img/shard_red.jpg" },
 
-  { "cat": "지 수정(파랑)", "name": "1개=500", "price": 500, "times": 50, "img": "assets/img/shard_blue.png" },
-  { "cat": "지 수정(파랑)", "name": "1개=600", "price": 600, "times": 40, "img": "assets/img/shard_blue.png" },
+{ "cat": "민 수정(초록)", "name": "1개=500", "price": 500, "times": 50, "img": "assets/img/shard_green.jpg" },
+{ "cat": "민 수정(초록)", "name": "1개=600", "price": 600, "times": 40, "img": "assets/img/shard_green.jpg" },
 
-  { "cat": "강화액", "name": "파랑 50개=2,000", "price": 2000, "times": 20, "img": "assets/img/potion_blue.png" },
-  { "cat": "강화액", "name": "노랑 50개=2,500", "price": 2500, "times": 20, "img": "assets/img/potion_yellow.png" },
-  { "cat": "강화액", "name": "주황 50개=3,200", "price": 3200, "times": 20, "img": "assets/img/potion_orange.png" },
+{ "cat": "지 수정(파랑)", "name": "1개=500", "price": 500, "times": 50, "img": "assets/img/shard_blue.jpg" },
+{ "cat": "지 수정(파랑)", "name": "1개=600", "price": 600, "times": 40, "img": "assets/img/shard_blue.jpg" },
 
-  { "cat": "최고급 강화액 상자", "name": "50개=4,000", "price": 4000, "times": 50, "img": "assets/img/potion_sel.png" },
+{ "cat": "강화액", "name": "파랑 50개=2,000", "price": 2000, "times": 20, "img": "assets/img/potion_blue.jpg" },
+{ "cat": "강화액", "name": "노랑 50개=2,500", "price": 2500, "times": 20, "img": "assets/img/potion_yellow.jpg" },
+{ "cat": "강화액", "name": "주황 50개=3,200", "price": 3200, "times": 20, "img": "assets/img/potion_orange.jpg" },
 
-  { "cat": "데이터 파편", "name": "100개=2,400", "price": 2400, "times": 30, "img": "assets/img/datapiece.png" },
-  
-  { "cat": "클래스 파편", "name": "탱커 100개=4,320", "price": 4320, "times": 10, "img": "assets/img/class_tanker.png" },
-  { "cat": "클래스 파편", "name": "탱커 100개=4,320", "price": 4320, "times": 5, "img": "assets/img/class_tanker.png" },
-  
-  { "cat": "클래스 파편", "name": "전사 100개=4,320", "price": 4320, "times": 10, "img": "assets/img/class_warrior.png" },
-  { "cat": "클래스 파편", "name": "전사 100개=4,320", "price": 4320, "times": 5, "img": "assets/img/class_warrior.png" },
-  
-  { "cat": "클래스 파편", "name": "암살자 100개=4,320", "price": 4320, "times": 10, "img": "assets/img/class_assassin.png" },
-  { "cat": "클래스 파편", "name": "암살자 100개=4,320", "price": 4320, "times": 5, "img": "assets/img/class_assassin.png" },
-  
-  { "cat": "클래스 파편", "name": "원거리 100개=4,320", "price": 4320, "times": 10, "img": "assets/img/class_ranger.png" },
-  { "cat": "클래스 파편", "name": "원거리 100개=4,320", "price": 4320, "times": 5, "img": "assets/img/class_ranger.png" },
-  
-  { "cat": "클래스 파편", "name": "마력 100개=4,320", "price": 4320, "times": 10, "img": "assets/img/class_magic.png" },
-  { "cat": "클래스 파편", "name": "마력 100개=4,320", "price": 4320, "times": 5, "img": "assets/img/class_magic.png" },
-  
-  { "cat": "클래스 파편", "name": "서포터 100개=4,320", "price": 4320, "times": 10, "img": "assets/img/class_support.png" },
-  { "cat": "클래스 파편", "name": "서포터 100개=4,320", "price": 4320, "times": 5, "img": "assets/img/class_support.png" }
-]
+{ "cat": "최고급 강화액 상자", "name": "50개=4,000", "price": 4000, "times": 50, "img": "assets/img/potion_sel.jpg" },
+
+{ "cat": "데이터 파편", "name": "100개=2,400", "price": 2400, "times": 30, "img": "assets/img/datapiece.jpg" },
+
+{ "cat": "클래스 파편", "name": "탱커 100개=4,320", "price": 4320, "times": 10, "img": "assets/img/class_tanker.jpg" },
+{ "cat": "클래스 파편", "name": "탱커 100개=4,320", "price": 4320, "times": 5, "img": "assets/img/class_tanker.jpg" },
+
+{ "cat": "클래스 파편", "name": "전사 100개=4,320", "price": 4320, "times": 10, "img": "assets/img/class_warrior.jpg" },
+{ "cat": "클래스 파편", "name": "전사 100개=4,320", "price": 4320, "times": 5, "img": "assets/img/class_warrior.jpg" },
+
+{ "cat": "클래스 파편", "name": "암살자 100개=4,320", "price": 4320, "times": 10, "img": "assets/img/class_assassin.jpg" },
+{ "cat": "클래스 파편", "name": "암살자 100개=4,320", "price": 4320, "times": 5, "img": "assets/img/class_assassin.jpg" },
+
+{ "cat": "클래스 파편", "name": "원거리 100개=4,320", "price": 4320, "times": 10, "img": "assets/img/class_ranger.jpg" },
+{ "cat": "클래스 파편", "name": "원거리 100개=4,320", "price": 4320, "times": 5, "img": "assets/img/class_ranger.jpg" },
+
+{ "cat": "클래스 파편", "name": "마력 100개=4,320", "price": 4320, "times": 10, "img": "assets/img/class_magic.jpg" },
+{ "cat": "클래스 파편", "name": "마력 100개=4,320", "price": 4320, "times": 5, "img": "assets/img/class_magic.jpg" },
+
+{ "cat": "클래스 파편", "name": "서포터 100개=4,320", "price": 4320, "times": 10, "img": "assets/img/class_support.jpg" },
+{ "cat": "클래스 파편", "name": "서포터 100개=4,320", "price": 4320, "times": 5, "img": "assets/img/class_support.jpg" }
