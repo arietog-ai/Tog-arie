@@ -1,3 +1,4 @@
+[
 { "cat": "비밀모집", "name": "10개=10,000", "price": 10000, "times": 20, "img": "assets/img/recruit.jpg" },
 { "cat": "비밀모집", "name": "10개=10,000", "price": 10000, "times": 10, "img": "assets/img/recruit.jpg" },
 
@@ -60,3 +61,4 @@
 
 { "cat": "클래스 파편", "name": "서포터 100개=4,320", "price": 4320, "times": 10, "img": "assets/img/class_support.jpg" },
 { "cat": "클래스 파편", "name": "서포터 100개=4,320", "price": 4320, "times": 5, "img": "assets/img/class_support.jpg" }
+]
