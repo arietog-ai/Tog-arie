@@ -1,20 +1,26 @@
 import { mountShop } from './hardmode_shop.js';
 
-const app = document.getElementById('app');
-const navBtns = document.querySelectorAll('.nav-btn');
+// 라우터
+function navigate(route) {
+  const app = document.getElementById('app');
+  app.innerHTML = ''; // 초기화
 
-function setActive(route){
-  navBtns.forEach(b=> b.classList.toggle('active', b.dataset.route===route));
+  if (route === 'shop') {
+    mountShop(app);  // 개척상점 계산기 mount
+  } else {
+    app.innerHTML = `<p>환영합니다! 좌측 메뉴에서 기능을 선택하세요.</p>`;
+  }
 }
 
-function router(route){
-  setActive(route);
-  if(route==='shop'){ mountShop(app); return; }
-  app.innerHTML = `<div class="container"><div class="card">준비 중입니다.</div></div>`;
-}
-
-navBtns.forEach(btn=>{
-  btn.addEventListener('click', ()=> router(btn.dataset.route));
+// 버튼 클릭 이벤트 연결
+document.querySelectorAll('[data-route]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const route = btn.getAttribute('data-route');
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    navigate(route);
+  });
 });
 
-router('shop'); // 기본 진입
+// 초기 진입 시는 빈 화면
+navigate(null);
