@@ -1,108 +1,208 @@
 import { TWO_WEEKS, hourlyFor, nf, nf1, loadShopItems } from './hardmode_data.js';
 
 export async function mountShop(container) {
-  container.innerHTML = `<h2>개척상점 계산기</h2>`;
+  // 헤더/뒤로가기
+  container.innerHTML = `
+    <div class="container">
+      <div class="card">
+        <button id="go-home" style="width:auto">← 돌아가기</button>
+        <h2 style="margin:10px 0 0">개척상점 계산기</h2>
+      </div>
 
+      <div class="card" style="margin-top:12px">
+        <div class="grid cols-3">
+          <div>
+            <label>현재 층수</label>
+            <input id="floor-input" type="number" min="1" max="999" value="171">
+          </div>
+          <div>
+            <label>구역</label>
+            <select id="zone-input">
+              <option value="A">A (1–20)</option>
+              <option value="B">B (21–40)</option>
+              <option value="C">C (41–60)</option>
+            </select>
+          </div>
+          <div class="card">
+            <div class="pill">선택 구역</div>
+            <div id="curLabel" class="big" style="margin-top:6px"></div>
+            <div id="curHour" class="muted"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div class="pill">아이템 선택 (세부 품목) — 체크 시 즉시 반영</div>
+        <div id="items" class="item-grid" style="margin-top:10px"></div>
+      </div>
+
+      <div class="grid cols-2" style="margin-top:12px">
+        <div class="card">
+          <div class="pill">선택 항목 합계</div>
+          <div id="needSum" class="big"></div>
+          <div id="needDetail" class="muted"></div>
+        </div>
+        <div class="card">
+          <div class="pill">판정</div>
+          <div id="judge" class="big"></div>
+          <div id="lack" class="muted"></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div class="pill">결과 복사 / 부족 층 계산</div>
+        <div class="grid cols-2" style="margin-top:8px">
+          <button id="btnCopy">결과 복사</button>
+          <button id="btnNeed">부족 시 최소 층 계산</button>
+        </div>
+        <pre id="copyText" class="muted" style="margin-top:8px"></pre>
+      </div>
+    </div>
+  `;
+
+  // 뒤로가기
+  container.querySelector('#go-home').addEventListener('click', ()=>{
+    history.back(); // 단순 뒤로가기가 불안하면 app.js에서 navigate(null)로 바꿔도 됨
+  });
+
+  // 데이터 로드
   const items = await loadShopItems();
 
-  // 입력 UI
-  const inputDiv = document.createElement('div');
-  inputDiv.className = 'input-section';
-  inputDiv.innerHTML = `
-    <label>현재 층: <input id="floor-input" type="number" min="1" max="999" value="141"></label>
-    <label>구역:
-      <select id="zone-input">
-        <option value="A">A (1-20)</option>
-        <option value="B">B (21-40)</option>
-        <option value="C">C (41-60)</option>
-      </select>
-    </label>
-  `;
-  container.appendChild(inputDiv);
+  const el = (id)=> container.querySelector('#'+id);
+  const itemsEl = container.querySelector('#items');
+  let picked = new Set(); // 선택 인덱스
 
-  // 아이템 선택 UI
-  const shopDiv = document.createElement('div');
-  shopDiv.className = 'shop-section';
-
-  items.forEach((item, idx) => {
-    const card = document.createElement('div');
-    card.className = 'shop-card';
-    card.innerHTML = `
-      <div class="card-top">
-        <img src="${item.img}" alt="${item.cat}" class="shop-img">
-        <div class="shop-name">${item.cat}<br><small>${item.name}</small></div>
-      </div>
-      <div class="card-bottom">
-        <span class="shop-price">${nf(item.price)}</span>
-        <input type="checkbox" data-idx="${idx}">
-      </div>
-    `;
-    shopDiv.appendChild(card);
-  });
-  container.appendChild(shopDiv);
-
-  // 결과 출력 박스
-  const resultBox = document.createElement('div');
-  resultBox.id = 'result-box';
-  container.appendChild(resultBox);
-
-  // 복사 버튼 (하나만 유지)
-  const copyBtn = document.createElement('button');
-  copyBtn.textContent = '결과 복사';
-  copyBtn.addEventListener('click', () => {
-    const text = resultBox.innerText;
-    navigator.clipboard.writeText(text).then(() => {
-      alert('결과가 클립보드에 복사되었습니다.');
-    });
-  });
-  container.appendChild(copyBtn);
-
-  // 계산 함수
-  function recalc() {
-    const floor = parseInt(document.getElementById('floor-input').value, 10);
-    const zone = document.getElementById('zone-input').value;
-
-    const hourly = hourlyFor(floor, zone);
-    const twoWeeks = hourly * TWO_WEEKS;
-
-    let totalPrice = 0;
-    let totalItems = 0;
-
-    const selected = [];
-    document.querySelectorAll('.shop-card input[type=checkbox]').forEach(cb => {
-      if (cb.checked) {
-        const item = items[cb.dataset.idx];
-        const subtotal = item.price * item.times;
-        totalPrice += subtotal;
-        totalItems += item.times;
-        selected.push(`- ${item.cat} ${item.name} ×${item.times} → ${nf(subtotal)}`);
-      }
-    });
-
-    let result = `현재 층 ${floor}${zone} 기준\n`;
-    result += `시간당: ${nf1(hourly)} / 2주간: ${nf(twoWeeks)}\n\n`;
-
-    if (selected.length > 0) {
-      result += `[선택한 아이템]\n${selected.join('\n')}\n\n`;
-      result += `총 아이템 수: ${totalItems}\n총 금액: ${nf(totalPrice)}\n\n`;
-
-      if (twoWeeks >= totalPrice) {
-        result += `✅ 구매 가능`;
-      } else {
-        const needHours = Math.ceil(totalPrice / hourly);
-        const needFloors = Math.ceil(needHours / TWO_WEEKS * (twoWeeks / hourly));
-        result += `❌ 부족 → 최소 ${nf(totalPrice - twoWeeks)} 더 필요`;
-      }
-    } else {
-      result += `아이템을 선택하세요.`;
-    }
-
-    resultBox.innerText = result;
+  // 상단 현재 구역 표시
+  function renderCurrent(){
+    const f = Number(el('floor-input').value);
+    const z = el('zone-input').value;
+    const perH = hourlyFor(f,z);
+    const two = Math.round(perH*TWO_WEEKS);
+    el('curLabel').textContent = `${f}층 ${z}구역`;
+    el('curHour').textContent = `시급: ${nf1(perH)} / h · 2주: ${nf(two)}`;
   }
 
-  // 이벤트 바인딩
-  container.addEventListener('input', recalc);
-  container.addEventListener('change', recalc);
+  // 아이템 카드(중앙정렬/반응형 3/5열)
+  function renderItems(){
+    itemsEl.innerHTML = '';
+    items.forEach((r, idx)=>{
+      const card = document.createElement('div');
+      card.className = 'item-card';
+      card.innerHTML = `
+        <div class="item-top">
+          <img src="${r.img}" alt="${r.cat}">
+          <div class="cap">${r.cat} · ${r.name} × ${r.times}회</div>
+        </div>
+        <div class="item-bottom">
+          <div class="price">${nf(r.price)}</div>
+          <div class="item-check">
+            <input type="checkbox" data-idx="${idx}" ${picked.has(idx)?'checked':''}>
+          </div>
+        </div>
+      `;
+      itemsEl.appendChild(card);
+    });
+  }
 
-  recalc();
+  function selectedTotal(){
+    let sum=0, lines=[], count=0;
+    picked.forEach(i=>{
+      const r = items[i];
+      const t = r.price * r.times;
+      sum += t; count += r.times;
+      lines.push(`${r.cat}·${r.name} × ${r.times}회: ${nf(t)}`);
+    });
+    return {sum, lines, count};
+  }
+
+  function buildCopy(){
+    const f = Number(el('floor-input').value);
+    const z = el('zone-input').value;
+    const per = hourlyFor(f,z);
+    const two = Math.round(per*TWO_WEEKS);
+    const {sum, lines, count} = selectedTotal();
+    const text =
+`[블러연합 계산]
+현재 위치: ${f}층 ${z}구역
+시급: ${nf1(per)} / h
+2주 누적: ${nf(two)}
+
+선택 항목 수: ${count}
+선택 항목 합계: ${nf(sum)}
+- 상세:
+${lines.length ? lines.join('\n') : '선택 없음'}`;
+    el('copyText').textContent = text;
+  }
+
+  function updateCalc(){
+    renderCurrent();
+    const f = Number(el('floor-input').value);
+    const z = el('zone-input').value;
+    const perH = hourlyFor(f,z);
+    const income = Math.round(perH*TWO_WEEKS);
+
+    const {sum, lines, count} = selectedTotal();
+    el('needSum').textContent = nf(sum);
+    el('needDetail').textContent = lines.length ? lines.join(' / ') : '선택된 항목이 없습니다.';
+
+    if(sum===0){
+      el('judge').textContent='항목을 선택하세요'; el('judge').className='big';
+      el('lack').textContent=''; buildCopy(); return;
+    }
+    if(income >= sum){
+      el('judge').textContent='구매 가능'; el('judge').className='big ok';
+      el('lack').textContent=`2주 누적: ${nf(income)} ≥ 필요: ${nf(sum)}`;
+    }else{
+      el('judge').textContent='부족'; el('judge').className='big bad';
+      el('lack').textContent=`부족분: ${nf(sum - income)} (2주: ${nf(income)})`;
+    }
+    buildCopy();
+  }
+
+  // 부족 시 최소 층 계산(같은 구역 유지)
+  function neededFloor(){
+    const start = Number(el('floor-input').value);
+    const z = el('zone-input').value;
+    const {sum} = selectedTotal();
+    if(sum===0){ alert('항목을 먼저 선택하세요.'); return; }
+
+    let f = start;
+    // 현재 규칙에 따른 시급 증가를 감안해, 같은 구역 z에서 2주 누적이 sum 이상이 되는 최소층을 찾음.
+    while(f <= 2000 && (hourlyFor(f,z) * TWO_WEEKS) < sum) f++;
+
+    const incomeAtStart = Math.round(hourlyFor(start,z)*TWO_WEEKS);
+    const lack = Math.max(0, sum - incomeAtStart);
+    const ok = (lack===0);
+
+    el('judge').textContent = ok ? '구매 가능' : '부족';
+    el('judge').className = ok ? 'big ok' : 'big bad';
+    el('lack').textContent =
+      ok ? `현재 층에서 구매 가능` :
+           `부족분: ${nf(lack)} → 최소 ${f}층 ${z}구역에서 가능 (2주 기준)`;
+
+    buildCopy();
+  }
+
+  // 이벤트
+  container.addEventListener('input', (e)=>{
+    if(e.target.matches('#floor-input, #zone-input')) updateCalc();
+  });
+  itemsEl.addEventListener('change', (e)=>{
+    if(e.target.matches('input[type="checkbox"]')){
+      const i = Number(e.target.dataset.idx);
+      e.target.checked ? picked.add(i) : picked.delete(i);
+      updateCalc();
+    }
+  });
+  container.querySelector('#btnCopy').addEventListener('click', async ()=>{
+    try{
+      await navigator.clipboard.writeText(container.querySelector('#copyText').textContent);
+      alert('결과가 복사되었습니다.');
+    }catch{ alert('복사 실패: 권한을 확인하세요.'); }
+  });
+  container.querySelector('#btnNeed').addEventListener('click', neededFloor);
+
+  // 최초 렌더
+  renderItems();
+  updateCalc();
 }
