@@ -1,40 +1,100 @@
-/* 아이템 그리드: 화면 너비에 맞춰 자동 칼럼 수 */
+/* ===== 공통 색/기본 ===== */
+:root{
+  --bg:#0b0d11; --card:#141821; --line:#222b3a; --text:#e8eef6; --muted:#a7b0bf;
+  --ok:#7cf29a; --bad:#ff8a8a;
+}
+*{ box-sizing:border-box }
+html,body{ height:100% }
+body{
+  margin:0;
+  background:var(--bg);            /* 다크 배경 복구 */
+  color:var(--text);
+  font-family:ui-sans-serif,system-ui,Pretendard,Roboto,AppleSDGothicNeo;
+  overflow-x:hidden;               /* 가로 스크롤 방지 */
+}
+
+/* ===== 헤더 ===== */
+.topbar{ padding:14px 16px; border-bottom:1px solid var(--line); background:#10151f }
+.topbar.center{ display:flex; justify-content:center; align-items:center }
+.topbar h1{ margin:0; font-size:18px }
+
+/* ===== 레이아웃 공통 ===== */
+.container{ max-width:1200px; margin:18px auto; padding:0 14px }
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:14px;
+}
+.grid{ display:grid; gap:12px }
+.cols-3{ grid-template-columns:1fr 1fr 1fr }
+.cols-2{ grid-template-columns:1fr 1fr }
+label{ display:block; font-size:12px; color:var(--muted); margin-bottom:6px }
+input,select,button{
+  width:100%; padding:12px; border-radius:12px;
+  border:1px solid #2b3547; background:#0f1420; color:var(--text)
+}
+button{ cursor:pointer; font-weight:700 }
+.pill{ display:inline-block; padding:4px 8px; border-radius:999px; background:#0f1420; border:1px solid #2b3547; color:var(--muted); font-size:12px }
+.big{ font-size:22px; font-weight:800 }
+.muted{ color:var(--muted) }
+.ok{ color:var(--ok) } .bad{ color:var(--bad) }
+
+/* ===== 메인(히어로) – 예전 느낌으로 복구 ===== */
+.hero{
+  min-height:calc(100dvh - 80px);
+  display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+  padding-top:24px;
+}
+.hero-img{
+  width:min(520px, 85vw);          /* 모바일/PC 모두 자연스러운 폭 */
+  height:auto; object-fit:contain; display:block; margin:0 auto;
+  pointer-events:none;              /* 이미지가 클릭 가로채지 않도록 */
+}
+.hero .btn-wrap{
+  width:min(520px, 85vw);
+  display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-start; /* 왼쪽 정렬 */
+  margin-top:10px;
+}
+.hero .hero-btn{
+  flex:0 0 auto; padding:12px 14px; border-radius:12px;
+  border:1px solid var(--line); background:#111726; color:var(--text);
+  position:relative; z-index:2;    /* 이미지 위로 */
+}
+
+/* ===== 아이템 그리드: auto-fit 유지 (유동 칼럼) ===== */
 .item-grid{
-  display: grid;
-  /* 카드 최소폭은 160px, 그 이상이면 1fr로 균등배분 */
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
-  justify-items: center; /* 카드 가운데 정렬 */
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); /* 화면 폭에 따라 2~N 칼럼 자동 */
+  gap:12px;
+  justify-items:center;            /* 카드 중앙 정렬 */
 }
 
-/* 카드: 고정 폭 제거 (반응형 칼럼에 맞춰 늘고 줄도록) */
+/* 카드 – 예전 톤 유지 + 반응형 */
 .item-card{
-  width: 100%;
-  /* max-width:210px;  <-- 있으면 삭제 */
-  display: grid;
-  grid-template-rows: auto auto;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  overflow: hidden;
-  background: #121826;
-  justify-items: center;
-  text-align: center;
+  width:100%;                      /* 칼럼 폭에 맞게 늘/줄임 */
+  display:grid; grid-template-rows:auto auto;
+  border:1px solid var(--line); border-radius:16px; overflow:hidden;
+  background:#121826; justify-items:center; text-align:center;
 }
-
-/* 상단 영역 */
-.item-top{ padding: 10px; border-bottom: 1px solid var(--line); width: 100%; }
-.item-top img{ width: 72px; height: 72px; object-fit: contain; display: block; margin: 0 auto 6px; }
+.item-top{ grid-column:1/-1; padding:10px; border-bottom:1px solid var(--line); width:100% }
+.item-top img{ width:72px; height:72px; object-fit:contain; display:block; margin:0 auto 6px }
 .item-top .cap{
-  font-size: 12px; line-height: 1.25; color: var(--muted);
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  font-size:12px; line-height:1.25; color:var(--muted);
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
 }
-
-/* 하단 영역 */
 .item-bottom{
-  display: grid; grid-template-columns: 1fr 42px; gap: 8px; align-items: center; padding: 10px; width: 100%;
+  display:grid; grid-template-columns:1fr 42px; gap:8px; align-items:center; padding:10px; width:100%;
 }
-.price{ font-weight: 800; text-align: left; font-size: 16px; padding-left: 6px; }
-.item-check{ display: flex; justify-content: flex-end; padding-right: 6px; }
-.item-check input{ width: 20px; height: 20px; }
+.price{ font-weight:800; text-align:left; font-size:16px; padding-left:6px }
+.item-check{ display:flex; justify-content:flex-end; padding-right:6px }
+.item-check input{ width:20px; height:20px }
 
-/* 아주 작은 화면에서 카드가 비좁으면 자동으로 2열 이하로 떨어짐 (auto-fit 덕분에 미디어쿼리 최소화) */
+/* ===== 반응형(입력 카드 등) ===== */
+@media (max-width: 900px){
+  .cols-3, .cols-2{ grid-template-columns:1fr }
+  input,select,button{ padding:14px; font-size:16px }
+  .container{ padding:0 12px }
+  .item-top img{ width:64px; height:64px }
+  .item-bottom{ grid-template-columns:1fr 38px }
+}
