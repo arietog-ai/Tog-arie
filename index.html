@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>신의탑: 새로운세계 블러연합용 도우미</title>
 
-  <!-- Content Security Policy -->
+  <!-- Content Security Policy: 이미지 https:까지 허용 (프로젝트 페이지 경로/절대경로 이슈 대응) -->
   <meta http-equiv="Content-Security-Policy"
     content="
       default-src 'self';
       script-src 'self';
       connect-src 'self';
-      img-src 'self' data:;
+      img-src 'self' data: https:;
       style-src 'self' 'unsafe-inline';
       font-src 'self';
       frame-ancestors 'none';
@@ -20,7 +20,7 @@
   <!-- Referrer 정책 -->
   <meta name="referrer" content="no-referrer-when-downgrade">
 
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="./css/style.css" />
 </head>
 <body>
   <header class="topbar center">
@@ -29,6 +29,6 @@
 
   <main id="app"><!-- 라우팅 뷰 --></main>
 
-  <script type="module" src="js/app.js"></script>
+  <script type="module" src="./js/app.js"></script>
 </body>
 </html>
