@@ -1,10 +1,10 @@
 // js/feature_starter.js
 // 시동무기 강화 시뮬레이터 (정확 확률 계산 버전)
-// - 0강: 4옵션 랜덤, 중복 불가
-// - 목표: 옵션별 강화횟수(k), 합계=5
-// - 정확 확률 계산 (멀티노미얼)
-// - 출력: 기대 시동무기 개수, 예상 고급숫돌 사용량
-// - 로그는 사람이 읽기 좋은 포맷 + 복사 버튼
+// - 0강: 4옵션 랜덤, 중복 불가(수정 시 중복 방지)
+// - 목표: 옵션별 강화횟수(k), 합계=5 강제
+// - 정확 확률 계산(멀티노미얼 × 증가치 경우의수)
+// - 출력: 기대 시동무기 개수(1/p), 예상 고급숫돌(27/p)
+// - 로그: 읽기 좋은 포맷 + 📋 복사 버튼
 
 /* ===== 옵션 그룹/값 정의 ===== */
 const GROUP_A = ["물리관통력","마법관통력","물리저항력","마법저항력","치명타확률","치명타데미지증가"]; // %
@@ -73,7 +73,7 @@ function checkStartCfg(cfg){
 function reachableExact(startV, incs, k){
   const start = scale(startV);
   const incScaled = incs.map(scale);
-  let counts = new Map();
+  let counts = new Map(); // 합계 -> 경우의수(순서 고려)
   counts.set(0, 1);
   for(let i=0;i<k;i++){
     const next = new Map();
@@ -119,7 +119,7 @@ function exactProbability(startCfg, kMap, targetMap){
   const ks = opts.map(o => kMap[o] || 0);
   if (ks.reduce((a,b)=>a+b,0) !== STEPS) return 0;
 
-  let p = multinomialProb(ks, opts.length);
+  let p = multinomialProb(ks, opts.length); // 옵션 균등 선택 확률
   for(const o of opts){
     const k = kMap[o] || 0;
     if(k===0){
@@ -129,7 +129,7 @@ function exactProbability(startCfg, kMap, targetMap){
     const { waysMap } = reachableExact(startCfg[o], INCS[o], k);
     const deltaScaled = scale(targetMap[o] - startCfg[o]);
     const ways = waysMap[deltaScaled] || 0;
-    const denom = Math.pow(INCS[o].length, k);
+    const denom = Math.pow(INCS[o].length, k); // 각 강화에서 증가치 후보 균등
     p *= (ways / denom);
     if(p===0) break;
   }
@@ -156,7 +156,7 @@ export function mountStarter(app){
           </div>
           <div>
             <h3>2) 목표 설정</h3>
-            <div class="pill" id="starter-remaining">남은 강화횟수: 5</div>
+            <div class="pill" id="starter-remaining" style="margin-bottom:6px">남은 강화횟수: 5</div>
             <div id="starter-goal"></div>
           </div>
         </div>
@@ -180,13 +180,189 @@ export function mountStarter(app){
     </section>
   `;
 
+  // 홈
   byId('starter-home-btn').addEventListener('click', ()=>{ location.hash=''; });
 
-  /* ... (중간: 0강/목표 입력 구성 로직 동일, 생략) ... */
+  /* ---------- 0강 폼 ---------- */
+  const startHost = byId('starter-start');
 
+  function startRow(id){
+    return `
+      <div class="grid cols-2" style="align-items:end; gap:8px; margin-bottom:6px">
+        <div>
+          <label>옵션 ${id}</label>
+          <select class="s-name" id="s${id}-name">
+            ${OPTION_NAMES.map(n=>`<option value="${n}">${n}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label>0강 값</label>
+          <select class="s-val" id="s${id}-val"></select>
+        </div>
+      </div>
+    `;
+  }
+  startHost.innerHTML = startRow(1)+startRow(2)+startRow(3)+startRow(4);
+
+  // 랜덤 초기 배정
+  const defaultStart = makeInitialStartCfg();
+  [1,2,3,4].forEach((i,idx)=>{
+    const nameSel = byId(`s${i}-name`);
+    const n = Object.keys(defaultStart)[idx];
+    nameSel.value = n;
+  });
+
+  function refreshInitVal(id, setRandom=false){
+    const nameSel = byId(`s${id}-name`);
+    const valSel  = byId(`s${id}-val`);
+    const name = nameSel.value;
+    const arr = INIT_VALUES[name];
+    valSel.innerHTML = arr.map(v=>`<option value="${v}">${fmt(name, v)}</option>`).join('');
+    if(setRandom) valSel.value = randomChoice(arr);
+  }
+  [1,2,3,4].forEach(i=> refreshInitVal(i, true));
+
+  // 옵션 중복 방지
+  function selectedNames(){ return [1,2,3,4].map(i=>byId(`s${i}-name`).value); }
+  function syncOptionDisables(){
+    const chosen = selectedNames();
+    const nameSels = Array.from(document.querySelectorAll('.s-name'));
+    nameSels.forEach(sel=>{
+      const current = sel.value;
+      Array.from(sel.options).forEach(opt=>{
+        const val = opt.value;
+        opt.disabled = (val!==current) && chosen.includes(val);
+      });
+    });
+  }
+  syncOptionDisables();
+
+  [1,2,3,4].forEach(i=>{
+    byId(`s${i}-name`).addEventListener('change', ()=>{
+      refreshInitVal(i, false);
+      syncOptionDisables();
+      rebuildGoalSection();
+    });
+    byId(`s${i}-val`).addEventListener('change', rebuildGoalSection);
+  });
+
+  /* ---------- 목표 섹션 ---------- */
+  const goalHost = byId('starter-goal');
+  const remainingEl = byId('starter-remaining');
+
+  function getStartCfg(){
+    const names = selectedNames();
+    const vals  = [1,2,3,4].map(i => parseFloat(byId(`s${i}-val`).value));
+    const cfg = Object.fromEntries(names.map((n,i)=>[n, vals[i]]));
+    checkStartCfg(cfg);
+    return cfg;
+  }
+
+  function rebuildGoalSection(){
+    const startCfg = getStartCfg();
+    const names = Object.keys(startCfg);
+
+    // 빌드
+    goalHost.innerHTML = names.map((opt, idx)=>{
+      const id = `g${idx+1}`;
+      const kSel = `<select id="${id}-k">${[0,1,2,3,4,5].map(k=>`<option value="${k}">${k}회</option>`).join('')}</select>`;
+      const { values } = reachableExact(startCfg[opt], INCS[opt], 0);
+      const vSel = `<select id="${id}-val">${values.map(v=>`<option value="${v}">${fmt(opt, v)}</option>`).join('')}</select>`;
+      return `
+        <div class="card" style="margin-bottom:8px">
+          <div class="grid cols-3" style="align-items:end; gap:8px">
+            <div>
+              <label>옵션</label>
+              <input value="${opt}" id="${id}-name" disabled />
+            </div>
+            <div>
+              <label>강화 횟수(k)</label>
+              ${kSel}
+            </div>
+            <div>
+              <label>목표 값(정확히 k회 가능값)</label>
+              ${vSel}
+            </div>
+          </div>
+          <small class="muted">증가치 후보: ${INCS[opt].join(' / ')}${PERCENT_SET.has(opt)?' (%)':''}</small>
+        </div>
+      `;
+    }).join('');
+
+    // k 합 표시/제어 & 값 후보 갱신
+    const readKMap = ()=>{
+      const kMap = {};
+      names.forEach((opt, idx)=>{
+        const id = `g${idx+1}`;
+        kMap[opt] = parseInt(byId(`${id}-k`).value, 10);
+      });
+      return kMap;
+    };
+    const setRemaining = ()=>{
+      const used = Object.values(readKMap()).reduce((a,b)=>a+b,0);
+      const left = Math.max(0, STEPS - used);
+      remainingEl.textContent = `남은 강화횟수: ${left}`;
+      remainingEl.style.color = (left===0 ? 'var(--ok)' : 'var(--muted)');
+      return left;
+    };
+    const refreshValueChoices = ()=>{
+      const startCfg2 = getStartCfg();
+      names.forEach((opt, idx)=>{
+        const id = `g${idx+1}`;
+        const k = parseInt(byId(`${id}-k`).value,10);
+        const vEl = byId(`${id}-val`);
+        const prev = parseFloat(vEl.value);
+        const { values } = reachableExact(startCfg2[opt], INCS[opt], k);
+        vEl.innerHTML = values.map(v=>`<option value="${v}">${fmt(opt, v)}</option>`).join('');
+        if(values.includes(prev)) vEl.value = prev;
+      });
+    };
+
+    // 이벤트: k/값 변경 → 합 5 유지 + 후보 갱신 + compute()
+    names.forEach((opt, idx)=>{
+      const id = `g${idx+1}`;
+      const kEl = byId(`${id}-k`);
+      const vEl = byId(`${id}-val`);
+
+      kEl.addEventListener('change', ()=>{
+        let kMap = readKMap();
+        let used = Object.values(kMap).reduce((a,b)=>a+b,0);
+        if(used > STEPS){
+          const over = used - STEPS;
+          kMap[opt] = Math.max(0, kMap[opt] - over);
+          kEl.value = String(kMap[opt]);
+        }
+        setRemaining();
+        refreshValueChoices();
+        try { compute(); } catch(e) { showComputeError(e); }
+      });
+
+      vEl.addEventListener('change', ()=>{
+        try { compute(); } catch(e) { showComputeError(e); }
+      });
+    });
+
+    // 초기 표시 + 초기 계산
+    setRemaining();
+    refreshValueChoices();
+    try { compute(); } catch(e) { showComputeError(e); }
+  }
+
+  function showComputeError(e){
+    byId('starter-out-weapons').textContent = '-';
+    byId('starter-out-stones-exp').textContent = '-';
+    byId('starter-out-p').textContent = '성공확률 p: -';
+    byId('starter-log').textContent = '⚠️ ' + e.message;
+  }
+
+  rebuildGoalSection(); // 최초 1회
+
+  /* ---------- 계산 실행(정확 확률) ---------- */
   function compute(){
     const startCfg = getStartCfg();
     const names = Object.keys(startCfg);
+
+    // kMap / targetMap 수집
     const kMap = {};
     const targetMap = {};
     names.forEach((opt, idx)=>{
@@ -231,7 +407,7 @@ ${targetLog}
     byId('starter-log').textContent = text;
   }
 
-  // 복사 버튼 기능
+  // 복사 버튼
   byId('starter-copy').addEventListener('click', ()=>{
     navigator.clipboard.writeText(byId('starter-log').textContent)
       .then(()=> alert('시뮬레이션 결과가 복사되었습니다!'));
