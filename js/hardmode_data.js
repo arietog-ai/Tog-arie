@@ -12,20 +12,19 @@ export function hourlyFor(floor, zone){
   return +(baseA171() + df + dz).toFixed(1);
 }
 
-// 스키마 검증
+// 스키마 검증: 내부 이미지 경로만 허용
 const IMG_WHITELIST_REGEX = /^assets\/img\/[a-z0-9_\-]+(\.jpe?g|\.png)$/i;
 function validateItem(i){
   if(typeof i !== 'object' || i === null) return false;
-  if(typeof i.cat !== 'string') return false;
-  if(typeof i.name !== 'string') return false;
-  if(!Number.isFinite(i.price)) return false;
-  if(!Number.isInteger(i.times)) return false;
-  if(typeof i.img !== 'string') return false;
-  if(!IMG_WHITELIST_REGEX.test(i.img)) return false;
+  if(typeof i.cat !== 'string' || !i.cat) return false;
+  if(typeof i.name !== 'string' || !i.name) return false;
+  if(!Number.isFinite(i.price) || i.price < 0) return false;
+  if(!Number.isInteger(i.times) || i.times < 0) return false;
+  if(typeof i.img !== 'string' || !IMG_WHITELIST_REGEX.test(i.img)) return false;
   return true;
 }
 
-// 기본 JSON만 사용
+// 기본 JSON만 사용(수동 입력 제거)
 export async function loadShopItems(){
   try{
     const res = await fetch('data/hardmode_shop_items.json?v=' + Date.now(), { cache:'no-store' });
