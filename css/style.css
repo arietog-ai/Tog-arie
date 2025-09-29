@@ -108,3 +108,7 @@ button{ cursor:pointer; font-weight:700 }
   .item-top img{ width:64px; height:64px }
   .item-bottom{ grid-template-columns:1fr 38px }
 }
+
+/* ===== (추가) 시뮬 결과 가독성 ===== */
+.mono { white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+#starter-result { line-height: 1.45; }
