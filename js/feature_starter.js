@@ -1,9 +1,11 @@
 // js/feature_starter.js
-// 시동무기 강화 시뮬레이터 (사례B)
-// - 옵션 4개(중복 불가) 선택 + 0강 값 선택
-// - 목표값: 각 옵션별로 "해당 옵션이 k회 강화되었다고 가정"하고, 그때 도달 가능한 값들만 선택 가능
-// - 실제 시뮬은 무작위 분배(균등/잔여격차)로 5회 진행 → 성공확률 p 추정 → 기대 시동무기 개수 = 1/p
-// - 홈으로 버튼 포함
+// 시동무기 강화 시뮬레이터 (정확 확률 계산 버전; 시뮬 X)
+// - 초기 0강: 4옵션을 중복 없이 랜덤 배정, 각 옵션의 0강 값도 랜덤 배정
+// - 사용자는 옵션명/0강값을 수정할 수 있지만, 드롭다운에서 중복 방지 자동 적용
+// - 목표 설정: 각 옵션의 강화횟수 k_i(0..5) 선택, 4옵션의 k 합이 정확히 5가 되도록 강제
+//   + 각 옵션의 목표 수치는 "현재값 + (증가치 후보를 정확히 k_i번 합산)"으로 도달 가능한 값만 선택 가능
+// - 결과: p = 확률(5회 균등강화 + 증가치 랜덤으로 목표에 정확히 도달)
+//         기대 시동무기 개수 = 1/p, 기대 고급숯돌 = 27/p
 
 /* ===== 옵션 그룹/값 정의 ===== */
 const GROUP_A = ["물리관통력","마법관통력","물리저항력","마법저항력","치명타확률","치명타데미지증가"]; // %단위
@@ -27,17 +29,40 @@ const INCS = {
 
 /* ===== 강화/재료 상수 ===== */
 const STEPS = 5;                    // 4/8/12/16/20강 → 총 5회
-const XP_TOTAL_20 = 261900;
-const HIGH_STONE_XP = 10000;
-const HIGH_STONES_PER_RUN = 27;
-const XP_OVERFLOW = HIGH_STONES_PER_RUN * HIGH_STONE_XP - XP_TOTAL_20; // 8100
+const HIGH_STONES_PER_RUN = 27;     // 20강 1회 완주 비용(고급 숫돌)
 
 /* ===== 유틸 ===== */
+const byId = (id) => { const el=document.getElementById(id); if(!el) throw new Error(`#${id} 없음`); return el; };
 const rand = (n) => (Math.random()*n)|0;
 const randomChoice = (arr) => arr[rand(arr.length)];
 const unique = (arr) => Array.from(new Set(arr));
-const byId = (id) => { const el=document.getElementById(id); if(!el) throw new Error(`#${id} 없음`); return el; };
+const OPTION_NAMES = Object.keys(INIT_VALUES);
 
+/* --- 부동소수 오차 방지: 모든 값을 *2 스케일로 정수화 --- */
+const SCALE = 2; // 0.5 단위까지 정확
+const scale = (x) => Math.round(x * SCALE);
+
+/* ===== 초기 0강 랜덤 세팅(중복 없는 4옵션) ===== */
+function randomDistinctOptions(n=4){
+  const pool = OPTION_NAMES.slice();
+  // Shuffle (Fisher–Yates)
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = rand(i+1);
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, n);
+}
+
+function makeInitialStartCfg(){
+  const names = randomDistinctOptions(4);
+  const cfg = {};
+  for(const n of names){
+    cfg[n] = randomChoice(INIT_VALUES[n]);
+  }
+  return cfg;
+}
+
+/* ===== 0강 유효성 검사 ===== */
 function checkStartCfg(cfg){
   const keys = Object.keys(cfg);
   if(keys.length !== 4) throw new Error('0강 옵션은 정확히 4개여야 합니다.');
@@ -48,76 +73,101 @@ function checkStartCfg(cfg){
   });
 }
 
-/* ===== k회 강화 시 도달 가능한 목표값 집합 계산 =====
-   - start: 시작값
-   - incs: 증가치 배열 (예: [1.5,2.5,3.5,4.5])
-   - k: 그 옵션이 선택되어 강화되는 횟수 (0..5)
-   => 반환: start + (incs 중 임의조합을 k번 더한 값들) 의 집합(소수 1자리/정수 단위 정렬)
+/* ===== 정확히 k회 강화해서 도달 가능한 값 목록 =====
+   startV: 현재값, incs: 증가치 배열, k: 횟수
+   반환: { values: [목표값 ...], waysMap: {scaledTargetSum: ways} }
+   ways = (증가치 시퀀스의 "순서"까지 고려한 개수)  ← 확률 계산에 필요
 */
-function reachableValues(start, incs, k){
-  // 다항식식 합성 느낌으로 동적 구성(중복 제거)
-  let sums = new Set([0]);
+function reachableExact(startV, incs, k){
+  const start = scale(startV);
+  const incScaled = incs.map(scale);
+  // DP over sequences length = k
+  let counts = new Map(); // sum -> ways
+  counts.set(0, 1); // 0회 합 = 0 ways 1
+
   for(let i=0;i<k;i++){
-    const next = new Set();
-    for(const s of sums){
-      for(const v of incs){
-        next.add(Number((s+v).toFixed(4))); // 부동소수 오차 억제
+    const next = new Map();
+    for(const [s, c] of counts.entries()){
+      for(const inc of incScaled){
+        const ns = s + inc;
+        next.set(ns, (next.get(ns) || 0) + c);
       }
     }
-    sums = next;
+    counts = next;
   }
-  const vals = Array.from(sums).map(s => Number((start + s).toFixed(4)));
-  // 정렬(숫자 오름차순)
-  vals.sort((a,b)=>a-b);
-  return vals;
-}
 
-/* ===== 시뮬레이션 ===== */
-function simulateOneRun(startCfg, goalCfg, pickMode='gap'){
-  const values = {...startCfg};
-  const targets = Object.keys(goalCfg);
-  const getPending = () => targets.filter(k => values[k] < goalCfg[k]);
-
-  for(let i=0;i<STEPS;i++){
-    const pending = getPending();
-    if(pending.length === 0) break;
-
-    let chosen;
-    if(pickMode === 'uniform'){
-      chosen = randomChoice(targets);
-    }else{
-      const gaps = targets.map(k => Math.max(0, goalCfg[k] - values[k]));
-      const sum = gaps.reduce((a,b)=>a+b,0);
-      if(sum <= 0){
-        chosen = randomChoice(targets);
-      }else{
-        let r = Math.random()*sum, acc=0;
-        for(let idx=0; idx<targets.length; idx++){
-          acc += gaps[idx];
-          if(r <= acc){ chosen = targets[idx]; break; }
-        }
-        if(!chosen) chosen = targets[targets.length-1];
-      }
+  // 목표값 후보와 ways 매핑
+  const waysMap = {};
+  const values = [];
+  if(k===0){
+    values.push(startV); // 그대로
+    waysMap[0] = 1;
+  }else{
+    for(const [sum, ways] of counts.entries()){
+      const v = (start + sum) / SCALE;
+      values.push(v);
+      waysMap[sum] = ways;
     }
-    const inc = randomChoice(INCS[chosen]);
-    values[chosen] += inc;
   }
-  return targets.every(k => values[k] >= goalCfg[k]);
+  // 정렬
+  values.sort((a,b)=>a-b);
+  return { values, waysMap };
 }
 
-function estimateP(startCfg, goalCfg, trials=50000, pickMode='gap'){
-  let wins = 0;
-  for(let i=0;i<trials;i++){
-    if(simulateOneRun(startCfg, goalCfg, pickMode)) wins++;
+/* ===== 멀티노미얼 계수 & 확률 ===== */
+function factorial(n){ let r=1; for(let i=2;i<=n;i++) r*=i; return r; }
+function multinomialCoef(counts){ // counts=[k1,k2,k3,k4]
+  const n = counts.reduce((a,b)=>a+b,0);
+  let denom = 1;
+  for(const k of counts) denom *= factorial(k);
+  return factorial(n) / denom;
+}
+function multinomialProb(counts, m=4){
+  // 각 스텝 옵션 균등(1/m), 총 n=Σk_i
+  const n = counts.reduce((a,b)=>a+b,0);
+  return multinomialCoef(counts) * Math.pow(1/m, n);
+}
+
+/* ===== 확률 계산 =====
+   입력:
+     startCfg: {opt: startValue}
+     kMap: {opt: k_i} (합계=5)
+     targetMap: {opt: targetValue} (각각 reachableExact(start, incs, k_i) 중 하나)
+   출력:
+     p = P(5회 균등강화 & 증가치 랜덤으로 targetMap 정확 달성)
+       = Multinomial(k) * ∏_i [ ways_i / (|S_i|)^{k_i} ]
+*/
+function exactProbability(startCfg, kMap, targetMap){
+  const opts = Object.keys(startCfg);
+  const ks = opts.map(o => kMap[o] || 0);
+  const n = ks.reduce((a,b)=>a+b,0);
+  if(n !== STEPS) return 0;
+
+  let p = multinomialProb(ks, opts.length); // (5!/(k1!...k4!)) * (1/4)^5
+
+  for(const o of opts){
+    const k = kMap[o] || 0;
+    const incs = INCS[o];
+    if(k===0){
+      // k=0이면 target은 start와 동일해야 함 (UI에서 강제)
+      if(targetMap[o] !== startCfg[o]) return 0;
+      continue;
+    }
+    const { waysMap } = reachableExact(startCfg[o], incs, k);
+    const deltaScaled = scale(targetMap[o] - startCfg[o]); // 합산 증가량(스케일)
+    const ways = waysMap[deltaScaled] || 0;
+    const denom = Math.pow(incs.length, k); // 각 강화에서 증가치 균등
+    p *= (ways / denom);
+    if(p===0) break;
   }
-  return wins / trials;
+  return p;
 }
 
 /* ===== 뷰 ===== */
 export function mountStarter(app){
   app.innerHTML = `
     <section class="container">
-      <!-- 홈으로 -->
+      <!-- 상단 내비 -->
       <div style="display:flex; gap:8px; margin-bottom:8px">
         <button id="starter-home-btn" class="hero-btn" style="padding:10px 12px">← 홈으로</button>
         <span class="pill">시동무기 시뮬레이터</span>
@@ -126,36 +176,19 @@ export function mountStarter(app){
       <div class="card">
         <h2 style="margin:0 0 8px">시동무기 강화 시뮬레이터</h2>
         <p class="muted">
-          0→20강 동안 <b>총 5회</b> 강화. 한 번 강화마다 <b>4옵션 중 1개</b>만 증가, 증가치는 옵션별 <b>증가치 후보</b> 중 랜덤 적용.<br/>
-          목표값은 각 옵션에 대해 "<b>그 옵션이 k회 강화되었다고 가정</b>"했을 때 도달 가능한 값만 선택할 수 있어요.
+          0→20강 동안 <b>5회</b> 강화(매번 4옵션 중 1개만 증가, 증가치는 해당 옵션의 후보 중 랜덤).<br/>
+          목표 설정은 옵션별 강화횟수 <b>k</b>를 합계 5로 맞춰 고르고, 각 옵션은 "현재값에서 정확히 k회" 가능한 값만 선택합니다.
         </p>
 
         <div class="grid cols-2" style="margin-top:10px">
           <div>
-            <h3 style="margin:6px 0">1) 0강 옵션 (중복 불가)</h3>
+            <h3 style="margin:6px 0">1) 0강 옵션 (중복 불가, 기본은 랜덤 배정)</h3>
             <div id="starter-start"></div>
           </div>
           <div>
-            <h3 style="margin:6px 0">2) 목표값 (k회 강화 가정)</h3>
+            <h3 style="margin:6px 0">2) 목표 설정 (k 합=5)</h3>
+            <div class="pill" id="starter-remaining" style="margin-bottom:6px">남은 강화횟수: 5</div>
             <div id="starter-goal"></div>
-          </div>
-        </div>
-
-        <div class="grid cols-3" style="margin-top:10px">
-          <div>
-            <label>선택 정책</label>
-            <select id="starter-mode">
-              <option value="gap" selected>잔여 격차 가중</option>
-              <option value="uniform">균등(4옵션 동확률)</option>
-            </select>
-          </div>
-          <div>
-            <label>시뮬레이션 횟수</label>
-            <input id="starter-trials" type="number" min="5000" step="5000" value="50000" />
-          </div>
-          <div>
-            <label>실행</label>
-            <button id="starter-run">시뮬레이션 실행</button>
           </div>
         </div>
 
@@ -163,16 +196,15 @@ export function mountStarter(app){
           <div class="card">
             <div class="big">① 20강 1회 시 고급숯돌</div>
             <div class="pill" style="margin-top:6px">고급숯돌 1개 = 10,000 XP</div>
-            <div id="starter-out-stones" class="big ok" style="margin-top:8px"></div>
-            <div class="muted" style="margin-top:6px">
-              총 필요 XP: ${XP_TOTAL_20.toLocaleString()} / 완주당 숫돌 ${HIGH_STONES_PER_RUN}개 (잉여 ${XP_OVERFLOW.toLocaleString()} XP)
-            </div>
+            <div id="starter-out-stones" class="big ok" style="margin-top:8px">${HIGH_STONES_PER_RUN} 개</div>
+            <div class="muted" style="margin-top:6px">완주당 숫돌 ${HIGH_STONES_PER_RUN}개 (상수)</div>
           </div>
           <div class="card">
             <div class="big">② 목표 달성까지 필요한 시동무기 개수(기대)</div>
-            <div class="pill" style="margin-top:6px">= 1 / p (p: 1회 완주 성공확률)</div>
-            <div id="starter-out-weapons" class="big ok" style="margin-top:8px"></div>
-            <div id="starter-out-p" class="muted" style="margin-top:6px"></div>
+            <div class="pill" style="margin-top:6px">= 1 / p (p: 정확 확률)</div>
+            <div id="starter-out-weapons" class="big ok" style="margin-top:8px">-</div>
+            <div id="starter-out-stones-exp" class="muted" style="margin-top:6px">예상 고급숯돌: -</div>
+            <div id="starter-out-p" class="muted" style="margin-top:6px">성공확률 p: -</div>
           </div>
         </div>
 
@@ -181,17 +213,14 @@ export function mountStarter(app){
     </section>
   `;
 
-  // 홈으로
+  // 홈 버튼
   byId('starter-home-btn').addEventListener('click', ()=>{ location.hash=''; });
 
-  /* ---------- 동적 폼: 0강 ---------- */
-  const OPTION_NAMES = Object.keys(INIT_VALUES);
+  /* ---------- 0강 폼: 중복 방지 + 랜덤 초기 ---------- */
   const startHost = byId('starter-start');
-  const goalHost  = byId('starter-goal');
-
   function startRow(id){
     return `
-      <div class="grid cols-3" style="align-items:end; gap:8px; margin-bottom:6px">
+      <div class="grid cols-2" style="align-items:end; gap:8px; margin-bottom:6px">
         <div>
           <label>옵션 ${id}</label>
           <select class="s-name" id="s${id}-name">
@@ -202,30 +231,30 @@ export function mountStarter(app){
           <label>0강 값</label>
           <select class="s-val" id="s${id}-val"></select>
         </div>
-        <div>
-          <label>삭제</label>
-          <button type="button" class="s-clear" data-id="${id}">지우기</button>
-        </div>
       </div>
     `;
   }
   startHost.innerHTML = startRow(1)+startRow(2)+startRow(3)+startRow(4);
 
-  // 0강 값 옵션 갱신
-  function refreshInitVal(id){
+  // 랜덤 초기 배정
+  const defaultStart = makeInitialStartCfg();
+  [1,2,3,4].forEach((i,idx)=>{
+    const nameSel = byId(`s${i}-name`);
+    const n = Object.keys(defaultStart)[idx];
+    nameSel.value = n;
+  });
+  function refreshInitVal(id, setRandom=false){
     const nameSel = byId(`s${id}-name`);
     const valSel  = byId(`s${id}-val`);
     const name = nameSel.value;
-    const vals = INIT_VALUES[name] || [];
-    valSel.innerHTML = vals.map(v=>`<option value="${v}">${v}</option>`).join('');
+    const arr = INIT_VALUES[name];
+    valSel.innerHTML = arr.map(v=>`<option value="${v}">${v}</option>`).join('');
+    if(setRandom) valSel.value = randomChoice(arr);
   }
+  [1,2,3,4].forEach(i=> refreshInitVal(i, true)); // 초기 값 랜덤
 
-  // 선택된 옵션들 수집
-  function selectedNames(){
-    return [1,2,3,4].map(i=>byId(`s${i}-name`).value);
-  }
-
-  // ★ 옵션 중복 방지: 이미 선택된 항목은 다른 셀렉트에서 비활성화
+  // 옵션 중복 방지(다른 선택지 비활성화)
+  function selectedNames(){ return [1,2,3,4].map(i=>byId(`s${i}-name`).value); }
   function syncOptionDisables(){
     const chosen = selectedNames();
     const nameSels = Array.from(document.querySelectorAll('.s-name'));
@@ -234,143 +263,192 @@ export function mountStarter(app){
       Array.from(sel.options).forEach(opt=>{
         const val = opt.value;
         if(val === current){
-          opt.disabled = false; // 본인 선택은 허용
+          opt.disabled = false;
         }else{
-          opt.disabled = chosen.includes(val); // 다른 곳에서 이미 선택 → disable
+          opt.disabled = chosen.includes(val);
         }
       });
     });
   }
+  syncOptionDisables();
 
-  // 초기화 + 이벤트 바인딩
+  // 변경 이벤트
   [1,2,3,4].forEach(i=>{
-    refreshInitVal(i);
     byId(`s${i}-name`).addEventListener('change', ()=>{
-      refreshInitVal(i);
+      refreshInitVal(i, false);
       syncOptionDisables();
-      rebuildGoalInputs(); // 목표 섹션도 갱신
+      rebuildGoalSection(); // 목표 섹션 갱신
     });
-    byId(`s${i}-val`).addEventListener('change', rebuildGoalInputs);
-  });
-  // 지우기 버튼: 기본값 첫 항목으로 리셋
-  Array.from(document.querySelectorAll('.s-clear')).forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const id = btn.dataset.id;
-      byId(`s${id}-name`).selectedIndex = 0;
-      refreshInitVal(id);
-      syncOptionDisables();
-      rebuildGoalInputs();
-    });
+    byId(`s${i}-val`).addEventListener('change', rebuildGoalSection);
   });
 
-  syncOptionDisables(); // 최초 1회
-  rebuildGoalInputs();  // 최초 1회
+  /* ---------- 목표 설정: k 합 = 5 강제 & 값 후보 자동 ---------- */
+  const goalHost = byId('starter-goal');
+  const remainingEl = byId('starter-remaining');
 
-  /* ---------- 동적 폼: 목표(k회 강화 가정) ---------- */
-  function rebuildGoalInputs(){
+  function getStartCfg(){
     const names = selectedNames();
-    const startVals = [1,2,3,4].map(i => parseFloat(byId(`s${i}-val`).value));
-    const pairs = names.map((n,idx)=>[n,startVals[idx]]);
+    const vals  = [1,2,3,4].map(i => parseFloat(byId(`s${i}-val`).value));
+    const cfg = Object.fromEntries(names.map((n,i)=>[n, vals[i]]));
+    checkStartCfg(cfg);
+    return cfg;
+  }
 
-    // 같은 옵션 여러 번 골랐을 경우(이론상 막혀 있지만 방어)
-    if(unique(names).length !== 4) {
-      goalHost.innerHTML = `<div class="muted">⚠️ 0강 옵션 중복을 없애면 목표 선택이 활성화됩니다.</div>`;
-      return;
-    }
+  function rebuildGoalSection(){
+    const startCfg = getStartCfg();
+    const names = Object.keys(startCfg);
 
-    // 목표 UI 빌드: 옵션명, k(0..5) 선택, 목표값 자동 리스트
-    goalHost.innerHTML = pairs.map(([opt, startVal], i)=>{
-      const thisId = `g${i+1}`;
-      const kSel = `<select id="${thisId}-k">${[0,1,2,3,4,5].map(k=>`<option value="${k}">${k}회</option>`).join('')}</select>`;
-      const vals = reachableValues(startVal, INCS[opt], 0); // 초기 k=0 표시
-      const vSel = `<select id="${thisId}-val">${vals.map(v=>`<option value="${v}">${v}</option>`).join('')}</select>`;
+    // k 슬라이더/셀렉트 + 목표값 select
+    goalHost.innerHTML = names.map((opt, idx)=>{
+      const id = `g${idx+1}`;
+      // k=0~5 select
+      const kSel = `<select id="${id}-k">${[0,1,2,3,4,5].map(k=>`<option value="${k}">${k}회</option>`).join('')}</select>`;
+      // 초기엔 k=0 가정 → 후보 1개(현재값)
+      const { values } = reachableExact(startCfg[opt], INCS[opt], 0);
+      const vSel = `<select id="${id}-val">${values.map(v=>`<option value="${v}">${v}</option>`).join('')}</select>`;
+
       return `
         <div class="card" style="margin-bottom:8px">
           <div class="grid cols-3" style="align-items:end; gap:8px">
             <div>
-              <label>목표 옵션</label>
-              <input value="${opt}" id="${thisId}-name" disabled />
+              <label>옵션</label>
+              <input value="${opt}" id="${id}-name" disabled />
             </div>
             <div>
-              <label>강화 적용 횟수(k)</label>
+              <label>강화 횟수(k)</label>
               ${kSel}
             </div>
             <div>
-              <label>목표 값(도달 가능 집합)</label>
+              <label>목표 값(정확히 k회 가능값)</label>
               ${vSel}
             </div>
           </div>
-          <small class="muted">설명: 이 목표값 리스트는 "${opt}"가 k회 강화되었다고 가정할 때
-          <b>증가치 후보(${INCS[opt].join('/')})</b>를 조합하여 도달 가능한 값만 보여줍니다.
-          (실제 시뮬은 랜덤 분배이므로 k회가 보장되진 않습니다.)</small>
+          <small class="muted">증가치 후보: ${INCS[opt].join(' / ')}</small>
         </div>
       `;
     }).join('');
 
-    // k 변경 시 목표값 리스트 재계산
-    names.forEach((opt, idx)=>{
-      const thisId = `g${idx+1}`;
-      const kEl = byId(`${thisId}-k`);
-      const vEl = byId(`${thisId}-val`);
-      const startVal = startVals[idx];
-
-      const refresh = ()=>{
-        const k = parseInt(kEl.value,10);
-        const vals = reachableValues(startVal, INCS[opt], k);
+    // 남은 강화 횟수 표시 & k 합=5 강제
+    function readKMap(){
+      const kMap = {};
+      names.forEach((opt, idx)=>{
+        const id = `g${idx+1}`;
+        kMap[opt] = parseInt(byId(`${id}-k`).value, 10);
+      });
+      return kMap;
+    }
+    function setRemaining(){
+      const kMap = readKMap();
+      const used = Object.values(kMap).reduce((a,b)=>a+b,0);
+      const left = Math.max(0, STEPS - used);
+      remainingEl.textContent = `남은 강화횟수: ${left}`;
+      remainingEl.style.color = (left===0 ? 'var(--ok)' : 'var(--muted)');
+      return left;
+    }
+    function refreshValueChoices(){
+      const startCfg = getStartCfg();
+      names.forEach((opt, idx)=>{
+        const id = `g${idx+1}`;
+        const k = parseInt(byId(`${id}-k`).value,10);
+        const vEl = byId(`${id}-val`);
         const prev = parseFloat(vEl.value);
-        vEl.innerHTML = vals.map(v=>`<option value="${v}">${v}</option>`).join('');
-        // 이전 선택이 여전히 유효하면 유지
-        const keep = vals.find(x=>Number(x)===Number(prev));
-        if(keep!==undefined) vEl.value = prev;
-      };
-      kEl.addEventListener('change', refresh);
-      refresh();
+        const { values } = reachableExact(startCfg[opt], INCS[opt], k);
+        vEl.innerHTML = values.map(v=>`<option value="${v}">${v}</option>`).join('');
+        // 가능한 경우 이전 선택 유지
+        if(values.includes(prev)) vEl.value = prev;
+      });
+    }
+
+    // k 변경 처리: 합이 5를 넘으면 방금 바꾼 셀을 자동으로 줄여서 5에 맞춤
+    names.forEach((opt, idx)=>{
+      const id = `g${idx+1}`;
+      const kEl = byId(`${id}-k`);
+      kEl.addEventListener('change', ()=>{
+        // 먼저 값 갱신
+        let kMap = readKMap();
+        let used = Object.values(kMap).reduce((a,b)=>a+b,0);
+        if(used > STEPS){
+          // 초과량을 현재 셀에서 줄여서 맞춤
+          const over = used - STEPS;
+          const cur = kMap[opt];
+          kMap[opt] = Math.max(0, cur - over);
+          kEl.value = String(kMap[opt]);
+        }
+        setRemaining();
+        refreshValueChoices();
+      });
     });
+
+    setRemaining();
+    refreshValueChoices();
   }
 
-  /* ---------- 실행 ---------- */
-  byId('starter-run').addEventListener('click', ()=>{
-    const log = byId('starter-log');
-    try{
-      // 0강 수집
-      const names = selectedNames();
-      const values = [1,2,3,4].map(i => parseFloat(byId(`s${i}-val`).value));
-      const startCfg = Object.fromEntries(names.map((n,i)=>[n, values[i]]));
-      checkStartCfg(startCfg);
+  rebuildGoalSection();
 
-      // 목표 수집(각 옵션별 k 가정에 따른 목록에서 선택한 값)
-      const goalCfg = {};
-      names.forEach((opt, idx)=>{
-        const thisId = `g${idx+1}`;
-        goalCfg[opt] = parseFloat(byId(`${thisId}-val`).value);
-      });
+  /* ---------- 계산 실행(정확 확률) ---------- */
+  function compute(){
+    const startCfg = getStartCfg();
+    const names = Object.keys(startCfg);
+    // kMap / targetMap 수집
+    const kMap = {};
+    const targetMap = {};
+    names.forEach((opt, idx)=>{
+      const id = `g${idx+1}`;
+      kMap[opt] = parseInt(byId(`${id}-k`).value,10);
+      targetMap[opt] = parseFloat(byId(`${id}-val`).value);
+    });
 
-      // 시뮬 파라미터
-      const trials = Math.max(5000, parseInt(byId('starter-trials').value,10) || 50000);
-      const mode   = byId('starter-mode').value;
+    // k 합 5 확인
+    const sumK = Object.values(kMap).reduce((a,b)=>a+b,0);
+    if(sumK !== STEPS){
+      throw new Error(`강화 횟수 합이 ${STEPS}가 아닙니다. (현재 ${sumK})`);
+    }
 
-      // 출력 ①: 20강 1회 시 고급숯돌
-      byId('starter-out-stones').textContent = `${HIGH_STONES_PER_RUN.toLocaleString()} 개`;
+    const p = exactProbability(startCfg, kMap, targetMap); // 정확 확률
+    const expectedWeapons = (p>0) ? (1/p) : Infinity;
+    const expectedStones  = (p>0) ? (HIGH_STONES_PER_RUN/p) : Infinity;
 
-      // 확률 p 추정 → 기대 시동무기 개수 1/p
-      const p = estimateP(startCfg, goalCfg, trials, mode);
-      const expectedWeapons = p===0 ? Infinity : (1/p);
-      byId('starter-out-weapons').textContent = (p===0 ? '∞ 개' : `${expectedWeapons.toFixed(2)} 개`);
-      byId('starter-out-p').textContent = `성공확률 p ≈ ${(p*100).toFixed(4)}%  (시뮬 ${trials.toLocaleString()}회, 모드=${mode})`;
+    // 출력
+    byId('starter-out-weapons').textContent = (p>0 ? `${expectedWeapons.toFixed(2)} 개` : '∞ 개');
+    byId('starter-out-stones-exp').textContent = (p>0 ? `예상 고급숯돌: ${expectedStones.toFixed(2)} 개` : '예상 고급숯돌: ∞');
+    byId('starter-out-p').textContent = `성공확률 p ≈ ${(p*100).toFixed(6)}%`;
 
-      // 상세 로그
-      log.textContent =
+    // 로그
+    byId('starter-log').textContent =
 `입력 요약
 - 0강: ${JSON.stringify(startCfg)}
-- 목표: ${JSON.stringify(goalCfg)}
-- 정책: ${mode}, 시뮬: ${trials.toLocaleString()}회
+- k(합=5): ${JSON.stringify(kMap)}
+- 목표: ${JSON.stringify(targetMap)}
 
-결과
-- ① 20강 1회 시 고급숯돌: ${HIGH_STONES_PER_RUN}개 (총 XP ${XP_TOTAL_20.toLocaleString()}, 잉여 ${XP_OVERFLOW.toLocaleString()} XP)
-- ② 목표 달성까지 필요한 시동무기(기대값): ${p===0 ? '∞ 개' : expectedWeapons.toFixed(2) + ' 개'}
--   참고) 성공확률 p ≈ ${(p*100).toFixed(4)}%`;
-    }catch(e){
-      log.textContent = '❌ 오류: ' + e.message;
+계산
+- 성공확률 p ≈ ${(p*100).toFixed(6)}%
+- 기대 시동무기 개수 = ${p>0 ? (1/p).toFixed(4) : '∞'}
+- 기대 고급숯돌 개수 = ${p>0 ? (HIGH_STONES_PER_RUN/p).toFixed(4) : '∞'} (1회 완주 27개)`;
+  }
+
+  // 결과 계산은 목표/0강 변경 시마다 자동 갱신
+  function bindAutoCompute(){
+    const els = [
+      ...document.querySelectorAll('.s-name'),
+      ...document.querySelectorAll('.s-val'),
+      ...document.querySelectorAll('[id^="g"][id$="-k"]'),
+      ...document.querySelectorAll('[id^="g"][id$="-val"]'),
+    ];
+    els.forEach(el=>{
+      el.addEventListener('change', ()=>{
+        try { compute(); } catch(e){
+          byId('starter-out-weapons').textContent = '-';
+          byId('starter-out-stones-exp').textContent = '예상 고급숯돌: -';
+          byId('starter-out-p').textContent = '성공확률 p: -';
+          byId('starter-log').textContent = '⚠️ ' + e.message;
+        }
+      });
+    });
+    // 초기 1회 계산
+    try { compute(); } catch(e){
+      byId('starter-log').textContent = '⚠️ ' + e.message;
     }
-  });
+  }
+
+  bindAutoCompute();
 }
