@@ -6,13 +6,14 @@ const brokenImages = [];
 function renderBrokenDiag(){
   const box = document.getElementById('diag');
   if(!box) return;
-  if(!brokenImages.length){ box.style.display='none'; box.textContent=''; return; }
-  box.style.display='block';
-  box.textContent = [
-    `이미지 로드 실패 ${brokenImages.length}건`,
-    '※ 파일명/확장자/대소문자/경로를 assets/img/ 와 일치시키세요.',
-    ...brokenImages.map((u,i)=>`${i+1}. ${u}`)
-  ].join('\n');
+  const lines = [];
+  if(brokenImages.length){
+    lines.push(`이미지 로드 실패 ${brokenImages.length}건`);
+    lines.push('※ 파일명/확장자/대소문자/경로를 assets/img/ 와 일치시키세요.');
+    brokenImages.forEach((u,i)=>lines.push(`${i+1}. ${u}`));
+  }
+  box.style.display = lines.length ? 'block' : 'none';
+  box.textContent = lines.join('\n');
 }
 
 export async function mountShop(container){
@@ -89,25 +90,25 @@ export async function mountShop(container){
         </div>
         <pre id="copyText" class="muted" style="margin-top:8px; white-space:pre-wrap"></pre>
       </div>
-    </div>
 
-    <!-- Sticky 결과바 -->
-    <div class="sticky-bar">
-      <div class="sticky-inner">
-        <div>
-          <div class="pill">현재 위치</div>
-          <div id="sticky-pos" class="big"></div>
-        </div>
-        <div>
-          <div class="pill">2주 누적</div>
-          <div id="sticky-two" class="big"></div>
-        </div>
-        <div>
-          <div class="pill">선택 합계</div>
-          <div id="sticky-sum" class="big"></div>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;justify-content:flex-end">
-          <button id="sticky-copy" style="width:auto">복사</button>
+      <!-- Sticky 결과바 -->
+      <div class="sticky-bar">
+        <div class="sticky-inner">
+          <div>
+            <div class="pill">현재 위치</div>
+            <div id="sticky-pos" class="big"></div>
+          </div>
+          <div>
+            <div class="pill">2주 누적</div>
+            <div id="sticky-two" class="big"></div>
+          </div>
+          <div>
+            <div class="pill">선택 합계</div>
+            <div id="sticky-sum" class="big"></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;justify-content:flex-end">
+            <button id="sticky-copy" style="width:auto">복사</button>
+          </div>
         </div>
       </div>
     </div>
@@ -121,36 +122,25 @@ export async function mountShop(container){
 
   el('go-home').addEventListener('click', ()=> location.hash = '');
 
-  // 데이터 로드 (+ 재시도 버튼)
-  let items = await loadShopItems();
-  if(!items.length){
+  // 📥 데이터 로드 + 진단 표시(원시/검증 개수)
+  let rawCount = 0, okCount = 0, items = [];
+  {
+    const load = await loadShopItems();
+    rawCount = load.rawCount; okCount = load.okCount; items = load.items;
     diag.style.display = 'block';
-    diag.textContent = '데이터가 비었습니다. data/hardmode_shop_items.json 확인 후 다시 시도하세요.';
-    const btn = document.createElement('button'); btn.textContent='재시도';
-    btn.addEventListener('click', async ()=>{
-      diag.textContent='재시도 중...';
-      items = await loadShopItems();
-      if(items.length){ diag.style.display='none'; init(); }
-      else diag.textContent='여전히 실패했습니다. JSON/경로/캐시를 확인하세요.';
-    });
-    diag.appendChild(document.createElement('br'));
-    diag.appendChild(btn);
-  }else{
-    init();
+    diag.textContent = `진단: JSON 원시 ${rawCount}개 / 검증 통과 ${okCount}개`;
+    if(!okCount){
+      diag.textContent += '\n※ 모든 항목이 검증에서 탈락했습니다. 이미지 경로/확장자를 확인하세요.';
+    }
   }
 
-  function init(){
-    setupFilters();
-    renderItems();
-    updateCalc();
+  if(!items.length){
+    // 렌더를 멈추지 않음: 진단만 띄우고 종료
+    return;
   }
 
-  /* ========= 검색/필터 ========= */
-  const state = {
-    picked: new Set(),
-    category: '전체',
-    keyword: ''
-  };
+  /* ========= 상태/필터 ========= */
+  const state = { picked:new Set(), category:'전체', keyword:'' };
   const categories = ['전체', ...Array.from(new Set(items.map(x=>x.cat)))];
 
   function setupFilters(){
@@ -164,8 +154,7 @@ export async function mountShop(container){
         state.category = cat;
         chipsEl.querySelectorAll('.filter-chip').forEach(n=>n.classList.remove('active'));
         chip.classList.add('active');
-        renderItems();
-        updateCalc();
+        renderItems(); updateCalc();
       });
       frag.appendChild(chip);
     });
@@ -173,8 +162,7 @@ export async function mountShop(container){
 
     searchEl.addEventListener('input', ()=>{
       state.keyword = (searchEl.value||'').trim();
-      renderItems();
-      updateCalc();
+      renderItems(); updateCalc();
     });
 
     el('btn-select-all').addEventListener('click', ()=>{
@@ -198,36 +186,27 @@ export async function mountShop(container){
     return items
       .map((it, i)=>({it, i}))
       .filter(({it}) => (state.category==='전체' || it.cat===state.category))
-      .filter(({it}) => {
-        if(!kw) return true;
-        return it.cat.toLowerCase().includes(kw) || it.name.toLowerCase().includes(kw);
-      });
+      .filter(({it}) => !kw || it.cat.toLowerCase().includes(kw) || it.name.toLowerCase().includes(kw));
   }
-  // 렌더 순서 기준의 index → 원본 items의 index 매핑
   let lastFiltered = [];
   function filteredIndexToGlobalIndex(i){ return lastFiltered[i]?.i; }
 
-  /* ========= 렌더 ========= */
   function createItemCard(r, idxGlobal){
-    const card = document.createElement('div');
-    card.className = 'item-card';
+    const card = document.createElement('div'); card.className = 'item-card';
 
-    const top = document.createElement('div');
-    top.className = 'item-top';
-
+    const top = document.createElement('div'); top.className = 'item-top';
     const img = document.createElement('img');
-    img.alt = r.cat;
-    img.loading = 'lazy';
-    // ./ 프리픽스로 프로젝트 페이지 경로(/Tog-arie)에서도 안전하게
+    img.alt = r.cat; img.loading = 'lazy';
+
+    // ./ 프리픽스 강제(프로젝트 페이지 경로 보정)
     const src0 = r.img.startsWith('http') ? r.img : (r.img.startsWith('./') ? r.img : ('./'+r.img));
     img.src = src0;
-    // 404 시 확장자 스왑 1회 재시도 + 실패 진단 노출
     img.onerror = () => {
       try{
         const u = new URL(img.src, location.href);
-        if (u.pathname.match(/\.(jpg|png)$/i)) {
-          const wasJpg = /\.jpg$/i.test(u.pathname);
-          u.pathname = u.pathname.replace(/\.(jpg|png)$/i, wasJpg ? '.png' : '.jpg');
+        if (u.pathname.match(/\.[A-Za-z0-9]+$/)) {
+          const isJpg = /\.jpe?g$/i.test(u.pathname);
+          u.pathname = u.pathname.replace(/\.[A-Za-z0-9]+$/, isJpg ? '.png' : '.jpg');
           img.onerror = () => { brokenImages.push(img.src); renderBrokenDiag(); };
           img.src = u.pathname + u.search + u.hash;
         } else {
@@ -238,33 +217,19 @@ export async function mountShop(container){
       }
     };
 
-    const cap = document.createElement('div');
-    cap.className = 'cap';
+    const cap = document.createElement('div'); cap.className = 'cap';
     cap.textContent = `${r.cat} · ${r.name} × ${r.times}회`;
+    top.appendChild(img); top.appendChild(cap);
 
-    top.appendChild(img);
-    top.appendChild(cap);
-
-    const bottom = document.createElement('div');
-    bottom.className = 'item-bottom';
-
-    const priceDiv = document.createElement('div');
-    priceDiv.className = 'price';
-    priceDiv.textContent = nf(r.price);
-
-    const checkDiv = document.createElement('div');
-    checkDiv.className = 'item-check';
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.dataset.idx = idxGlobal;
+    const bottom = document.createElement('div'); bottom.className = 'item-bottom';
+    const priceDiv = document.createElement('div'); priceDiv.className = 'price'; priceDiv.textContent = nf(r.price);
+    const checkDiv = document.createElement('div'); checkDiv.className = 'item-check';
+    const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.dataset.idx = idxGlobal;
     if(state.picked.has(idxGlobal)) checkbox.checked = true;
     checkDiv.appendChild(checkbox);
 
-    bottom.appendChild(priceDiv);
-    bottom.appendChild(checkDiv);
-
-    card.appendChild(top);
-    card.appendChild(bottom);
+    bottom.appendChild(priceDiv); bottom.appendChild(checkDiv);
+    card.appendChild(top); card.appendChild(bottom);
     return card;
   }
 
@@ -272,10 +237,9 @@ export async function mountShop(container){
     itemsEl.innerHTML = '';
     const frag = document.createDocumentFragment();
     lastFiltered = filteredItems();
-    lastFiltered.forEach(({it, i})=>{
-      frag.appendChild(createItemCard(it, i));
-    });
+    lastFiltered.forEach(({it, i})=> frag.appendChild(createItemCard(it, i)));
     itemsEl.appendChild(frag);
+    renderBrokenDiag();
   }
 
   function selectedTotal(){
@@ -296,8 +260,6 @@ export async function mountShop(container){
     const two = Math.round(perH*TWO_WEEKS);
     el('curLabel').textContent = `${f}층 ${z}구역`;
     el('curHour').textContent  = `시급: ${nf1(perH)} / h · 2주: ${nf(two)}`;
-
-    // sticky
     el('sticky-pos').textContent = `${f}층 ${z}구역`;
     el('sticky-two').textContent = `${nf(two)}`;
   }
@@ -308,7 +270,6 @@ export async function mountShop(container){
     const per = hourlyFor(f,z);
     const two = Math.round(per*TWO_WEEKS);
     const {sum, lines, count} = selectedTotal();
-
     const fmt = (container.querySelector('input[name="copyfmt"]:checked')?.value) || 'short';
     if(fmt === 'short'){
       return `[블러연합 계산] ${f}층 ${z}구역 · 시급 ${nf1(per)}/h · 2주 ${nf(two)} · 선택합계 ${nf(sum)} (${count}개)`;
@@ -347,11 +308,9 @@ ${lines.length ? lines.join('\n') : '선택 없음'}`;
       lack.textContent=`부족분: ${nf(sum - income)} (2주: ${nf(income)})`;
     }
 
-    // sticky
     el('sticky-sum').textContent = nf(sum);
-
-    // 미리보기
-    el('copyText').textContent = buildCopyText();
+    const copyBox = document.getElementById('copyText');
+    if(copyBox) copyBox.textContent = buildCopyText();
   }
 
   function neededFloor(){
@@ -365,15 +324,18 @@ ${lines.length ? lines.join('\n') : '선택 없음'}`;
     el('lack').textContent = lack <= 0
       ? '현재 층에서 구매 가능'
       : `부족분: ${nf(lack)} → 최소 ${f}층 ${z}구역 필요`;
-    el('copyText').textContent = buildCopyText();
+    const copyBox = document.getElementById('copyText');
+    if(copyBox) copyBox.textContent = buildCopyText();
   }
 
-  /* ========= 이벤트 바인딩 ========= */
+  /* ========= 이벤트 ========= */
   container.addEventListener('input', (e)=>{
     if(e.target.matches('#floor-input, #zone-input')) updateCalc();
-    if(e.target.name === 'copyfmt') el('copyText').textContent = buildCopyText();
+    if(e.target.name === 'copyfmt'){
+      const copyBox = document.getElementById('copyText');
+      if(copyBox) copyBox.textContent = buildCopyText();
+    }
   });
-
   itemsEl.addEventListener('change', (e)=>{
     if(e.target.matches('input[type="checkbox"]')){
       const i = Number(e.target.dataset.idx);
@@ -381,21 +343,22 @@ ${lines.length ? lines.join('\n') : '선택 없음'}`;
       updateCalc();
     }
   });
-
-  el('btnNeed').addEventListener('click', neededFloor);
-  el('btnCopy').addEventListener('click', async ()=>{
+  document.getElementById('btnNeed').addEventListener('click', neededFloor);
+  document.getElementById('btnCopy').addEventListener('click', async ()=>{
     try{
-      await navigator.clipboard.writeText(el('copyText').textContent);
+      await navigator.clipboard.writeText(buildCopyText());
       alert('결과가 복사되었습니다.');
     }catch{ alert('복사 실패: 브라우저 권한을 확인하세요.'); }
   });
-  container.querySelector('#sticky-copy').addEventListener('click', async ()=>{
+  document.getElementById('sticky-copy').addEventListener('click', async ()=>{
     try{
       await navigator.clipboard.writeText(buildCopyText());
       alert('결과가 복사되었습니다.');
     }catch{ alert('복사 실패: 브라우저 권한을 확인하세요.'); }
   });
 
-  // 초기 렌더
+  // 초기 설정
+  setupFilters();
+  renderItems();
   updateCalc();
 }
