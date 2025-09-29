@@ -1,8 +1,8 @@
 // js/feature_starter.js
 // 시동무기 강화 시뮬레이터 (정확 확률 계산 버전)
 // - 진입 시 0강: 4옵션 중복 없이 랜덤, 각 옵션 0강 값도 랜덤
-// - 목표: 옵션별 강화횟수 k(합=5) 강제, "현재값에서 정확히 k회"로 가능값만 선택
-// - 확률: 시뮬 없이 정확 계산 → 기대 시동무기 개수 = 1/p, 기대 숫돌 = 27/p
+// - 목표: 옵션별 강화횟수 k(합=5) 강제, "현재값에서 정확히 k회"로 가능한 값만 선택
+// - 확률: 시뮬 없이 정확 계산 → 기대 시동무기 개수 = 1/p, 기대 고급숫돌 = 27/p
 // - 홈으로 버튼 포함
 
 /* ===== 옵션 그룹/값 정의 ===== */
@@ -27,7 +27,7 @@ const INCS = {
 
 /* ===== 강화/재료 상수 ===== */
 const STEPS = 5;                // 4/8/12/16/20강 → 총 5회
-const HIGH_STONES_PER_RUN = 27; // 20강 1회 완주 비용(고급 숫돌)
+const HIGH_STONES_PER_RUN = 27; // 20강 1회 완주 비용(고급숫돌)
 
 /* ===== 유틸 ===== */
 const byId = (id) => { const el=document.getElementById(id); if(!el) throw new Error(`#${id} 없음`); return el; };
@@ -164,19 +164,19 @@ export function mountStarter(app){
           </div>
         </div>
 
+        <!-- 결과: 1) 시동무기 사용 갯수(기대) → 2) 예상 고급숫돌 사용갯수 -->
         <div class="grid cols-2" style="margin-top:10px">
           <div class="card">
-            <div class="big">① 20강 1회 시 고급숯돌</div>
-            <div class="pill" style="margin-top:6px">고급숯돌 1개 = 10,000 XP</div>
-            <div id="starter-out-stones" class="big ok" style="margin-top:8px">${HIGH_STONES_PER_RUN} 개</div>
-            <div class="muted" style="margin-top:6px">완주당 숫돌 ${HIGH_STONES_PER_RUN}개 (상수)</div>
-          </div>
-          <div class="card">
-            <div class="big">② 목표 달성까지 필요한 시동무기 개수(기대)</div>
+            <div class="big">① 목표 달성까지 필요한 시동무기 개수(기대)</div>
             <div class="pill" style="margin-top:6px">= 1 / p (p: 정확 확률)</div>
             <div id="starter-out-weapons" class="big ok" style="margin-top:8px">-</div>
-            <div id="starter-out-stones-exp" class="muted" style="margin-top:6px">예상 고급숯돌: -</div>
             <div id="starter-out-p" class="muted" style="margin-top:6px">성공확률 p: -</div>
+          </div>
+          <div class="card">
+            <div class="big">② 예상 고급숫돌 사용갯수</div>
+            <div class="pill" style="margin-top:6px">= 27 / p</div>
+            <div id="starter-out-stones-exp" class="big ok" style="margin-top:8px">-</div>
+            <div class="muted" style="margin-top:6px">고급숫돌 1개 = 10,000 XP</div>
           </div>
         </div>
 
@@ -222,7 +222,6 @@ export function mountStarter(app){
     const valSel  = byId(`s${id}-val`);
     const name = nameSel.value;
     const arr = INIT_VALUES[name];
-    // value는 숫자, label은 % 여부에 따라 변환
     valSel.innerHTML = arr.map(v=>`<option value="${v}">${fmt(name, v)}</option>`).join('');
     if(setRandom) valSel.value = randomChoice(arr);
   }
@@ -247,7 +246,7 @@ export function mountStarter(app){
     byId(`s${i}-name`).addEventListener('change', ()=>{
       refreshInitVal(i, false);
       syncOptionDisables();
-      rebuildGoalSection(); // 목표 섹션 다시 그리기(이때 이벤트도 재바인딩)
+      rebuildGoalSection();
     });
     byId(`s${i}-val`).addEventListener('change', rebuildGoalSection);
   });
@@ -312,19 +311,19 @@ export function mountStarter(app){
       return left;
     };
     const refreshValueChoices = ()=>{
-      const startCfg = getStartCfg();
+      const startCfg2 = getStartCfg();
       names.forEach((opt, idx)=>{
         const id = `g${idx+1}`;
         const k = parseInt(byId(`${id}-k`).value,10);
         const vEl = byId(`${id}-val`);
         const prev = parseFloat(vEl.value);
-        const { values } = reachableExact(startCfg[opt], INCS[opt], k);
+        const { values } = reachableExact(startCfg2[opt], INCS[opt], k);
         vEl.innerHTML = values.map(v=>`<option value="${v}">${fmt(opt, v)}</option>`).join('');
         if(values.includes(prev)) vEl.value = prev;
       });
     };
 
-    // 이벤트: k 변경 → 합 5 맞추고, 값 후보 갱신, 그리고 반드시 compute()
+    // 이벤트: k 변경 → 합 5 맞추고, 값 후보 갱신, compute()
     names.forEach((opt, idx)=>{
       const id = `g${idx+1}`;
       const kEl = byId(`${id}-k`);
@@ -356,7 +355,7 @@ export function mountStarter(app){
 
   function showComputeError(e){
     byId('starter-out-weapons').textContent = '-';
-    byId('starter-out-stones-exp').textContent = '예상 고급숯돌: -';
+    byId('starter-out-stones-exp').textContent = '-';
     byId('starter-out-p').textContent = '성공확률 p: -';
     byId('starter-log').textContent = '⚠️ ' + e.message;
   }
@@ -385,7 +384,7 @@ export function mountStarter(app){
     const expectedStones  = (p>0) ? (HIGH_STONES_PER_RUN/p) : Infinity;
 
     byId('starter-out-weapons').textContent = (p>0 ? `${expectedWeapons.toFixed(2)} 개` : '∞ 개');
-    byId('starter-out-stones-exp').textContent = (p>0 ? `예상 고급숯돌: ${expectedStones.toFixed(2)} 개` : '예상 고급숯돌: ∞');
+    byId('starter-out-stones-exp').textContent = (p>0 ? `${expectedStones.toFixed(2)} 개` : '∞');
     byId('starter-out-p').textContent = `성공확률 p ≈ ${(p*100).toFixed(6)}%`;
 
     // 로그: % 표기 반영
@@ -400,9 +399,6 @@ export function mountStarter(app){
 계산
 - 성공확률 p ≈ ${(p*100).toFixed(6)}%
 - 기대 시동무기 개수 = ${p>0 ? (1/p).toFixed(4) : '∞'}
-- 기대 고급숯돌 개수 = ${p>0 ? (HIGH_STONES_PER_RUN/p).toFixed(4) : '∞'} (1회 완주 27개)`;
+- 기대 고급숫돌 개수 = ${p>0 ? (HIGH_STONES_PER_RUN/p).toFixed(4) : '∞'} (1회 완주 27개)`;
   }
-
-  // 홈 이동만 별도
-  // 나머지는 목표 섹션 내부에서 change마다 compute()가 호출됨
 }
