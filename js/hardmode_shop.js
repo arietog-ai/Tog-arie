@@ -1,6 +1,20 @@
 // js/hardmode_shop.js
 import { TWO_WEEKS, hourlyFor, nf, nf1, loadShopItems } from './hardmode_data.js';
 
+// 이미지 실패 진단
+const brokenImages = [];
+function renderBrokenDiag(){
+  const box = document.getElementById('diag');
+  if(!box) return;
+  if(!brokenImages.length){ box.style.display='none'; box.textContent=''; return; }
+  box.style.display='block';
+  box.textContent = [
+    `이미지 로드 실패 ${brokenImages.length}건`,
+    '※ 파일명/확장자/대소문자/경로를 assets/img/ 와 일치시키세요.',
+    ...brokenImages.map((u,i)=>`${i+1}. ${u}`)
+  ].join('\n');
+}
+
 export async function mountShop(container){
   container.innerHTML = `
     <div class="container">
@@ -164,7 +178,7 @@ export async function mountShop(container){
     });
 
     el('btn-select-all').addEventListener('click', ()=>{
-      filteredItems().forEach((_, idxInFiltered, arr)=>{
+      filteredItems().forEach((_, idxInFiltered)=>{
         const globalIdx = filteredIndexToGlobalIndex(idxInFiltered);
         state.picked.add(globalIdx);
       });
@@ -202,19 +216,41 @@ export async function mountShop(container){
     top.className = 'item-top';
 
     const img = document.createElement('img');
-    img.alt = r.cat; img.loading = 'lazy'; img.src = r.img;
+    img.alt = r.cat;
+    img.loading = 'lazy';
+    // ./ 프리픽스로 프로젝트 페이지 경로(/Tog-arie)에서도 안전하게
+    const src0 = r.img.startsWith('http') ? r.img : (r.img.startsWith('./') ? r.img : ('./'+r.img));
+    img.src = src0;
+    // 404 시 확장자 스왑 1회 재시도 + 실패 진단 노출
+    img.onerror = () => {
+      try{
+        const u = new URL(img.src, location.href);
+        if (u.pathname.match(/\.(jpg|png)$/i)) {
+          const wasJpg = /\.jpg$/i.test(u.pathname);
+          u.pathname = u.pathname.replace(/\.(jpg|png)$/i, wasJpg ? '.png' : '.jpg');
+          img.onerror = () => { brokenImages.push(img.src); renderBrokenDiag(); };
+          img.src = u.pathname + u.search + u.hash;
+        } else {
+          brokenImages.push(img.src); renderBrokenDiag();
+        }
+      }catch{
+        brokenImages.push(img.src); renderBrokenDiag();
+      }
+    };
 
     const cap = document.createElement('div');
     cap.className = 'cap';
     cap.textContent = `${r.cat} · ${r.name} × ${r.times}회`;
 
-    top.appendChild(img); top.appendChild(cap);
+    top.appendChild(img);
+    top.appendChild(cap);
 
     const bottom = document.createElement('div');
     bottom.className = 'item-bottom';
 
     const priceDiv = document.createElement('div');
-    priceDiv.className = 'price'; priceDiv.textContent = nf(r.price);
+    priceDiv.className = 'price';
+    priceDiv.textContent = nf(r.price);
 
     const checkDiv = document.createElement('div');
     checkDiv.className = 'item-check';
@@ -224,8 +260,11 @@ export async function mountShop(container){
     if(state.picked.has(idxGlobal)) checkbox.checked = true;
     checkDiv.appendChild(checkbox);
 
-    bottom.appendChild(priceDiv); bottom.appendChild(checkDiv);
-    card.appendChild(top); card.appendChild(bottom);
+    bottom.appendChild(priceDiv);
+    bottom.appendChild(checkDiv);
+
+    card.appendChild(top);
+    card.appendChild(bottom);
     return card;
   }
 
@@ -299,7 +338,7 @@ ${lines.length ? lines.join('\n') : '선택 없음'}`;
     const judge = el('judge'), lack = el('lack');
     if(sum===0){
       judge.textContent='항목을 선택하세요'; judge.className='big';
-      lack.textContent=''; 
+      lack.textContent='';
     }else if(income >= sum){
       judge.textContent='구매 가능'; judge.className='big ok';
       lack.textContent=`2주 누적: ${nf(income)} ≥ 필요: ${nf(sum)}`;
