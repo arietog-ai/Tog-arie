@@ -1,4 +1,4 @@
-// 라우팅: 해시('#shop')로 단순 내비게이션
+// js/app.js
 import { mountShop } from './hardmode_shop.js';
 
 const app = document.getElementById('app');
@@ -19,14 +19,11 @@ function renderHome(){
       </div>
     </section>
   `;
-  app.querySelector('[data-route="shop"]').addEventListener('click', ()=>{
-    navigate('shop');
-  });
+  app.querySelector('[data-route="shop"]').addEventListener('click', ()=> navigate('shop'));
 }
 
-function navigate(route){
-  if(route === 'shop') location.hash = '#shop';
-  else location.hash = '';
+export function navigate(route){
+  location.hash = route === 'shop' ? '#shop' : '';
 }
 
 function renderFromHash(){
