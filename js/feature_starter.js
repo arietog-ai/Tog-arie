@@ -2,16 +2,14 @@
 // 시동무기 강화 시뮬레이터 (사례B 규칙)
 // - 0→20강 동안 총 5회(4/8/12/16/20강) 증가
 // - 매 스텝 4옵션 중 1개 선택 → 그 옵션의 이산 증가량 중 랜덤 적용
-// - 이번 요구 출력: 
-//   ① 20강까지 "한 번" 시도 시 소모 고급숫돌 수(= 27개, 상수)
-//   ② 목표 달성까지 필요한 시동무기 개수(= 1/p 의 기대값; p는 한 번 완주의 성공확률)
-// UI: 0강 4옵션(항목+값) 드롭다운, 해당 4옵션의 목표값 드롭다운, 실행 버튼
+// - 출력:
+//   ① 20강 한 번 시도 시 고급숯돌 수(=27개)
+//   ② 목표 달성까지 필요한 시동무기 개수(= 1/p 기대값)
 
-/* ===== 옵션 그룹/값 정의 ===== */
-const GROUP_A = ["물리관통력","마법관통력","물리저항력","마법저항력","치명타확률","치명타데미지증가"]; // %단위
+const GROUP_A = ["물리관통력","마법관통력","물리저항력","마법저항력","치명타확률","치명타데미지증가"]; // %
 const GROUP_B = ["회피","명중","효과적중","효과저항"]; // 수치
-const GROUP_C = ["공격력","방어력","체력"]; // %단위
-const GROUP_D = ["치명타 저항률","치명타 대미지 감소율"]; // %단위
+const GROUP_C = ["공격력","방어력","체력"]; // %
+const GROUP_D = ["치명타 저항률","치명타 대미지 감소율"]; // %
 
 const INIT_VALUES = {
   ...Object.fromEntries(GROUP_A.map(k => [k, [1.5,2.5,3.5,4.5]])),
@@ -27,14 +25,12 @@ const INCS = {
   ...Object.fromEntries(GROUP_D.map(k => [k, [1.5,2.5,3.5,4.5]])),
 };
 
-/* ===== 강화/재료 상수 ===== */
-const STEPS = 5;                    // 4/8/12/16/20강에서 총 5회 증가
+const STEPS = 5;                    // 4/8/12/16/20강 → 5회
 const XP_TOTAL_20 = 261900;
 const HIGH_STONE_XP = 10000;
-const HIGH_STONES_PER_RUN = 27;     // 20강까지 1회 완주 시 고급숯돌 27개 고정
-const XP_OVERFLOW = HIGH_STONES_PER_RUN * HIGH_STONE_XP - XP_TOTAL_20; // 8,100
+const HIGH_STONES_PER_RUN = 27;
+const XP_OVERFLOW = HIGH_STONES_PER_RUN * HIGH_STONE_XP - XP_TOTAL_20; // 8100
 
-/* ===== 유틸 ===== */
 function randomChoice(arr){ return arr[(Math.random()*arr.length)|0]; }
 function unique(arr){ return Array.from(new Set(arr)); }
 function byId(id){ const el=document.getElementById(id); if(!el) throw new Error(`#${id} 없음`); return el; }
@@ -49,14 +45,10 @@ function checkStartCfg(cfg){
   });
 }
 
-/* ----- 단일 완주 시뮬레이션 ----- */
 function simulateOneRun(startCfg, goalCfg, pickMode='gap'){
-  // startCfg: {opt: value} (정확히 4옵션)
-  // goalCfg : {opt: value} (동일한 4옵션만 대상)
   const values = {...startCfg};
-
-  const targetOpts = Object.keys(goalCfg); // 목표를 설정한 4옵션만 체크
-  const getPending = () => targetOpts.filter(k => values[k] < goalCfg[k]);
+  const targets = Object.keys(goalCfg);
+  const getPending = () => targets.filter(k => values[k] < goalCfg[k]);
 
   for(let i=0;i<STEPS;i++){
     const pending = getPending();
@@ -64,20 +56,19 @@ function simulateOneRun(startCfg, goalCfg, pickMode='gap'){
 
     let chosen;
     if(pickMode === 'uniform'){
-      chosen = randomChoice(targetOpts);
+      chosen = randomChoice(targets);
     }else{
-      // gap 가중: 목표-현재 격차가 큰 옵션이 선택될 확률 ↑
-      const gaps = targetOpts.map(k => Math.max(0, goalCfg[k] - values[k]));
+      const gaps = targets.map(k => Math.max(0, goalCfg[k] - values[k]));
       const sum = gaps.reduce((a,b)=>a+b,0);
       if(sum <= 0){
-        chosen = randomChoice(targetOpts);
+        chosen = randomChoice(targets);
       }else{
         let r = Math.random()*sum, acc=0;
-        for(let idx=0; idx<targetOpts.length; idx++){
+        for(let idx=0; idx<targets.length; idx++){
           acc += gaps[idx];
-          if(r <= acc){ chosen = targetOpts[idx]; break; }
+          if(r <= acc){ chosen = targets[idx]; break; }
         }
-        if(!chosen) chosen = targetOpts[targetOpts.length-1];
+        if(!chosen) chosen = targets[targets.length-1];
       }
     }
 
@@ -85,11 +76,9 @@ function simulateOneRun(startCfg, goalCfg, pickMode='gap'){
     values[chosen] += inc;
   }
 
-  // 한 번 완주 후 목표 충족 여부
-  return targetOpts.every(k => values[k] >= goalCfg[k]);
+  return targets.every(k => values[k] >= goalCfg[k]);
 }
 
-/* ----- 몬테카를로: 성공확률 p 추정 ----- */
 function estimateP(startCfg, goalCfg, trials=50000, pickMode='gap'){
   let wins = 0;
   for(let i=0;i<trials;i++){
@@ -98,15 +87,19 @@ function estimateP(startCfg, goalCfg, trials=50000, pickMode='gap'){
   return wins / trials;
 }
 
-/* ====== 뷰 ====== */
 export function mountStarter(app){
   app.innerHTML = `
     <section class="container">
+      <!-- 상단 미니 내비: 홈으로 -->
+      <div style="display:flex; gap:8px; margin-bottom:8px">
+        <button id="starter-home-btn" class="hero-btn" style="padding:10px 12px">← 홈으로</button>
+        <span class="pill">시동무기 시뮬레이터</span>
+      </div>
+
       <div class="card">
         <h2 style="margin:0 0 8px">시동무기 강화 시뮬레이터</h2>
-        <p class="muted">0→20강 동안 5회 랜덤 분배(사례B). 0강/목표를 선택하면, 
-        <b>① 20강까지 한 번 시도 시 고급숯돌 개수</b>와 
-        <b>② 목표 달성까지 필요한 시동무기 개수</b>를 계산합니다.</p>
+        <p class="muted">0→20강(5회 랜덤 분배). 0강/목표를 선택하면 
+        <b>① 1회 완주 숫돌</b>과 <b>② 목표 달성까지 필요한 시동무기 개수</b>를 보여줍니다.</p>
 
         <div class="grid cols-2" style="margin-top:10px">
           <div>
@@ -124,7 +117,7 @@ export function mountStarter(app){
             <label>선택 정책</label>
             <select id="starter-mode">
               <option value="gap" selected>잔여 격차 가중</option>
-              <option value="uniform">균등(4옵션 동일확률)</option>
+              <option value="uniform">균등</option>
             </select>
           </div>
           <div>
@@ -139,15 +132,15 @@ export function mountStarter(app){
 
         <div class="grid cols-2" style="margin-top:10px">
           <div class="card">
-            <div class="big">① 20강 1회 시 소모 고급숯돌</div>
+            <div class="big">① 20강 1회 시 고급숯돌</div>
             <div class="pill" style="margin-top:6px">고급숯돌 1개 = 10,000 XP</div>
             <div id="starter-out-stones" class="big ok" style="margin-top:8px"></div>
             <div class="muted" style="margin-top:6px">
-              총 필요 XP: ${XP_TOTAL_20.toLocaleString()} / 1회 완주 시 숫돌 ${HIGH_STONES_PER_RUN}개 (잉여 ${XP_OVERFLOW.toLocaleString()} XP)
+              총 필요 XP: ${XP_TOTAL_20.toLocaleString()} / 완주당 숫돌 ${HIGH_STONES_PER_RUN}개 (잉여 ${XP_OVERFLOW.toLocaleString()} XP)
             </div>
           </div>
           <div class="card">
-            <div class="big">② 목표 달성까지 필요한 시동무기 개수 (기대값)</div>
+            <div class="big">② 목표 달성까지 필요한 시동무기 개수(기대값)</div>
             <div class="pill" style="margin-top:6px">= 1 / p (p: 1회 완주 성공확률)</div>
             <div id="starter-out-weapons" class="big ok" style="margin-top:8px"></div>
             <div id="starter-out-p" class="muted" style="margin-top:6px"></div>
@@ -159,9 +152,13 @@ export function mountStarter(app){
     </section>
   `;
 
-  /* ----- 동적 폼 구성 ----- */
-  const OPTION_NAMES = Object.keys(INIT_VALUES);
+  // 홈으로 이동
+  document.getElementById('starter-home-btn').addEventListener('click', ()=>{
+    // app.js 라우터는 해시 기반 → 빈 해시로 보내면 홈 렌더
+    location.hash = '';
+  });
 
+  const OPTION_NAMES = Object.keys(INIT_VALUES);
   const startHost = byId('starter-start');
   const goalHost  = byId('starter-goal');
 
@@ -201,7 +198,7 @@ export function mountStarter(app){
   function rebuildGoalInputs(){
     const names = [1,2,3,4].map(i=>byId(`s${i}-name`).value);
     const html = names.map(n=>{
-      const choices = INIT_VALUES[n]; // 목표도 동일한 값셋에서 선택
+      const choices = INIT_VALUES[n];
       return `
         <div class="grid cols-2" style="align-items:end; gap:8px; margin-bottom:6px">
           <div>
@@ -220,11 +217,9 @@ export function mountStarter(app){
   }
   rebuildGoalInputs();
 
-  /* ----- 실행 버튼 ----- */
   byId('starter-run').addEventListener('click', ()=>{
     const log = byId('starter-log');
     try{
-      // 0강 수집
       const startPairs = [1,2,3,4].map(i=>[
         byId(`s${i}-name`).value,
         parseFloat(byId(`s${i}-val`).value)
@@ -235,26 +230,21 @@ export function mountStarter(app){
       const startCfg = Object.fromEntries(startPairs);
       checkStartCfg(startCfg);
 
-      // 목표 수집(선택된 4옵션만 대상)
       const goalCfg = {};
       for(const n of names){
         goalCfg[n] = parseFloat(byId(`g-${n}`).value);
       }
 
-      // 시뮬 설정
       const trials = Math.max(5000, parseInt(byId('starter-trials').value,10) || 50000);
       const mode   = byId('starter-mode').value;
 
-      // 20강 1회 시 고급숯돌 수는 상수(=27개)
       byId('starter-out-stones').textContent = `${HIGH_STONES_PER_RUN.toLocaleString()} 개`;
 
-      // 성공확률 p 추정 → 기대 무기 개수 = 1/p
       const p = estimateP(startCfg, goalCfg, trials, mode);
       const expectedWeapons = p===0 ? Infinity : (1/p);
       byId('starter-out-weapons').textContent = (p===0 ? '∞ 개' : `${expectedWeapons.toFixed(2)} 개`);
       byId('starter-out-p').textContent = `성공확률 p ≈ ${(p*100).toFixed(4)}%  (시뮬 ${trials.toLocaleString()}회, 모드=${mode})`;
 
-      // 로그(상세)
       log.textContent =
         `입력 요약
 - 0강: ${JSON.stringify(startCfg)}
@@ -265,7 +255,6 @@ export function mountStarter(app){
 - ① 20강 1회 시 고급숯돌: ${HIGH_STONES_PER_RUN}개 (총 XP ${XP_TOTAL_20.toLocaleString()}, 잉여 ${XP_OVERFLOW.toLocaleString()} XP)
 - ② 목표 달성까지 필요한 시동무기(기대값): ${p===0 ? '∞ 개' : expectedWeapons.toFixed(2) + ' 개'}
 -   참고) 성공확률 p ≈ ${(p*100).toFixed(4)}%`;
-
     }catch(e){
       log.textContent = '❌ 오류: ' + e.message;
     }
