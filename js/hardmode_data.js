@@ -12,7 +12,7 @@ export function hourlyFor(floor, zone){
   return +(baseA171() + df + dz).toFixed(1);
 }
 
-// 스키마 검증: 내부 이미지 경로만 허용
+// 스키마 검증: 내부 이미지 경로만 허용 + 확장자 대소문자 허용
 const IMG_WHITELIST_REGEX = /^assets\/img\/[A-Za-z0-9_\-]+(\.jpe?g|\.png)$/i;
 function validateItem(i){
   if(typeof i !== 'object' || i === null) return false;
@@ -27,7 +27,7 @@ function validateItem(i){
 // 기본 JSON만 사용(수동 입력 제거)
 export async function loadShopItems(){
   try{
-    const res = await fetch('data/hardmode_shop_items.json?v=' + Date.now(), { cache:'no-store' });
+    const res = await fetch('./data/hardmode_shop_items.json?v=' + Date.now(), { cache:'no-store' });
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     return Array.isArray(data) ? data.filter(validateItem) : [];
