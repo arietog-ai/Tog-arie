@@ -1,3 +1,4 @@
+// js/hardmode_shop.js
 import { TWO_WEEKS, hourlyFor, nf, nf1, loadShopItems } from './hardmode_data.js';
 
 export async function mountShop(container){
@@ -58,32 +59,25 @@ export async function mountShop(container){
           <button id="btnCopy">결과 복사</button>
           <button id="btnNeed">부족 시 최소 층 계산</button>
         </div>
-        <pre id="copyText" class="muted" style="margin-top:8px"></pre>
+        <pre id="copyText" class="muted" style="margin-top:8px; white-space:pre-wrap"></pre>
       </div>
     </div>
   `;
 
-  // 돌아가기: 해시 라우팅으로 홈 이동(히스토리 유무와 무관)
-  container.querySelector('#go-home').addEventListener('click', ()=>{
-    location.hash = '';
-  });
-
-  // 데이터 로드
   const diag = container.querySelector('#diag');
+  const itemsEl = container.querySelector('#items');
+  const el = id => container.querySelector(`#${id}`);
+
+  el('go-home').addEventListener('click', ()=> location.hash = '');
+
   let items = await loadShopItems();
-  if(!items || !items.length){
+  if(!items.length){
     diag.style.display = 'block';
-    diag.innerHTML = `
-      <div class="pill">진단</div>
-      <div style="margin-top:6px">
-        상점 데이터가 비었습니다. <code>data/hardmode_shop_items.json</code> 경로/문법을 확인하세요.
-      </div>
-    `;
-    items = [];
+    diag.textContent = '데이터가 비었습니다. data/hardmode_shop_items.json 확인하세요.';
+  } else {
+    diag.style.display = 'none';
   }
 
-  const el = (id)=> container.querySelector('#'+id);
-  const itemsEl = el('items');
   let picked = new Set();
 
   function renderCurrent(){
@@ -95,7 +89,6 @@ export async function mountShop(container){
     el('curHour').textContent  = `시급: ${nf1(perH)} / h · 2주: ${nf(two)}`;
   }
 
-  // 안전한 이미지 로더(404 시 .jpg↔.png 자동 스왑 1회)
   function createItemCard(r, idx){
     const card = document.createElement('div');
     card.className = 'item-card';
@@ -105,16 +98,8 @@ export async function mountShop(container){
 
     const img = document.createElement('img');
     img.alt = r.cat;
+    img.loading = 'lazy';
     img.src = r.img;
-    img.onerror = ()=>{
-      try{
-        const u = new URL(img.src, location.href);
-        if(u.pathname.endsWith('.jpg')) u.pathname = u.pathname.replace(/\.jpg$/i,'.png');
-        else if(u.pathname.endsWith('.png')) u.pathname = u.pathname.replace(/\.png$/i,'.jpg');
-        img.onerror = null;
-        img.src = u.pathname + u.search + u.hash;
-      }catch(_){}
-    };
 
     const cap = document.createElement('div');
     cap.className = 'cap';
@@ -125,10 +110,21 @@ export async function mountShop(container){
 
     const bottom = document.createElement('div');
     bottom.className = 'item-bottom';
-    bottom.innerHTML = `
-      <div class="price">${nf(r.price)}</div>
-      <div class="item-check"><input type="checkbox" data-idx="${idx}" ${picked.has(idx)?'checked':''}></div>
-    `;
+
+    const priceDiv = document.createElement('div');
+    priceDiv.className = 'price';
+    priceDiv.textContent = nf(r.price);
+
+    const checkDiv = document.createElement('div');
+    checkDiv.className = 'item-check';
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.dataset.idx = idx;
+    if(picked.has(idx)) checkbox.checked = true;
+    checkDiv.appendChild(checkbox);
+
+    bottom.appendChild(priceDiv);
+    bottom.appendChild(checkDiv);
 
     card.appendChild(top);
     card.appendChild(bottom);
@@ -137,14 +133,15 @@ export async function mountShop(container){
 
   function renderItems(){
     itemsEl.innerHTML = '';
-    items.forEach((r, idx)=>{
-      const card = createItemCard(r, idx);
-      itemsEl.appendChild(card);
+    const frag = document.createDocumentFragment();
+    items.forEach((r, idx) => {
+      frag.appendChild(createItemCard(r, idx));
     });
+    itemsEl.appendChild(frag);
   }
 
   function selectedTotal(){
-    let sum=0, lines=[], count=0;
+    let sum = 0, lines = [], count = 0;
     picked.forEach(i=>{
       const r = items[i]; if(!r) return;
       const t = r.price * r.times;
@@ -176,23 +173,27 @@ ${lines.length ? lines.join('\n') : '선택 없음'}`;
     renderCurrent();
     const f = Number(el('floor-input').value);
     const z = el('zone-input').value;
-    const perH = hourlyFor(f,z);
-    const income = Math.round(perH*TWO_WEEKS);
+    const income = Math.round(hourlyFor(f,z)*TWO_WEEKS);
 
     const {sum, lines} = selectedTotal();
     el('needSum').textContent = nf(sum);
     el('needDetail').textContent = lines.length ? lines.join(' / ') : '선택된 항목이 없습니다.';
 
-    if(sum===0){
-      el('judge').textContent='항목을 선택하세요'; el('judge').className='big';
-      el('lack').textContent=''; buildCopy(); return;
+    if(sum === 0){
+      el('judge').textContent = '항목을 선택하세요';
+      el('judge').className = 'big';
+      el('lack').textContent = '';
+      buildCopy(); return;
     }
+
     if(income >= sum){
-      el('judge').textContent='구매 가능'; el('judge').className='big ok';
-      el('lack').textContent=`2주 누적: ${nf(income)} ≥ 필요: ${nf(sum)}`;
-    }else{
-      el('judge').textContent='부족'; el('judge').className='big bad';
-      el('lack').textContent=`부족분: ${nf(sum - income)} (2주: ${nf(income)})`;
+      el('judge').textContent = '구매 가능';
+      el('judge').className = 'big ok';
+      el('lack').textContent = `2주 누적: ${nf(income)} ≥ 필요: ${nf(sum)}`;
+    } else {
+      el('judge').textContent = '부족';
+      el('judge').className = 'big bad';
+      el('lack').textContent = `부족분: ${nf(sum - income)} (2주: ${nf(income)})`;
     }
     buildCopy();
   }
@@ -200,26 +201,17 @@ ${lines.length ? lines.join('\n') : '선택 없음'}`;
   function neededFloor(){
     const start = Number(el('floor-input').value);
     const z = el('zone-input').value;
-    const {sum} = selectedTotal();
-    if(sum===0){ alert('항목을 먼저 선택하세요.'); return; }
-
+    const { sum } = selectedTotal();
+    if(sum === 0){ alert('항목을 먼저 선택하세요.'); return; }
     let f = start;
     while(f <= 3000 && (hourlyFor(f,z)*TWO_WEEKS) < sum) f++;
-
-    const incomeAtStart = Math.round(hourlyFor(start,z)*TWO_WEEKS);
-    const lack = Math.max(0, sum - incomeAtStart);
-    const ok = (lack===0);
-
-    el('judge').textContent = ok ? '구매 가능' : '부족';
-    el('judge').className = ok ? 'big ok' : 'big bad';
-    el('lack').textContent =
-      ok ? `현재 층에서 구매 가능` :
-           `부족분: ${nf(lack)} → 최소 ${f}층 ${z}구역에서 가능 (2주 기준)`;
-
+    const lack = sum - Math.round(hourlyFor(start,z)*TWO_WEEKS);
+    el('lack').textContent = lack <= 0
+      ? '현재 층에서 구매 가능'
+      : `부족분: ${nf(lack)} → 최소 ${f}층 ${z}구역 필요`;
     buildCopy();
   }
 
-  // 이벤트 바인딩
   container.addEventListener('input', (e)=>{
     if(e.target.matches('#floor-input, #zone-input')) updateCalc();
   });
@@ -240,7 +232,6 @@ ${lines.length ? lines.join('\n') : '선택 없음'}`;
   });
   container.querySelector('#btnNeed').addEventListener('click', neededFloor);
 
-  // 초기 렌더
   renderItems();
   updateCalc();
 }
