@@ -13,7 +13,7 @@ export function hourlyFor(floor, zone){
 }
 
 // 스키마 검증: 내부 이미지 경로만 허용
-const IMG_WHITELIST_REGEX = /^assets\/img\/[A-Za-z0-9_\-]+(\.jpe?g|\.png)$/;
+const IMG_WHITELIST_REGEX = /^assets\/img\/[A-Za-z0-9_\-]+(\.jpe?g|\.png)$/i;
 function validateItem(i){
   if(typeof i !== 'object' || i === null) return false;
   if(typeof i.cat !== 'string' || !i.cat) return false;
