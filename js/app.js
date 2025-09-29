@@ -6,7 +6,7 @@ const app = document.getElementById('app');
 function renderHome(){
   app.innerHTML = `
     <section class="hero container">
-      <img src="assets/img/blur_guild.png" alt="블러 연합" class="hero-img" />
+      <img src="./assets/img/blur_guild.png" alt="블러 연합" class="hero-img" />
       <div class="btn-wrap">
         <button class="hero-btn" data-route="shop">개척상점계산기</button>
         <button class="hero-btn" disabled>기능생성예정1</button>
