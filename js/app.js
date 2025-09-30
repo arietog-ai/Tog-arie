@@ -1,20 +1,20 @@
 // js/app.js
 import { mountShop } from './hardmode_shop.js';
 import { mountStarter } from './feature_starter.js';
-import { mountDraw } from './feature_draw.js';
+import { mountDraw, resetDrawSession } from './feature_draw.js';
 
 const app = document.getElementById('app');
 
 function scrollTop(){ try{ window.scrollTo({top:0, behavior:'instant'}); }catch(_){} }
 
 function renderHome(){
-  const usedKeys = sessionStorage.getItem('used_keys') || 0;
+  // 홈 입장 시 뽑기 세션은 초기화된 상태로 시작하게 두는 게 안전
   app.innerHTML = `
     <section class="hero container">
       <img src="./assets/img/blur_guild.png" alt="블러 연합" class="hero-img" />
       <div class="btn-wrap">
         <button class="hero-btn" data-route="shop">개척상점계산기</button>
-        <button class="hero-btn" data-route="gear">시동무기 (🔑 <span id="key-count">${usedKeys}</span>)</button>
+        <button class="hero-btn" data-route="gear">시동무기</button>
         <button class="hero-btn" disabled>기능생성예정1</button>
         <button class="hero-btn" disabled>기능생성예정2</button>
         <button class="hero-btn" disabled>기능생성예정3</button>
@@ -43,7 +43,10 @@ function renderGearHub(){
       </div>
     </section>
   `;
-  app.querySelector('[data-route="draw"]').addEventListener('click', ()=> navigate('draw'));
+  app.querySelector('[data-route="draw"]').addEventListener('click', ()=> {
+    resetDrawSession();           // 허브에서 뽑기 진입 시 매번 초기화
+    navigate('draw');
+  });
   app.querySelector('[data-route="starter"]').addEventListener('click', ()=> navigate('starter'));
   app.querySelector('[data-route="home"]').addEventListener('click', ()=> navigate('home'));
 }
