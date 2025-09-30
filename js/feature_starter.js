@@ -357,7 +357,7 @@ export function mountStarter(app){
 
   rebuildGoalSection(); // 최초 1회
 
-    // ▼▼ 강화 프리셋 로딩(시동무기 뽑기 → 강화 시뮬로)
+  // ▼▼ 프리셋 로딩(시동무기 뽑기 → 강화 시뮬로)
   try {
     const raw = sessionStorage.getItem('starter_preset');
     if(raw){
@@ -378,7 +378,6 @@ export function mountStarter(app){
     }
   } catch(e){}
 
-  
   /* ---------- 계산 실행(정확 확률) ---------- */
   function compute(){
     const startCfg = getStartCfg();
@@ -435,4 +434,3 @@ ${targetLog}
       .then(()=> alert('시뮬레이션 결과가 복사되었습니다!'));
   });
 }
-
