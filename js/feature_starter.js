@@ -357,6 +357,28 @@ export function mountStarter(app){
 
   rebuildGoalSection(); // 최초 1회
 
+    // ▼▼ 강화 프리셋 로딩(시동무기 뽑기 → 강화 시뮬로)
+  try {
+    const raw = sessionStorage.getItem('starter_preset');
+    if(raw){
+      const preset = JSON.parse(raw);
+      sessionStorage.removeItem('starter_preset');
+      const names = preset.starter4.map(o => o.stat);
+      const vals  = preset.starter4.map(o => o.value);
+      [1,2,3,4].forEach((i,idx)=>{
+        const nameSel=document.getElementById(`s${i}-name`);
+        const valSel=document.getElementById(`s${i}-val`);
+        nameSel.value=names[idx];
+        const arr=INIT_VALUES[names[idx]];
+        valSel.innerHTML=arr.map(v=>`<option value="${v}">${fmt(names[idx],v)}</option>`).join('');
+        valSel.value=vals[idx];
+      });
+      if(typeof syncOptionDisables==='function')syncOptionDisables();
+      if(typeof rebuildGoalSection==='function')rebuildGoalSection();
+    }
+  } catch(e){}
+
+  
   /* ---------- 계산 실행(정확 확률) ---------- */
   function compute(){
     const startCfg = getStartCfg();
@@ -413,3 +435,4 @@ ${targetLog}
       .then(()=> alert('시뮬레이션 결과가 복사되었습니다!'));
   });
 }
+
