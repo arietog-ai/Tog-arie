@@ -1,158 +1,192 @@
 // js/feature_draw.js
-// 시동무기 뽑기 모듈
+// 시동무기 뽑기 시뮬레이터
+// - 단일 뽑기, ???뽑기(최대 1000회)
+// - 결과 저장(sessionStorage)
+// - 총 결과보기: 조건별 상세 통계 출력
+// - A급(부옵션 4개) → 강화 시뮬로 보내기 지원
 
-// 아이콘 경로
-const ICON_KEY = "./assets/img/key.jpg";        // 실제 파일 확장자가 png면 .png로 수정
-const ICON_WHET = "./assets/img/whetstone.jpg"; // 실제 파일 확장자가 png면 .png로 수정
+const byId = (id)=>document.getElementById(id);
+const rand = (n)=>(Math.random()*n)|0;
+const randomChoice = (arr)=>arr[rand(arr.length)];
 
-// 상태
-const state = {
-  keysUsed: 0,
-  pulls: [],
-  savedAList: [],
+const GRADES = {
+  A: { mainCount: [3,4], mainProb: [0.5,0.5] },
+  B: { mainCount: [2,3], mainProb: [0.5,0.5] },
+  C: { mainCount: [1,2], mainProb: [0.5,0.5] },
 };
 
-// 확률 데이터 (간단화된 샘플)
-const gradeTable = [
-  { grade:"A", slot:"무기", prob:2.6 },
-  { grade:"A", slot:"의상", prob:2.6 },
-  { grade:"A", slot:"모자", prob:2.6 },
-  { grade:"A", slot:"신발", prob:1.1 },
-  { grade:"A", slot:"장갑", prob:1.1 },
-  { grade:"B", slot:"무기", prob:3.9 },
-  { grade:"B", slot:"의상", prob:3.9 },
-  { grade:"B", slot:"모자", prob:3.9 },
-  { grade:"B", slot:"신발", prob:1.65 },
-  { grade:"B", slot:"장갑", prob:1.65 },
-  { grade:"C", slot:"무기", prob:6.5 },
-  { grade:"C", slot:"의상", prob:6.5 },
-  { grade:"C", slot:"모자", prob:6.5 },
-  { grade:"C", slot:"신발", prob:2.75 },
-  { grade:"C", slot:"장갑", prob:2.75 },
+// 부위별 주스탯 풀
+const MAIN_STATS = {
+  무기:["공격력%"],
+  옷:["방어력%"],
+  모자:["체력%"],
+  신발:["치명타 대미지 증가율","치명타 대미지 감소율","마법 저항률","효과적중","효과저항"],
+  장갑:["치명타 확률","치명타 저항률","물리 저항률","마법 관통률","물리 관통률"],
+};
+
+// 부옵션 전체 풀
+const SUB_STATS = [
+  "체력%","공격력%","방어력%","치명타 확률","치명타 대미지 증가율","마법 저항률",
+  "물리 저항률","치명타 저항률","치명타 대미지 감소율","마법 관통률","물리 관통률",
+  "효과적중","효과저항","명중","회피"
 ];
-const subPool = ["체력%","공격력%","방어력%","치명타 확률","치명타 대미지 증가율",
-"마법 저항률","물리 저항률","치명타 저항률","치명타 대미지 감소율","마법 관통률",
-"물리 관통률","효과 적중","효과 저항","명중","회피"];
 
-// 가중치 샘플링
-function weightedPick(arr){
-  const sum = arr.reduce((a,b)=>a+b.prob,0);
-  let r = Math.random()*sum;
-  for(const e of arr){
-    if(r < e.prob) return e;
-    r -= e.prob;
-  }
-  return arr[arr.length-1];
+// 등급별 뽑기 확률
+const DRAW_TABLE = [
+  // A급
+  { grade:"A", part:"무기", prob:0.026 }, { grade:"A", part:"옷", prob:0.026 },
+  { grade:"A", part:"모자", prob:0.026 }, { grade:"A", part:"신발", prob:0.011 },
+  { grade:"A", part:"장갑", prob:0.011 },
+  // B급
+  { grade:"B", part:"무기", prob:0.039 }, { grade:"B", part:"옷", prob:0.039 },
+  { grade:"B", part:"모자", prob:0.039 }, { grade:"B", part:"신발", prob:0.0165 },
+  { grade:"B", part:"장갑", prob:0.0165 },
+  // C급
+  { grade:"C", part:"무기", prob:0.065 }, { grade:"C", part:"옷", prob:0.065 },
+  { grade:"C", part:"모자", prob:0.065 }, { grade:"C", part:"신발", prob:0.0275 },
+  { grade:"C", part:"장갑", prob:0.0275 },
+];
+
+// 누적 합 계산
+const CDF = [];
+let sumProb=0;
+for(const item of DRAW_TABLE){
+  sumProb+=item.prob;
+  CDF.push({ ...item, acc:sumProb });
 }
 
-// 주스탯 선택
-function pickMain(slot){
-  if(slot==="무기") return "공격력%";
-  if(slot==="의상") return "방어력%";
-  if(slot==="모자") return "체력%";
-  if(slot==="신발"){
-    const opts=["치명타 대미지 증가율","치명타 대미지 감소율","마법 저항률","효과 적중","효과 저항"];
-    return opts[Math.floor(Math.random()*opts.length)];
-  }
-  if(slot==="장갑"){
-    const opts=["치명타 확률","치명타 저항률","물리 저항률","마법 관통률","물리 관통률"];
-    return opts[Math.floor(Math.random()*opts.length)];
-  }
-}
+// 세션 결과 관리
+function loadResults(){ return JSON.parse(sessionStorage.getItem("draw_results")||"[]"); }
+function saveResults(res){ sessionStorage.setItem("draw_results", JSON.stringify(res)); }
 
-// 부스탯 개수 선택
-function pickSubCount(grade){
+// 뽑기 실행
+function singleDraw(){
   const r=Math.random();
-  if(grade==="C") return r<0.5?1:2;
-  if(grade==="B") return r<0.5?2:3;
-  if(grade==="A") return r<0.5?3:4;
-  return 0;
-}
+  const picked = CDF.find(it=>r<=it.acc);
+  if(!picked) return null;
+  const { grade, part } = picked;
 
-// 부스탯 샘플링
-function sampleSubs(main, count){
-  const pool = subPool.filter(s=>s!==main);
-  const out=[];
-  while(out.length<count && pool.length){
-    const i=Math.floor(Math.random()*pool.length);
-    out.push(pool[i]);
-    pool.splice(i,1);
-  }
-  return out;
-}
-
-function rollOnce(){
-  const g=weightedPick(gradeTable);
-  const main=pickMain(g.slot);
-  const subs=sampleSubs(main,pickSubCount(g.grade));
-  return {grade:g.grade, slot:g.slot, main, subs};
-}
-
-function showPopup(r){
-  let msg="";
-  if(r.grade==="A"){
-    msg=`A급 ${r.slot}입니다. (주스탯: ${r.main})`;
-  }else{
-    msg=`${r.grade}급 ${r.slot}입니다.`;
-  }
-  alert(msg); // 임시: 나중에 모달 UI로 교체 가능
-}
-
-export function mountDraw(app){
-  app.innerHTML=`
-  <section class="container">
-    <div style="display:flex; gap:8px; margin-bottom:8px">
-      <button id="draw-home" class="hero-btn" style="padding:10px 12px">← 홈으로</button>
-      <span class="pill">시동무기 뽑기</span>
-    </div>
-    <div class="card">
-      <h2 style="margin:0 0 8px">뽑기</h2>
-      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center">
-        <button id="btn-single" class="hero-btn">
-          <img src="${ICON_KEY}" style="width:18px;height:18px;margin-right:6px;vertical-align:middle;border-radius:4px"/>단일뽑기
-        </button>
-        <button id="btn-bulk" class="hero-btn">
-          <img src="${ICON_KEY}" style="width:18px;height:18px;margin-right:6px;vertical-align:middle;border-radius:4px"/>???뽑기
-        </button>
-        <button id="btn-summary" class="hero-btn" style="margin-left:auto">총 결과보기</button>
-      </div>
-      <div id="draw-log" class="muted" style="margin-top:8px"></div>
-    </div>
-    <div id="summary-wrap" style="margin-top:10px"></div>
-  </section>
-  `;
-  document.getElementById('draw-home').onclick=()=>location.hash="#gear";
-  document.getElementById('btn-single').onclick=()=>{
-    state.keysUsed++;
-    const r=rollOnce();
-    state.pulls.push(r);
-    if(r.grade==="A") state.savedAList.push(r);
-    showPopup(r);
-  };
-  document.getElementById('btn-bulk').onclick=()=>{
-    const n=parseInt(prompt("열쇠를 몇 개 사용하여 뽑기를 진행할까요? (최대 1000)"));
-    if(!n||n<=0||n>1000)return;
-    for(let i=0;i<n;i++){
-      state.keysUsed++;
-      const r=rollOnce();
-      state.pulls.push(r);
-      if(r.grade==="A") state.savedAList.push(r);
+  const mainStat = randomChoice(MAIN_STATS[part]);
+  let subs=[];
+  if(grade==="A"||grade==="B"||grade==="C"){
+    const cfg = GRADES[grade];
+    const count = randomChoice(cfg.mainCount);
+    while(subs.length<count){
+      const c = randomChoice(SUB_STATS);
+      if(c!==mainStat && !subs.includes(c)) subs.push(c);
     }
-    const aTotal=state.savedAList.length;
-    const a3=state.savedAList.filter(x=>x.subs.length===3).length;
-    const a4=state.savedAList.filter(x=>x.subs.length===4).length;
-    alert(`A급 총 ${aTotal}개\nA급 중 옵션3개: ${a3}, 옵션4개: ${a4}`);
+  }
+  return { grade, part, main:mainStat, subs };
+}
+
+// 결과 통계 요약
+function summarizeResults(){
+  const results=loadResults().filter(r=>r.grade==="A");
+  const totalAll = loadResults().length;
+  const counts={무기:0, 옷:0, 모자:0, 신발:0, 장갑:0};
+  let fourSubs=0;
+  let effAccResist=0,resistBoth=0,effAll=0;
+  let shoeAccHasRes=0,shoeResHasAcc=0;
+  let glovePhysHasBoth=0;
+
+  results.forEach(r=>{
+    counts[r.part]++;
+    if(r.subs.length===4) fourSubs++;
+    if(["무기","옷","모자"].includes(r.part)){
+      if(r.subs.includes("효과적중")&&r.subs.includes("효과저항")) effAccResist++;
+      if(r.subs.includes("물리 저항률")&&r.subs.includes("마법 저항률")) resistBoth++;
+      if(["효과적중","효과저항","물리 저항률","마법 저항률"].every(x=>r.subs.includes(x))) effAll++;
+    }
+    if(r.part==="신발"){
+      if(r.main==="효과적중"&&r.subs.includes("효과저항")) shoeAccHasRes++;
+      if(r.main==="효과저항"&&r.subs.includes("효과적중")) shoeResHasAcc++;
+    }
+    if(r.part==="장갑"){
+      if(r.main==="물리 저항률"&&r.subs.includes("효과적중")&&r.subs.includes("효과저항")) glovePhysHasBoth++;
+    }
+  });
+
+  return {
+    totalAll, totalA:results.length, counts, fourSubs,
+    effAccResist,resistBoth,effAll,
+    shoeAccHasRes,shoeResHasAcc,glovePhysHasBoth
   };
-  document.getElementById('btn-summary').onclick=()=>{
-    const aTotal=state.savedAList.length;
-    const a4=state.savedAList.filter(x=>x.subs.length===4).length;
-    document.getElementById('summary-wrap').innerHTML=`
-      <div class="card">
-        <h3>총 결과</h3>
-        <p>총 뽑기 횟수: ${state.pulls.length}</p>
-        <p>A급 총: ${aTotal}개</p>
-        <p>A급 중 옵션4개: ${a4}개</p>
+}
+
+/* ===== 메인 마운트 ===== */
+export function mountDraw(app){
+  // 세션 초기화
+  sessionStorage.removeItem("draw_results");
+
+  app.innerHTML=`
+    <section class="container">
+      <div style="display:flex; gap:8px; margin-bottom:8px">
+        <button id="draw-home-btn" class="hero-btn" style="padding:10px 12px">← 홈으로</button>
+        <span class="pill">시동무기 뽑기</span>
       </div>
-    `;
-  };
+
+      <div class="card">
+        <h2>시동무기 뽑기</h2>
+        <div style="margin:10px 0; display:flex; gap:10px">
+          <button id="btn-single" class="hero-btn">단일 뽑기</button>
+          <button id="btn-multi" class="hero-btn">??? 뽑기</button>
+          <button id="btn-summary" class="hero-btn">총 결과보기</button>
+        </div>
+        <div id="draw-log" style="white-space:pre-wrap; margin-top:10px"></div>
+      </div>
+    </section>
+  `;
+
+  byId("draw-home-btn").addEventListener("click",()=>{ location.hash=""; });
+  const log=byId("draw-log");
+
+  function logMsg(txt){ log.textContent=txt; }
+
+  byId("btn-single").addEventListener("click",()=>{
+    const res=singleDraw();
+    if(!res){ logMsg("실패: 결과 없음"); return; }
+    const all=loadResults(); all.push(res); saveResults(all);
+    if(res.grade==="A"){
+      logMsg(`🎉 A급 ${res.part}\n주스탯:${res.main}\n부옵션:${res.subs.join(",")}`);
+    }else{
+      logMsg(`${res.grade}급 ${res.part}입니다.`);
+    }
+  });
+
+  byId("btn-multi").addEventListener("click",()=>{
+    const n=parseInt(prompt("열쇠를 몇 개 사용하여 뽑기를 진행할까요? (최대 1000)"),10);
+    if(!n||n<=0) return;
+    if(n>1000){ alert("최대 1000개까지 가능합니다."); return; }
+    const all=loadResults();
+    let aCount=0,fourSubs=0;
+    for(let i=0;i<n;i++){
+      const res=singleDraw(); all.push(res);
+      if(res.grade==="A"){ aCount++; if(res.subs.length===4) fourSubs++; }
+    }
+    saveResults(all);
+    logMsg(`???뽑기 결과: 총 ${n}회\nA급:${aCount}, 그 중 부옵션4개:${fourSubs}`);
+  });
+
+  byId("btn-summary").addEventListener("click",()=>{
+    const s=summarizeResults();
+    logMsg(
+`총 뽑기 횟수: ${s.totalAll}
+
+A급 총: ${s.totalA}
+부위별: 무기:${s.counts.무기}, 옷:${s.counts.옷}, 모자:${s.counts.모자}, 신발:${s.counts.신발}, 장갑:${s.counts.장갑}
+A급 중 부옵션 4개: ${s.fourSubs}
+
+무기/옷/모자:
+- 효과적중+효과저항: ${s.effAccResist}
+- 물리저항력+마법저항력: ${s.resistBoth}
+- 효과적중+효과저항+물리저항력+마법저항력: ${s.effAll}
+
+신발:
+- 주스탯=효과적중, 부옵션에 효과저항 포함: ${s.shoeAccHasRes}
+- 주스탯=효과저항, 부옵션에 효과적중 포함: ${s.shoeResHasAcc}
+
+장갑:
+- 주스탯=물리저항력, 부옵션에 효과적중+효과저항 모두 포함: ${s.glovePhysHasBoth}`
+    );
+  });
 }
