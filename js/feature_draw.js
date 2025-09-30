@@ -10,9 +10,9 @@ const rand = (n)=>(Math.random()*n)|0;
 const randomChoice = (arr)=>arr[rand(arr.length)];
 
 const GRADES = {
-  A: { mainCount: [3,4], mainProb: [0.5,0.5] },
-  B: { mainCount: [2,3], mainProb: [0.5,0.5] },
-  C: { mainCount: [1,2], mainProb: [0.5,0.5] },
+  A: { subCount: [3,4], prob: [0.5,0.5] },
+  B: { subCount: [2,3], prob: [0.5,0.5] },
+  C: { subCount: [1,2], prob: [0.5,0.5] },
 };
 
 // 부위별 주스탯 풀
@@ -31,7 +31,7 @@ const SUB_STATS = [
   "효과적중","효과저항","명중","회피"
 ];
 
-// 등급별 뽑기 확률
+// 등급별 뽑기 확률 테이블
 const DRAW_TABLE = [
   // A급
   { grade:"A", part:"무기", prob:0.026 }, { grade:"A", part:"옷", prob:0.026 },
@@ -47,7 +47,7 @@ const DRAW_TABLE = [
   { grade:"C", part:"장갑", prob:0.0275 },
 ];
 
-// 누적 합 계산
+// 누적 분포 계산
 const CDF = [];
 let sumProb=0;
 for(const item of DRAW_TABLE){
@@ -70,7 +70,7 @@ function singleDraw(){
   let subs=[];
   if(grade==="A"||grade==="B"||grade==="C"){
     const cfg = GRADES[grade];
-    const count = randomChoice(cfg.mainCount);
+    const count = randomChoice(cfg.subCount);
     while(subs.length<count){
       const c = randomChoice(SUB_STATS);
       if(c!==mainStat && !subs.includes(c)) subs.push(c);
@@ -81,8 +81,9 @@ function singleDraw(){
 
 // 결과 통계 요약
 function summarizeResults(){
-  const results=loadResults().filter(r=>r.grade==="A");
-  const totalAll = loadResults().length;
+  const all = loadResults();           // 전체 결과
+  const results = all.filter(r=>r.grade==="A"); // A급만 필터
+
   const counts={무기:0, 옷:0, 모자:0, 신발:0, 장갑:0};
   let fourSubs=0;
   let effAccResist=0,resistBoth=0,effAll=0;
@@ -107,7 +108,9 @@ function summarizeResults(){
   });
 
   return {
-    totalAll, totalA:results.length, counts, fourSubs,
+    totalAll: all.length,
+    totalA: results.length,
+    counts,fourSubs,
     effAccResist,resistBoth,effAll,
     shoeAccHasRes,shoeResHasAcc,glovePhysHasBoth
   };
@@ -115,7 +118,7 @@ function summarizeResults(){
 
 /* ===== 메인 마운트 ===== */
 export function mountDraw(app){
-  // 세션 초기화
+  // ✅ 페이지 들어올 때마다 초기화
   sessionStorage.removeItem("draw_results");
 
   app.innerHTML=`
@@ -137,9 +140,12 @@ export function mountDraw(app){
     </section>
   `;
 
-  byId("draw-home-btn").addEventListener("click",()=>{ location.hash=""; });
-  const log=byId("draw-log");
+  byId("draw-home-btn").addEventListener("click",()=>{
+    sessionStorage.removeItem("draw_results"); // ✅ 홈으로 나갈 때도 초기화
+    location.hash="";
+  });
 
+  const log=byId("draw-log");
   function logMsg(txt){ log.textContent=txt; }
 
   byId("btn-single").addEventListener("click",()=>{
