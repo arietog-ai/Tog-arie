@@ -121,14 +121,23 @@ button{ cursor:pointer; font-weight:700 }
 }
 
 /* ===== 추가: 힌트/작은 설명 ===== */
-.hint{
-  margin-top:4px; font-size:12px; color:var(--muted);
-}
+.hint{ margin-top:4px; font-size:12px; color:var(--muted) }
 
-/* ===== 추가: 작은 뱃지 라벨 ===== */
+/* ===== 추가: 작은 배지 ===== */
 .badge{
   display:inline-flex; align-items:center; gap:6px;
   padding:4px 8px; border-radius:999px;
   border:1px solid var(--line); background:#0f1420; color:var(--text); font-size:12px;
 }
 .badge img{ width:14px; height:14px; border-radius:3px; }
+
+/* ===== 추가: 체크박스 그리드 ===== */
+.checkbox-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(120px, 1fr));
+  gap:6px;
+  max-height:200px; overflow:auto;
+}
+.checkbox-grid label{
+  display:flex; align-items:center; gap:6px; font-size:13px;
+}
