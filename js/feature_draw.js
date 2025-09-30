@@ -5,7 +5,7 @@ const byId = (id)=>document.getElementById(id);
 const rand = (n)=>(Math.random()*n)|0;
 const choice = (arr)=>arr[rand(arr.length)];
 
-const ICON_KEY = "./assets/img/key.jpg";
+const ICON_KEY = "./assets/img/key.jpg"; // 확장자 .jpg로 고정 (이미지 경로 문제 해결)
 
 // === 옵션 키(강화와 동일) ===
 const SUB_OPTIONS = [
@@ -27,10 +27,10 @@ const MAIN_STATS = {
   gloves:["치명타확률","치명타 저항률","물리저항력","마법관통력","물리관통력"],
 };
 
-// 등급별 부옵 개수
+// 등급별 부옵 개수 50:50
 const SUB_COUNT_RULE = { A:[3,4], B:[2,3], C:[1,2] };
 
-// 0강 수치 후보
+// 0강 수치 후보(강화 프리셋 생성용)
 const INIT_VALUES = {
   "물리관통력":[1.5,2.5,3.5,4.5],
   "마법관통력":[1.5,2.5,3.5,4.5],
@@ -50,7 +50,7 @@ const INIT_VALUES = {
 };
 
 // ===== 세션 상태 =====
-let results = [];
+let results = [];  // {part, grade, main, subs, src, display, forceEnable, when}
 let usedKeys = 0;
 let autoRunning = false;
 let autoStop = false;
@@ -72,12 +72,12 @@ function saveSession(){
   sessionStorage.setItem('used_keys', usedKeys);
 }
 
-// 등급 확률
+// 등급 분포(예시값)
 function rollGrade(){
   const r=Math.random();
-  if(r<0.20) return 'A'; 
-  if(r<0.50) return 'B'; 
-  return 'C';            
+  if(r<0.20) return 'A'; // 20%
+  if(r<0.50) return 'B'; // 30%
+  return 'C';            // 50%
 }
 function rollMainStat(part){ return choice(MAIN_STATS[part]); }
 function rollSubs(grade, main){
@@ -103,12 +103,15 @@ function makeRecord(src, forceEnable=false){
   return rec;
 }
 
-// 표시 규칙
+// 표시 규칙: 단일은 마지막 1개만, 자동은 조건 달성 1개만, ???는 표시 안함
 function updateDisplayFlags(){
   results.forEach(r => r.display = false);
+
+  // 단일 마지막 1개
   for(let i=results.length-1;i>=0;i--){
     if(results[i].src==='single'){ results[i].display = true; break; }
   }
+  // 자동 마지막 1개(조건 달성만)
   for(let i=results.length-1;i>=0;i--){
     if(results[i].src==='auto' && results[i].forceEnable){ results[i].display = true; break; }
   }
@@ -134,6 +137,7 @@ function renderResultList(){
     `;
   }).join('');
 
+  // 강화로 보내기
   host.querySelectorAll('.to-starter').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       if(btn.classList.contains('disabled')) return;
@@ -141,17 +145,8 @@ function renderResultList(){
       const r = results.find(x=>x.when===when);
       if(!r) return;
 
-      // 주스탯 제외 → 부옵 4개만
-      const base = r.subs.slice(0,4);
-      let four = base.slice();
-      if(four.length<4){
-        const pool = SUB_OPTIONS.filter(x=>!four.includes(x));
-        while(four.length<4 && pool.length){
-          const pick = choice(pool);
-          four.push(pick);
-          pool.splice(pool.indexOf(pick),1);
-        }
-      }
+      // 주옵 제외, 부옵만 4개
+      let four = r.subs.slice(0,4);
       const preset = {
         starter4: four.map(stat=>{
           const vals = INIT_VALUES[stat] || [1,1.5,2,2.5];
@@ -163,8 +158,35 @@ function renderResultList(){
     });
   });
 
+  // 사용 키 표시
+  const k0 = document.querySelector('#key-count');
+  if(k0) k0.textContent = usedKeys;
   const k1 = byId('used-keys');
   if(k1) k1.textContent = usedKeys;
+}
+
+/* ===== 총 결과 카드 ===== */
+function closeTotalCard(){
+  byId('draw-total').innerHTML = '';
+}
+function showTotalCardWith(text){
+  byId('draw-total').innerHTML = `
+    <div class="card">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:8px">
+        <div class="big">총 결과</div>
+        <div style="display:flex; gap:8px; align-items:center">
+          <button id="copy-total" class="hero-btn">📋 총 결과 복사</button>
+          <button id="close-total" class="hero-btn">닫기</button>
+        </div>
+      </div>
+      <div style="white-space:pre-wrap; margin-top:6px" id="draw-total-text">${text}</div>
+    </div>
+  `;
+  byId('copy-total').addEventListener('click', ()=>{
+    const t = byId('draw-total-text').textContent;
+    navigator.clipboard.writeText(t).then(()=> alert('총 결과가 클립보드에 복사되었습니다!'));
+  });
+  byId('close-total').addEventListener('click', closeTotalCard);
 }
 
 /* ===== 자동 뽑기 조건 ===== */
@@ -181,11 +203,12 @@ function syncAutoMain(){
     const fixed = MAIN_STATS[part][0];
     mainSel.innerHTML = `<option value="${fixed}">${fixed}</option>`;
     mainSel.dataset.fixed = '1';
+    hint.textContent = '무기/옷/모자는 주옵 고정, 신발/장갑은 선택 가능';
   }else{
     mainSel.innerHTML = MAIN_STATS[part].map(s=>`<option value="${s}">${s}</option>`).join('');
     mainSel.dataset.fixed = '0';
+    hint.textContent = '무기/옷/모자는 주옵 고정, 신발/장갑은 선택 가능';
   }
-  hint.textContent = '무기/옷/모자는 주옵 고정, 신발/장갑은 선택 가능';
   syncAutoSubs();
 }
 function syncAutoSubs(){
@@ -193,7 +216,10 @@ function syncAutoSubs(){
   const box = byId('auto-subs');
   const pool = SUB_OPTIONS.filter(x=>x!==main);
   box.innerHTML = pool.map(s=>{
-    return `<label><input type="checkbox" class="auto-sub" value="${s}" /> ${s}</label>`;
+    const id = `sub-${s}`;
+    return `
+      <label><input type="checkbox" class="auto-sub" id="${id}" value="${s}" /> <span>${s}</span></label>
+    `;
   }).join('');
   enforceSubSelectLimit();
 }
@@ -205,14 +231,16 @@ function enforceSubSelectLimit(){
   function refresh(){
     const checks = Array.from(subsBox.querySelectorAll('.auto-sub'));
     const chosen = checks.filter(c=>c.checked);
-    counter.textContent = `선택: ${chosen.length}/최대4`;
+    counter.textContent = `선택: ${chosen.length}개`;
 
+    // 4개 초과 방지
     if(chosen.length>=4){
-      checks.forEach(c=>{ if(!c.checked) c.disabled=true; });
+      checks.forEach(c=>{ if(!c.checked) c.disabled = true; });
     }else{
-      checks.forEach(c=> c.disabled=false);
+      checks.forEach(c=> c.disabled = false);
     }
-    btnStart.classList.toggle('disabled', chosen.length<1);
+    // 1개 이상 선택 시 시작 가능
+    btnStart.classList.toggle('disabled', chosen.length<1 || chosen.length>4);
   }
   subsBox.addEventListener('change', refresh);
   refresh();
@@ -224,19 +252,21 @@ function getAutoCondition(){
   return { part, main, subs };
 }
 function matchCondition(rec, cond){
-  if(rec.grade!=='A') return false;
   if(rec.part !== cond.part) return false;
   if(rec.main !== cond.main) return false;
-  if(rec.subs.length!==4) return false;
+  if(rec.grade !== 'A') return false; // A급 고정
+  // 선택된 subs가 모두 포함돼야 함
   for(const s of cond.subs){
     if(!rec.subs.includes(s)) return false;
   }
+  // 총 부옵션은 반드시 4개
+  if(rec.subs.length !== 4) return false;
   return true;
 }
 
-/* ===== 메인 ===== */
+/* ===== 메인 마운트 ===== */
 export function mountDraw(app){
-  resetDrawSession();
+  // 세션 유지 (초기화 제거!)
   loadSession();
 
   app.innerHTML = `
@@ -251,12 +281,29 @@ export function mountDraw(app){
 
       <div class="card">
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center">
-          <button class="hero-btn" id="single-draw">단일 뽑기</button>
-          <button class="hero-btn" id="multi-open">??? 뽑기</button>
+          <button class="hero-btn" id="single-draw">
+            <img src="${ICON_KEY}" alt="" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;border-radius:4px" />
+            단일 뽑기
+          </button>
+          <button class="hero-btn" id="multi-open">
+            <img src="${ICON_KEY}" alt="" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;border-radius:4px" />
+            ??? 뽑기
+          </button>
           <button class="hero-btn" id="auto-open">자동 뽑기(조건)</button>
           <button class="hero-btn" id="show-total" style="margin-left:auto">총 결과보기</button>
         </div>
 
+        <!-- ??? 뽑기 패널 -->
+        <div id="multi-panel" style="display:none; margin-top:10px">
+          <label>열쇠를 몇 개 사용하여 뽑기를 진행할까요? <b>(한 번에 최대 1000회)</b></label>
+          <input type="number" id="multi-count" min="1" max="1000" value="10" />
+          <div style="margin-top:6px; display:flex; gap:8px">
+            <button class="hero-btn" id="multi-run">뽑기</button>
+            <button class="hero-btn" id="multi-cancel">취소</button>
+          </div>
+        </div>
+
+        <!-- 자동 뽑기(조건) 패널 -->
         <div id="auto-panel" style="display:none; margin-top:12px">
           <label>조건을 입력하세요 (부위 + 주옵션 + 부옵션 1~4개)</label>
           <div class="grid cols-3" style="margin-top:6px">
@@ -272,57 +319,66 @@ export function mountDraw(app){
             </div>
             <div>
               <label>주옵션</label>
-              <select id="auto-main"></select>
-              <small class="hint" id="auto-main-hint"></small>
+              <select id="auto-main" data-fixed="1"></select>
+              <small class="hint" id="auto-main-hint">무기/옷/모자는 주옵 고정, 신발/장갑은 선택 가능</small>
             </div>
             <div>
               <label>부옵션(1~4개)</label>
               <div id="auto-subs" class="checkbox-grid"></div>
-              <div class="hint" id="auto-counter">선택: 0/최대4</div>
+              <div class="hint" id="auto-counter">선택: 0개</div>
             </div>
           </div>
-          <div style="margin-top:8px; display:flex; gap:8px">
-            <button class="hero-btn disabled" id="auto-run">조건 달성까지 자동 뽑기</button>
+          <div style="margin-top:8px; display:flex; gap:8px; align-items:center">
+            <button class="hero-btn disabled" id="auto-run">조건 달성까지 자동 뽑기 시작</button>
             <button class="hero-btn" id="auto-stop">중지</button>
             <button class="hero-btn" id="auto-cancel" style="margin-left:auto">닫기</button>
           </div>
+          <small class="hint">※ 자동 뽑기 중에도 "중지"로 즉시 멈출 수 있습니다.</small>
         </div>
       </div>
 
       <div id="draw-results" style="margin-top:12px"></div>
+
       <div id="draw-total" style="margin-top:12px"></div>
     </section>
   `;
 
+  // 공통: 뽑기류 버튼 누르면 총 결과 카드 자동 닫기
+  const autoHideTotal = ()=> closeTotalCard();
+
+  // 홈 → 즉시 세션 초기화
   byId('draw-home').addEventListener('click', ()=>{
-    resetDrawSession(); location.hash='';
+    resetDrawSession();
+    location.hash='';
   });
-  byId('single-draw').addEventListener('click', ()=>{ makeRecord('single'); renderResultList(); });
-  byId('auto-open').addEventListener('click', ()=>{ byId('auto-panel').style.display='block'; buildAutoUI(); });
-  byId('auto-cancel').addEventListener('click', ()=>{ byId('auto-panel').style.display='none'; });
-  byId('auto-part').addEventListener('change', syncAutoMain);
-  byId('auto-main').addEventListener('change', syncAutoSubs);
 
-  byId('auto-run').addEventListener('click', ()=>{
-    if(byId('auto-run').classList.contains('disabled')) return;
-    if(autoRunning) return;
-    autoRunning = true; autoStop = false;
-    const cond = getAutoCondition();
-    const step=()=>{
-      if(autoStop){autoRunning=false;return;}
-      const rec=makeRecord('auto');
-      if(matchCondition(rec,cond)){
-        rec.forceEnable=true;
-        renderResultList();
-        autoRunning=false;
-        return;
-      }
-      renderResultList();
-      setTimeout(step,0);
-    };
-    step();
+  // 단일
+  byId('single-draw').addEventListener('click', ()=>{
+    autoHideTotal();
+    makeRecord('single', false);
+    renderResultList();
   });
-  byId('auto-stop').addEventListener('click', ()=>{ autoStop=true; });
 
-  renderResultList();
-}
+  // ??? 뽑기
+  byId('multi-open').addEventListener('click', ()=>{
+    autoHideTotal();
+    byId('multi-panel').style.display='block';
+  });
+  byId('multi-cancel').addEventListener('click', ()=>{
+    byId('multi-panel').style.display='none';
+  });
+  byId('multi-run').addEventListener('click', ()=>{
+    const n = parseInt(byId('multi-count').value,10);
+    if(!Number.isFinite(n) || n<1 || n>1000){
+      alert('1~1000 사이의 정수를 입력하세요. (한 번에 최대 1000회)');
+      return;
+    }
+    const startLen = results.length;
+    for(let i=0;i<n;i++) makeRecord('multi', false); // 저장
+    byId('multi-panel').style.display='none';
+    renderResultList(); // 키 카운트만 갱신
+
+    // ✅ 요약 출력
+    const batch = results.slice(startLen);
+    const A = batch.filter(r=>r.grade==='A');
+    const aTotal = A.length
