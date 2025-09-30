@@ -13,7 +13,7 @@ const GROUP_C = ["공격력","방어력","체력"]; // %
 const GROUP_D = ["치명타 저항률","치명타 대미지 감소율"]; // %
 const PERCENT_SET = new Set([...GROUP_A, ...GROUP_C, ...GROUP_D]);
 
-const INIT_VALUES = {
+export const INIT_VALUES = {
   ...Object.fromEntries(GROUP_A.map(k => [k, [1.5,2.5,3.5,4.5]])),
   ...Object.fromEntries(GROUP_B.map(k => [k, [3,6,9,12]])),
   ...Object.fromEntries(GROUP_C.map(k => [k, [1,1.5,2,2.5]])),
@@ -32,7 +32,7 @@ const HIGH_STONES_PER_RUN = 27; // 20강 1회 완주 = 고급숫돌 27개
 
 /* ===== 유틸 ===== */
 const byId = (id) => document.getElementById(id);
-const rand = (n) => (Math.random()*n)|0;
+export const rand = (n) => (Math.random()*n)|0;
 const randomChoice = (arr) => arr[rand(arr.length)];
 const unique = (arr) => Array.from(new Set(arr));
 const OPTION_NAMES = Object.keys(INIT_VALUES);
@@ -73,7 +73,7 @@ function checkStartCfg(cfg){
 function reachableExact(startV, incs, k){
   const start = scale(startV);
   const incScaled = incs.map(scale);
-  let counts = new Map(); // 합계 -> 경우의수(순서 고려)
+  let counts = new Map();
   counts.set(0, 1);
   for(let i=0;i<k;i++){
     const next = new Map();
@@ -119,7 +119,7 @@ function exactProbability(startCfg, kMap, targetMap){
   const ks = opts.map(o => kMap[o] || 0);
   if (ks.reduce((a,b)=>a+b,0) !== STEPS) return 0;
 
-  let p = multinomialProb(ks, opts.length); // 옵션 균등 선택 확률
+  let p = multinomialProb(ks, opts.length);
   for(const o of opts){
     const k = kMap[o] || 0;
     if(k===0){
@@ -129,7 +129,7 @@ function exactProbability(startCfg, kMap, targetMap){
     const { waysMap } = reachableExact(startCfg[o], INCS[o], k);
     const deltaScaled = scale(targetMap[o] - startCfg[o]);
     const ways = waysMap[deltaScaled] || 0;
-    const denom = Math.pow(INCS[o].length, k); // 각 강화에서 증가치 후보 균등
+    const denom = Math.pow(INCS[o].length, k);
     p *= (ways / denom);
     if(p===0) break;
   }
@@ -357,7 +357,7 @@ export function mountStarter(app){
 
   rebuildGoalSection(); // 최초 1회
 
-  // ▼▼ 프리셋 로딩(시동무기 뽑기 → 강화 시뮬로)
+  // ▼▼ 프리셋 로딩(뽑기 → 강화 버튼으로 이동한 경우에만 존재)
   try {
     const raw = sessionStorage.getItem('starter_preset');
     if(raw){
@@ -403,7 +403,7 @@ export function mountStarter(app){
     byId('starter-out-stones-exp').textContent = (p>0 ? `${expectedStones.toFixed(2)} 개` : '∞');
     byId('starter-out-p').textContent = `성공확률 p ≈ ${(p*100).toFixed(6)}%`;
 
-    // === 보기 좋은 로그 포맷 ===
+    // === 로그 ===
     const optionLog = names.map(n=>`${n} : ${fmt(n, startCfg[n])}`).join('\n');
     const kLog = names.map(n=>`${n} : ${kMap[n]}회`).join('\n');
     const targetLog = names.map(n=>`${n} : ${fmt(n, targetMap[n])}`).join('\n');
