@@ -185,7 +185,10 @@ export function mountDraw(app){
       </div>
 
       <div id="draw-results" style="margin-top:12px"></div>
-      <div id="draw-total" style="margin-top:12px"></div>
+
+      <div id="draw-total" style="margin-top:12px">
+        <!-- 총 결과 UI가 여기 렌더됩니다 -->
+      </div>
     </section>
   `;
 
@@ -214,32 +217,49 @@ export function mountDraw(app){
   });
 
   byId('show-total').addEventListener('click', ()=>{
+    // 집계
     const total = results.length;
     const A = results.filter(r=>r.grade==='A');
     const counts = {weapon:0,armor:0,hat:0,shoes:0,gloves:0};
     A.forEach(r=>counts[r.part]++);
     const a4 = A.filter(r=>r.subs.length===4).length;
 
-    // 요구 조건에서 일부 예시(장갑 특정 조합)
+    // 요구 조건의 예시 집계 (추가 가능)
     const glovePhysEffBoth = A.filter(r=>
       r.part==='gloves' && r.main==='물리저항력' &&
       r.subs.includes('효과적중') && r.subs.includes('효과저항')
     ).length;
 
-    byId('draw-total').innerHTML = `
-      <div class="card">
-        <div class="big">총 결과</div>
-        <div style="white-space:pre-wrap; margin-top:6px">
+    // 텍스트(복사용) 생성
+    const totalText =
+`총 결과
+
 총 뽑기 횟수: ${total}
 
 A급 시동무기 총 갯수 [무기:${counts.weapon} , 옷:${counts.armor} , 모자:${counts.hat} , 신발:${counts.shoes} , 장갑:${counts.gloves}]
 A급 시동무기 중에 부옵션 4개인 총 갯수: ${a4}
 
 장갑 부위에서
-  - 주스탯: 물리저항력 / 부스탯: 효과적중과 효과저항 동시 → ${glovePhysEffBoth}
+- 주스탯: 물리저항력 / 부스탯: 효과적중과 효과저항 동시 → ${glovePhysEffBoth}
+`;
+
+    // UI 렌더 + 복사 버튼
+    byId('draw-total').innerHTML = `
+      <div class="card">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px">
+          <div class="big">총 결과</div>
+          <button id="copy-total" class="hero-btn">📋 총 결과 복사</button>
         </div>
+        <div style="white-space:pre-wrap; margin-top:6px" id="draw-total-text">${totalText}</div>
       </div>
     `;
+
+    // 복사 기능
+    byId('copy-total').addEventListener('click', ()=>{
+      const text = byId('draw-total-text').textContent;
+      navigator.clipboard.writeText(text)
+        .then(()=> alert('총 결과가 클립보드에 복사되었습니다!'));
+    });
   });
 
   renderResultList();
