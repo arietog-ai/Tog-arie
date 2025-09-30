@@ -1,19 +1,13 @@
 // js/feature_starter.js
 // 시동무기 강화 시뮬레이터 (정확 확률 계산 버전)
-// - 0강: 4옵션 랜덤, 중복 불가(수정 시 중복 방지)
-// - 목표: 옵션별 강화횟수(k), 합계=5 강제
-// - 정확 확률 계산(멀티노미얼 × 증가치 경우의수)
-// - 출력: 기대 시동무기 개수(1/p), 예상 고급숫돌(27/p)
-// - 로그: 읽기 좋은 포맷 + 📋 복사 버튼
 
-/* ===== 옵션 그룹/값 정의 ===== */
 const GROUP_A = ["물리관통력","마법관통력","물리저항력","마법저항력","치명타확률","치명타데미지증가"]; // %
 const GROUP_B = ["회피","명중","효과적중","효과저항"]; // 수치
 const GROUP_C = ["공격력","방어력","체력"]; // %
 const GROUP_D = ["치명타 저항률","치명타 대미지 감소율"]; // %
 const PERCENT_SET = new Set([...GROUP_A, ...GROUP_C, ...GROUP_D]);
 
-export const INIT_VALUES = {
+const INIT_VALUES = {
   ...Object.fromEntries(GROUP_A.map(k => [k, [1.5,2.5,3.5,4.5]])),
   ...Object.fromEntries(GROUP_B.map(k => [k, [3,6,9,12]])),
   ...Object.fromEntries(GROUP_C.map(k => [k, [1,1.5,2,2.5]])),
@@ -26,23 +20,19 @@ const INCS = {
   ...Object.fromEntries(GROUP_D.map(k => [k, [1.5,2.5,3.5,4.5]])),
 };
 
-/* ===== 강화/재료 상수 ===== */
-const STEPS = 5;                // 총 5회 강화
-const HIGH_STONES_PER_RUN = 27; // 20강 1회 완주 = 고급숫돌 27개
+const STEPS = 5;
+const HIGH_STONES_PER_RUN = 27;
 
-/* ===== 유틸 ===== */
 const byId = (id) => document.getElementById(id);
-export const rand = (n) => (Math.random()*n)|0;
+const rand = (n) => (Math.random()*n)|0;
 const randomChoice = (arr) => arr[rand(arr.length)];
 const unique = (arr) => Array.from(new Set(arr));
 const OPTION_NAMES = Object.keys(INIT_VALUES);
 const fmt = (opt, v) => PERCENT_SET.has(opt) ? `${v}%` : `${v}`;
 
-/* === 스케일링 (0.5 단위 정확) === */
 const SCALE = 2;
 const scale = (x) => Math.round(x * SCALE);
 
-/* ===== 초기 0강 랜덤 세팅 ===== */
 function randomDistinctOptions(n=4){
   const pool = OPTION_NAMES.slice();
   for (let i = pool.length - 1; i > 0; i--) {
@@ -58,7 +48,6 @@ function makeInitialStartCfg(){
   return cfg;
 }
 
-/* ===== 0강 검사 ===== */
 function checkStartCfg(cfg){
   const keys = Object.keys(cfg);
   if(keys.length !== 4) throw new Error('0강 옵션은 정확히 4개여야 합니다.');
@@ -69,7 +58,6 @@ function checkStartCfg(cfg){
   });
 }
 
-/* ===== 정확히 k회 강화 결과 ===== */
 function reachableExact(startV, incs, k){
   const start = scale(startV);
   const incScaled = incs.map(scale);
@@ -101,7 +89,6 @@ function reachableExact(startV, incs, k){
   return { values, waysMap };
 }
 
-/* ===== 멀티노미얼 ===== */
 function factorial(n){ let r=1; for(let i=2;i<=n;i++) r*=i; return r; }
 function multinomialCoef(counts){
   const n = counts.reduce((a,b)=>a+b,0);
@@ -113,7 +100,6 @@ function multinomialProb(counts, m=4){
   return multinomialCoef(counts) * Math.pow(1/m, n);
 }
 
-/* ===== 확률 계산 ===== */
 function exactProbability(startCfg, kMap, targetMap){
   const opts = Object.keys(startCfg);
   const ks = opts.map(o => kMap[o] || 0);
@@ -136,7 +122,6 @@ function exactProbability(startCfg, kMap, targetMap){
   return p;
 }
 
-/* ===== 뷰 ===== */
 export function mountStarter(app){
   app.innerHTML = `
     <section class="container">
@@ -180,10 +165,8 @@ export function mountStarter(app){
     </section>
   `;
 
-  // 홈
   byId('starter-home-btn').addEventListener('click', ()=>{ location.hash=''; });
 
-  /* ---------- 0강 폼 ---------- */
   const startHost = byId('starter-start');
 
   function startRow(id){
@@ -204,7 +187,6 @@ export function mountStarter(app){
   }
   startHost.innerHTML = startRow(1)+startRow(2)+startRow(3)+startRow(4);
 
-  // 랜덤 초기 배정
   const defaultStart = makeInitialStartCfg();
   [1,2,3,4].forEach((i,idx)=>{
     const nameSel = byId(`s${i}-name`);
@@ -222,7 +204,6 @@ export function mountStarter(app){
   }
   [1,2,3,4].forEach(i=> refreshInitVal(i, true));
 
-  // 옵션 중복 방지
   function selectedNames(){ return [1,2,3,4].map(i=>byId(`s${i}-name`).value); }
   function syncOptionDisables(){
     const chosen = selectedNames();
@@ -246,7 +227,6 @@ export function mountStarter(app){
     byId(`s${i}-val`).addEventListener('change', rebuildGoalSection);
   });
 
-  /* ---------- 목표 섹션 ---------- */
   const goalHost = byId('starter-goal');
   const remainingEl = byId('starter-remaining');
 
@@ -262,7 +242,6 @@ export function mountStarter(app){
     const startCfg = getStartCfg();
     const names = Object.keys(startCfg);
 
-    // 빌드
     goalHost.innerHTML = names.map((opt, idx)=>{
       const id = `g${idx+1}`;
       const kSel = `<select id="${id}-k">${[0,1,2,3,4,5].map(k=>`<option value="${k}">${k}회</option>`).join('')}</select>`;
@@ -289,7 +268,6 @@ export function mountStarter(app){
       `;
     }).join('');
 
-    // k 합 표시/제어 & 값 후보 갱신
     const readKMap = ()=>{
       const kMap = {};
       names.forEach((opt, idx)=>{
@@ -318,7 +296,6 @@ export function mountStarter(app){
       });
     };
 
-    // 이벤트: k/값 변경 → 합 5 유지 + 후보 갱신 + compute()
     names.forEach((opt, idx)=>{
       const id = `g${idx+1}`;
       const kEl = byId(`${id}-k`);
@@ -342,7 +319,6 @@ export function mountStarter(app){
       });
     });
 
-    // 초기 표시 + 초기 계산
     setRemaining();
     refreshValueChoices();
     try { compute(); } catch(e) { showComputeError(e); }
@@ -355,9 +331,9 @@ export function mountStarter(app){
     byId('starter-log').textContent = '⚠️ ' + e.message;
   }
 
-  rebuildGoalSection(); // 최초 1회
+  rebuildGoalSection();
 
-  // ▼▼ 프리셋 로딩(뽑기 → 강화 버튼으로 이동한 경우에만 존재)
+  // ▼▼ 뽑기 → 강화 프리셋 로딩
   try {
     const raw = sessionStorage.getItem('starter_preset');
     if(raw){
@@ -378,12 +354,10 @@ export function mountStarter(app){
     }
   } catch(e){}
 
-  /* ---------- 계산 실행(정확 확률) ---------- */
   function compute(){
     const startCfg = getStartCfg();
     const names = Object.keys(startCfg);
 
-    // kMap / targetMap 수집
     const kMap = {};
     const targetMap = {};
     names.forEach((opt, idx)=>{
@@ -403,7 +377,6 @@ export function mountStarter(app){
     byId('starter-out-stones-exp').textContent = (p>0 ? `${expectedStones.toFixed(2)} 개` : '∞');
     byId('starter-out-p').textContent = `성공확률 p ≈ ${(p*100).toFixed(6)}%`;
 
-    // === 로그 ===
     const optionLog = names.map(n=>`${n} : ${fmt(n, startCfg[n])}`).join('\n');
     const kLog = names.map(n=>`${n} : ${kMap[n]}회`).join('\n');
     const targetLog = names.map(n=>`${n} : ${fmt(n, targetMap[n])}`).join('\n');
@@ -428,7 +401,6 @@ ${targetLog}
     byId('starter-log').textContent = text;
   }
 
-  // 복사 버튼
   byId('starter-copy').addEventListener('click', ()=>{
     navigator.clipboard.writeText(byId('starter-log').textContent)
       .then(()=> alert('시뮬레이션 결과가 복사되었습니다!'));
