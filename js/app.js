@@ -5,13 +5,16 @@ import { mountDraw } from './feature_draw.js';
 
 const app = document.getElementById('app');
 
+function scrollTop(){ try{ window.scrollTo({top:0, behavior:'instant'}); }catch(_){} }
+
 function renderHome(){
+  const usedKeys = sessionStorage.getItem('used_keys') || 0;
   app.innerHTML = `
     <section class="hero container">
       <img src="./assets/img/blur_guild.png" alt="블러 연합" class="hero-img" />
       <div class="btn-wrap">
         <button class="hero-btn" data-route="shop">개척상점계산기</button>
-        <button class="hero-btn" data-route="gear">시동무기</button>
+        <button class="hero-btn" data-route="gear">시동무기 (🔑 <span id="key-count">${usedKeys}</span>)</button>
         <button class="hero-btn" disabled>기능생성예정1</button>
         <button class="hero-btn" disabled>기능생성예정2</button>
         <button class="hero-btn" disabled>기능생성예정3</button>
@@ -70,10 +73,16 @@ function renderFromHash(){
       app.innerHTML = '';
       mountStarter(app);
       break;
-    default:
+    case '':
+    case '#':
       renderHome();
+      break;
+    default:
+      location.hash = '';
+      return;
   }
+  scrollTop();
 }
 
-window.addEventListener('hashchange', renderFromHash);
-document.addEventListener('DOMContentLoaded', renderFromHash);
+window.addEventListener('hashchange', renderFromHash, { passive:true });
+document.addEventListener('DOMContentLoaded', renderFromHash, { passive:true });
