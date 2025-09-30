@@ -5,7 +5,7 @@ const byId = (id)=>document.getElementById(id);
 const rand = (n)=>(Math.random()*n)|0;
 const choice = (arr)=>arr[rand(arr.length)];
 
-const ICON_KEY = "./assets/img/key.png"; // 확장자 맞춰주세요
+const ICON_KEY = "./assets/img/key.jpg"; // 확장자 .jpg 고정
 
 // === 옵션 키(강화와 동일) ===
 const SUB_OPTIONS = [
@@ -50,7 +50,7 @@ const INIT_VALUES = {
 };
 
 // ===== 세션 상태 =====
-let results = [];  // {part, grade, main, subs, src, display, forceEnable}
+let results = [];  // {part, grade, main, subs, src, display, forceEnable, when}
 let usedKeys = 0;
 let autoRunning = false;
 let autoStop = false;
@@ -97,7 +97,7 @@ function makeRecord(src, forceEnable=false){
   const grade = rollGrade();
   const main = rollMainStat(part);
   const subs = rollSubs(grade, main);
-  const rec = { part, grade, main, subs, src, forceEnable, display:false, when:Date.now() };
+  const rec = { part, grade, main, subs, src, forceEnable, display:false, when:Date.now() + Math.random() };
   results.push(rec);
   saveSession();
   return rec;
@@ -105,14 +105,13 @@ function makeRecord(src, forceEnable=false){
 
 // 표시 규칙: 단일은 마지막 1개만, 자동은 조건 달성 1개만, ???는 표시 안함
 function updateDisplayFlags(){
-  // 모두 숨김
   results.forEach(r => r.display = false);
 
   // 단일 마지막 1개
   for(let i=results.length-1;i>=0;i--){
     if(results[i].src==='single'){ results[i].display = true; break; }
   }
-  // 자동 마지막 1개(조건 달성 기록만)
+  // 자동 마지막 1개(조건 달성만)
   for(let i=results.length-1;i>=0;i--){
     if(results[i].src==='auto' && results[i].forceEnable){ results[i].display = true; break; }
   }
@@ -123,7 +122,7 @@ function renderResultList(){
   const list = results.filter(r=>r.display);
   const host = byId('draw-results');
 
-  host.innerHTML = list.map((r,i)=>{
+  host.innerHTML = list.map((r)=>{
     const enable = r.forceEnable || (r.grade==='A' && r.subs.length===4);
     return `
       <div class="card" style="padding:10px; margin-bottom:10px; ${enable?'border:2px solid var(--ok)':''}">
@@ -138,26 +137,26 @@ function renderResultList(){
     `;
   }).join('');
 
-  // 핸들러
+  // 강화로 보내기
   host.querySelectorAll('.to-starter').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       if(btn.classList.contains('disabled')) return;
-      const when = parseInt(btn.dataset.when,10);
+      const when = parseFloat(btn.dataset.when);
       const r = results.find(x=>x.when===when);
       if(!r) return;
 
-      // 주 + 부 3 = 4옵션 (부족하면 랜덤 보충)
-      const base = [r.main, ...r.subs].slice(0,4);
-      let four = base.slice();
-      if(four.length<4){
-        const pool = SUB_OPTIONS.filter(x=>x!==r.main && !four.includes(x));
-        while(four.length<4 && pool.length){
+      // ✅ 부옵션만 강화 대상으로 전달 (주옵 제외)
+      let four = r.subs.slice(0,4);
+      if(four.length < 4){
+        const pool = SUB_OPTIONS.filter(x=>!four.includes(x));
+        while(four.length < 4 && pool.length){
           const pick = choice(pool);
           four.push(pick);
           const idx = pool.indexOf(pick);
-          if(idx>=0) pool.splice(idx,1);
+          if(idx >= 0) pool.splice(idx,1);
         }
       }
+
       const preset = {
         starter4: four.map(stat=>{
           const vals = INIT_VALUES[stat] || [1,1.5,2,2.5];
@@ -169,18 +168,40 @@ function renderResultList(){
     });
   });
 
-  // 사용 키 업데이트
+  // 사용 키 표시
   const k0 = document.querySelector('#key-count');
   if(k0) k0.textContent = usedKeys;
   const k1 = byId('used-keys');
   if(k1) k1.textContent = usedKeys;
 }
 
+/* ===== 총 결과 카드 ===== */
+function closeTotalCard(){
+  byId('draw-total').innerHTML = '';
+}
+function showTotalCardWith(text){
+  byId('draw-total').innerHTML = `
+    <div class="card">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:8px">
+        <div class="big">총 결과</div>
+        <div style="display:flex; gap:8px; align-items:center">
+          <button id="copy-total" class="hero-btn">📋 총 결과 복사</button>
+          <button id="close-total" class="hero-btn">닫기</button>
+        </div>
+      </div>
+      <div style="white-space:pre-wrap; margin-top:6px" id="draw-total-text">${text}</div>
+    </div>
+  `;
+  byId('copy-total').addEventListener('click', ()=>{
+    const t = byId('draw-total-text').textContent;
+    navigator.clipboard.writeText(t).then(()=> alert('총 결과가 클립보드에 복사되었습니다!'));
+  });
+  byId('close-total').addEventListener('click', closeTotalCard);
+}
+
 /* ===== 자동 뽑기 조건 ===== */
 function buildAutoUI(){
-  // 부위/주옵 초기화
   syncAutoMain();
-  // 부옵 체크 로직(정확히 4개)
   enforceSubSelectLimit();
 }
 function syncAutoMain(){
@@ -246,16 +267,17 @@ function getAutoCondition(){
 function matchCondition(rec, cond){
   if(rec.part !== cond.part) return false;
   if(rec.main !== cond.main) return false;
-  // 선택된 부옵 4개가 모두 포함(부옵 개수는 장비 등급 따라 다름)
   for(const s of cond.subs){
     if(!rec.subs.includes(s)) return false;
   }
   return true;
 }
 
+/* ===== 메인 마운트 ===== */
 export function mountDraw(app){
-  // 페이지 입장 시 매번 초기화
+  // 페이지 입장 시 매번 초기화 (요청사항)
   resetDrawSession();
+  loadSession();
 
   app.innerHTML = `
     <section class="container">
@@ -269,8 +291,14 @@ export function mountDraw(app){
 
       <div class="card">
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center">
-          <button class="hero-btn" id="single-draw">단일 뽑기</button>
-          <button class="hero-btn" id="multi-open">??? 뽑기</button>
+          <button class="hero-btn" id="single-draw">
+            <img src="${ICON_KEY}" alt="" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;border-radius:4px" />
+            단일 뽑기
+          </button>
+          <button class="hero-btn" id="multi-open">
+            <img src="${ICON_KEY}" alt="" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;border-radius:4px" />
+            ??? 뽑기
+          </button>
           <button class="hero-btn" id="auto-open">자동 뽑기(조건)</button>
           <button class="hero-btn" id="show-total" style="margin-left:auto">총 결과보기</button>
         </div>
@@ -327,6 +355,9 @@ export function mountDraw(app){
     </section>
   `;
 
+  // 공통: 뽑기류 버튼 누르면 총 결과 카드 자동 닫기
+  const autoHideTotal = ()=> closeTotalCard();
+
   // 홈 → 즉시 세션 초기화
   byId('draw-home').addEventListener('click', ()=>{
     resetDrawSession();
@@ -335,26 +366,51 @@ export function mountDraw(app){
 
   // 단일
   byId('single-draw').addEventListener('click', ()=>{
-    const rec = makeRecord('single', false);
+    autoHideTotal();
+    makeRecord('single', false);
     renderResultList();
   });
 
   // ??? 뽑기
-  byId('multi-open').addEventListener('click', ()=> byId('multi-panel').style.display='block');
-  byId('multi-cancel').addEventListener('click', ()=> byId('multi-panel').style.display='none');
+  byId('multi-open').addEventListener('click', ()=>{
+    autoHideTotal();
+    byId('multi-panel').style.display='block';
+  });
+  byId('multi-cancel').addEventListener('click', ()=>{
+    byId('multi-panel').style.display='none';
+  });
   byId('multi-run').addEventListener('click', ()=>{
     const n = parseInt(byId('multi-count').value,10);
     if(!Number.isFinite(n) || n<1 || n>1000){
       alert('1~1000 사이의 정수를 입력하세요. (한 번에 최대 1000회)');
       return;
     }
-    for(let i=0;i<n;i++) makeRecord('multi', false); // 표시 안 함
+    const startLen = results.length;
+    for(let i=0;i<n;i++) makeRecord('multi', false); // 리스트에는 출력 안함
     byId('multi-panel').style.display='none';
-    renderResultList(); // 키 카운트만 갱신
+    renderResultList(); // 키 카운트 갱신
+
+    // 이 실행분(batch)에 대한 요약 카드 출력
+    const batch = results.slice(startLen);
+    const A = batch.filter(r=>r.grade==='A');
+    const aTotal = A.length;
+    const a3 = A.filter(r=>r.subs.length===3).length;
+    const a4 = A.filter(r=>r.subs.length===4).length;
+
+    const txt =
+`이번 ??? 뽑기 결과 요약
+
+총 뽑기 횟수(이번 실행): ${n}
+A급 총: ${aTotal}개
+- A급(부옵 3개): ${a3}개
+- A급(부옵 4개): ${a4}개
+`;
+    showTotalCardWith(txt);
   });
 
   // 자동(조건)
   byId('auto-open').addEventListener('click', ()=>{
+    autoHideTotal();
     byId('auto-panel').style.display='block';
     buildAutoUI();
   });
@@ -367,6 +423,7 @@ export function mountDraw(app){
   byId('auto-run').addEventListener('click', ()=>{
     if(byId('auto-run').classList.contains('disabled')) return; // 4개 미만 선택 방지
     if(autoRunning) return;
+    autoHideTotal();
     autoRunning = true; autoStop = false;
 
     const cond = getAutoCondition();
@@ -374,44 +431,39 @@ export function mountDraw(app){
     const startKeys = usedKeys;
 
     const BATCH = 200;
-    const tick = ()=>{
+    const step = ()=>{
       if(autoStop){ autoRunning=false; return; }
       for(let i=0;i<BATCH;i++){
         const rec = makeRecord('auto', false);
         if(matchCondition(rec, cond)){
           // 조건 달성!
           rec.forceEnable = true; // 강화 버튼 활성
-          // 자동표시: 마지막 조건 달성 1개만
           renderResultList();
           const drew = results.length - startCount;
           const used = usedKeys - startKeys;
-          byId('draw-total').innerHTML = `
-            <div class="card">
-              <div class="big">자동 뽑기 결과</div>
-              <div style="margin-top:6px">조건 달성! 총 ${drew}회 뽑음 (열쇠 ${used}개 사용)</div>
-            </div>
-          `;
+          const txt = `자동 뽑기 결과\n\n조건 달성! 총 ${drew}회 뽑음 (열쇠 ${used}개 사용)`;
+          showTotalCardWith(txt);
           autoRunning=false;
           return;
         }
       }
       renderResultList();
-      setTimeout(tick, 0);
+      setTimeout(step, 0);
     };
-    tick();
+    step();
   });
 
   byId('auto-stop').addEventListener('click', ()=>{
     autoStop = true;
   });
 
-  // 총 결과
+  // 총 결과 버튼
   byId('show-total').addEventListener('click', ()=>{
+    // 종합 집계
     const total = results.length;
     const A = results.filter(r=>r.grade==='A');
     const counts = {weapon:0,armor:0,hat:0,shoes:0,gloves:0};
     A.forEach(r=>counts[r.part]++);
-
     const a4 = A.filter(r=>r.subs.length===4).length;
 
     // 무기/옷/모자: 특수 조합
@@ -452,19 +504,7 @@ A급 시동무기 중에 부옵션 4개인 총 갯수: ${a4}
 장갑 부위
 - 주스탯: 물리저항력 & 부스탯: (효과적중 + 효과저항) → ${glovesPhysEffBoth}
 `;
-
-    byId('draw-total').innerHTML = `
-      <div class="card">
-        <div class="big">총 결과</div>
-        <button id="copy-total" class="hero-btn" style="margin-top:8px">📋 총 결과 복사</button>
-        <div style="white-space:pre-wrap; margin-top:6px" id="draw-total-text">${totalText}</div>
-      </div>
-    `;
-    byId('copy-total').addEventListener('click', ()=>{
-      const text = byId('draw-total-text').textContent;
-      navigator.clipboard.writeText(text)
-        .then(()=> alert('총 결과가 클립보드에 복사되었습니다!'));
-    });
+    showTotalCardWith(totalText);
   });
 
   renderResultList();
