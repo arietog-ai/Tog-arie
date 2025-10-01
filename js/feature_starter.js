@@ -2,8 +2,8 @@
 // 시동무기 강화 시뮬레이터
 // - 정확 확률 계산(목표 k합=5, 값 정확히 일치)
 // - 몬테카를로(고정 100,000,000회) 기대 결과:
-//     • 기대 강화횟수 E[k] → 합계=5 보장 정수 배분
-//     • 기대 최종값(퍼센트 0.5단위 / 수치 정수 반올림)
+//     • 기대 강화횟수 E[k] → 합계=5 보장 정수 배분(내부 계산만, 화면 표기는 숨김)
+//     • 기대 최종값(퍼센트 0.5 단위 / 수치 정수 반올림) → "옵션명 : 초기값 -> 기대값" 만 표기
 // - 드로우(뽑기) 프리셋 연동: 부옵 4개만 0강 셋팅
 
 /* ===== 옵션 그룹/값 정의 ===== */
@@ -124,16 +124,18 @@ function exactProbability(startCfg, kMap, targetMap){
 
 /* =============== 몬테카를로: 100,000,000회 고정 =============== */
 const MC_TOTAL = 100000000;  // 1억회
-const MC_BATCH = 200000;     // 프레임당 20만회 (필요시 100k로 낮춰도 됨)
+const MC_BATCH = 200000;     // 프레임당 20만회
 
 function mcInit(names, startCfg){
   return {
     names,
     startCfg,
     N: 0,
-    sumHits: [0,0,0,0],           // 옵션별 누적 강화횟수
+    sumHits: [0,0,0,0],           // 옵션별 누적 강화횟수(표시는 안 함)
     sumFinalScaled: [0,0,0,0],    // 옵션별 최종값(스케일) 누적
     stop: false,
+    doneBatches: 0,
+    totalBatches: Math.ceil(MC_TOTAL / MC_BATCH),
   };
 }
 
@@ -173,7 +175,7 @@ function roundDisplayValue(opt, v){ // 표시용 반올림 규칙
 }
 
 function assignIntHitsSum5(avgHits){
-  // 바닥합 + 소수 큰 순으로 (5 - 바닥합) 배분 → 합=5 보장
+  // 바닥합 + 소수 큰 순으로 (5 - 바닥합) 배분 → 합=5 보장 (내부 계산용)
   const floors = avgHits.map(x=>Math.floor(x));
   let need = 5 - floors.reduce((a,b)=>a+b,0);
   const decs = avgHits.map((x,i)=>({i, d: x - Math.floor(x), base: x}));
@@ -226,17 +228,17 @@ export function mountStarter(app){
         <pre id="starter-log" class="mono" style="margin-top:10px"></pre>
         <button id="starter-copy" style="margin-top:8px">📋 결과 복사</button>
 
-        <!-- ▼▼ 몬테카를로(1억회 고정) -->
+        <!-- ▼▼ 몬테카를로 (1억회) -->
         <div class="card" style="margin-top:12px">
-          <h3>20강 기대값(몬테카를로)</h3>
+          <h3>20강 기대값</h3>
           <p class="muted">
-            0강 구성으로 5회 강화를 <b>100,000,000회</b> 시뮬합니다.<br>
-            • 기대 강화횟수는 합계가 <b>항상 5</b>가 되도록 정수 배분하여 표기합니다.<br>
-            • 기대 최종값은 퍼센트형 <b>0.5 단위</b> / 수치형 <b>정수</b>로 반올림하여 표기합니다.
+            0강 구성으로 5회 강화를 <b>대량 시뮬</b>하여 옵션별 기대 최종값을 보여줍니다.<br>
+            (퍼센트형 0.5 단위, 수치형 정수 반올림)
           </p>
-          <div style="display:flex; gap:8px; align-items:center">
-            <button id="mc-run" class="hero-btn">20강 시뮬 돌리기 (100,000,000회)</button>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+            <button id="mc-run" class="hero-btn">20강 기대값</button>
             <button id="mc-stop" class="hero-btn">중지</button>
+            <button id="mc-reset" class="hero-btn">초기화</button>
             <span id="mc-status" class="muted" style="margin-left:6px"></span>
           </div>
           <div id="mc-out" style="margin-top:10px"></div>
@@ -268,7 +270,7 @@ export function mountStarter(app){
   }
   startHost.innerHTML = startRow(1)+startRow(2)+startRow(3)+startRow(4);
 
-  // 랜덤 or 프리셋
+  // 랜덤 or 프리셋(뽑기→강화)
   let defaultStart = makeInitialStartCfg();
   try{
     const raw = sessionStorage.getItem('starter_preset');
@@ -453,10 +455,9 @@ export function mountStarter(app){
     byId('starter-out-stones-exp').textContent = (p>0 ? `${expectedStones.toFixed(2)} 개` : '∞');
     byId('starter-out-p').textContent = `성공확률 p ≈ ${(p*100).toFixed(6)}%`;
 
-    const names2 = Object.keys(startCfg);
-    const optionLog = names2.map(n=>`${n} : ${fmt(n, startCfg[n])}`).join('\n');
-    const kLog = names2.map(n=>`${n} : ${kMap[n]}회`).join('\n');
-    const targetLog = names2.map(n=>`${n} : ${fmt(n, targetMap[n])}`).join('\n');
+    const optionLog = names.map(n=>`${n} : ${fmt(n, startCfg[n])}`).join('\n');
+    const kLog = names.map(n=>`${n} : ${kMap[n]}회`).join('\n');
+    const targetLog = names.map(n=>`${n} : ${fmt(n, targetMap[n])}`).join('\n');
 
     byId('starter-log').textContent =
 `시뮬레이션 요약
@@ -485,26 +486,19 @@ ${targetLog}
   /* ========== 20강 몬테카를로 (1억회) ========== */
   function renderMC(stat){
     const { names, startCfg, sumHits, sumFinalScaled, N } = stat;
-    const avgHits = sumHits.map(h=>h/N);                       // 기대 강화횟수 (실수)
-    const intHits = assignIntHitsSum5(avgHits.slice());        // 합=5로 정수 배분
-    const avgVals = sumFinalScaled.map(s => (s/N)/SCALE);      // 기대 최종값(실수)
+    const avgHits = sumHits.map(h=>h/N);                  // 내부 계산용
+    assignIntHitsSum5(avgHits.slice());                   // 합=5 보장(표시하지 않음)
+    const avgVals = sumFinalScaled.map(s => (s/N)/SCALE); // 기대 최종값(실수)
 
-    const cards = names.map((opt,i)=>{
-      const hitStr = `${intHits[i]}회 (E[k]≈${avgHits[i].toFixed(3)})`;
+    // "옵션명 : 초기값 -> 기대값" 만 출력
+    const lines = names.map((opt,i)=>{
       const disp = roundDisplayValue(opt, avgVals[i]);
-      return `
-        <div class="card" style="padding:10px">
-          <div><b>${opt}</b></div>
-          <div class="muted">강화 횟수(정수 배분): ${hitStr}</div>
-          <div>기대 최종값(표시용): <b>${disp.txt}</b></div>
-        </div>
-      `;
+      return `<div class="card" style="padding:10px">${opt} : ${fmt(opt, startCfg[opt])} -> <b>${disp.txt}</b></div>`;
     }).join('');
 
     return `
-      <div class="muted">완료: ${N.toLocaleString()} 회 (합계 강화횟수는 항상 5로 배분됩니다)</div>
       <div class="grid cols-2" style="gap:8px; margin-top:6px">
-        ${cards}
+        ${lines}
       </div>
     `;
   }
@@ -513,35 +507,37 @@ ${targetLog}
     const names = Object.keys(startCfg);
     const stat = mcInit(names, startCfg);
 
-    const totalBatches = Math.ceil(MC_TOTAL / MC_BATCH);
-    let doneBatches = 0;
-    byId('mc-status').textContent = `진행 중... (0 / ${totalBatches} 배치)`;
+    byId('mc-status').textContent = `진행 중... (0 / ${stat.totalBatches} 배치)`;
     byId('mc-out').innerHTML = '';
 
     const step = ()=>{
       if(stat.stop){
-        byId('mc-status').textContent = `중지됨 (${stat.N.toLocaleString()} 회)`;
+        byId('mc-status')..textContent = '완료'; // 중지 시에도 화면은 간단히 '완료'
         byId('mc-out').innerHTML = renderMC(stat);
         return;
       }
       const remain = MC_TOTAL - stat.N;
       if(remain<=0){
-        byId('mc-status').textContent = `완료 (${stat.N.toLocaleString()} 회)`;
+        byId('mc-status').textContent = '완료';
         byId('mc-out').innerHTML = renderMC(stat);
         return;
       }
       mcRunBatch(stat);
-      doneBatches++;
-      if(doneBatches % 2 === 0){
-        byId('mc-status').textContent = `진행 중... (${doneBatches} / ${totalBatches} 배치)`;
+      stat.doneBatches++;
+      if(stat.doneBatches % 2 === 0){
+        byId('mc-status').textContent = `진행 중... (${stat.doneBatches} / ${stat.totalBatches} 배치)`;
       }
       requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
 
-    // 중지 버튼 핸들러
-    const stopBtn = byId('mc-stop');
-    stopBtn.onclick = ()=>{ stat.stop = true; };
+    // 버튼 핸들러
+    byId('mc-stop').onclick = ()=>{ stat.stop = true; };
+    byId('mc-reset').onclick = ()=>{
+      stat.stop = true;
+      byId('mc-status').textContent = '';
+      byId('mc-out').innerHTML = '';
+    };
   }
 
   byId('mc-run').addEventListener('click', ()=>{
