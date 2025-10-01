@@ -1,7 +1,10 @@
 // js/feature_starter.js
 // 시동무기 강화 시뮬레이터
 // - 정확 확률 계산(목표 k합=5, 값 정확히 일치)
-// - 몬테카를로(다회 시뮬) 20강 기대/케이스 뷰: 사용자 정의 회수로 5회 강화 과정을 반복하여 "모드 기반 기대값" + "옵션별 최고 케이스 4종" 출력
+// - 몬테카를로(10,000,000회 고정) 20강 기대/케이스 뷰
+//   * 개별 옵션 최빈(모드) 결과
+//   * ★공동 최빈 분배(합=5) 결과(요청 사항: 강화횟수 합이 5로 보장)
+//   * 옵션별 최고 케이스 4종
 // - 드로우(뽑기) 프리셋 연동: 부옵 4개만 가져와 0강 셋팅
 
 /* ===== 옵션 그룹/값 정의 ===== */
@@ -122,7 +125,80 @@ function exactProbability(startCfg, kMap, targetMap){
   return p;
 }
 
-/* ===== 뷰 ===== */
+/* ================= 몬테카를로(고정 10,000,000회) ================= */
+const MC_TOTAL = 10000000;      // 1천만 회 고정
+const MC_BATCH = 200000;        // 프레임당 처리 수(멈춤 방지)
+
+function mcInitStats(names, startCfg){
+  const stat = {
+    names,
+    startCfg,
+    N: 0,
+    hitCounts: names.map(()=> new Uint32Array(STEPS+1)),                   // [4][0..5]
+    valueFreq: names.map(()=> Array.from({length:STEPS+1},()=> new Map())),// [4][k] -> Map(valueScaled -> count)
+    atLeast1: names.map(()=>0),                                            // 각 옵션이 1회 이상 맞음 횟수
+    hitVectorCounts: new Map(),                                            // "k1,k2,k3,k4" -> count (합=5)
+  };
+  return stat;
+}
+function mcAccumulate(stat, sumScaled, hits, startScaled){
+  const { names, hitCounts, valueFreq, atLeast1, hitVectorCounts } = stat;
+
+  // 공동 분배 카운트
+  const key = hits.join(',');
+  hitVectorCounts.set(key, (hitVectorCounts.get(key)||0) + 1);
+
+  for(let i=0;i<4;i++){
+    const k = hits[i];
+    hitCounts[i][k]++;
+
+    const finalScaled = startScaled[i] + sumScaled[i];
+    const vf = valueFreq[i][k];
+    vf.set(finalScaled, (vf.get(finalScaled)||0)+1);
+
+    if(k>0) atLeast1[i]++;
+  }
+  stat.N++;
+}
+function mcRunBatch(stat){
+  const { names, startCfg } = stat;
+  const incArr      = names.map(n => INCS[n]);
+  const startScaled = names.map(n => scale(startCfg[n]));
+
+  for(let t=0; t<MC_BATCH; t++){
+    const hits = [0,0,0,0];
+    const sumScaled = [0,0,0,0];
+
+    for(let s=0; s<STEPS; s++){
+      const i = rand(4);
+      const inc = incArr[i][rand(incArr[i].length)];
+      sumScaled[i] += scale(inc);
+      hits[i]++;
+    }
+    mcAccumulate(stat, sumScaled, hits, startScaled);
+  }
+}
+function argmaxIndex(arr){
+  let mi=0, mv=arr[0];
+  for(let i=1;i<arr.length;i++){ if(arr[i]>mv){ mv=arr[i]; mi=i; } }
+  return mi;
+}
+function modalValueForK(mapForK){ // Map(scaledValue -> count) 최빈(동률이면 큰 값)
+  let bestV=null, bestC=-1;
+  for(const [v,c] of mapForK.entries()){
+    if(c>bestC || (c===bestC && v>bestV)){ bestC=c; bestV=v; }
+  }
+  return bestV;
+}
+function findJointMode(hitVectorCounts){
+  let bestKey=null, bestC=-1;
+  for(const [k,c] of hitVectorCounts.entries()){
+    if(c>bestC){ bestC=c; bestKey=k; }
+  }
+  return bestKey ? bestKey.split(',').map(x=>parseInt(x,10)) : [0,0,0,0];
+}
+
+/* ================== 뷰 ================== */
 export function mountStarter(app){
   app.innerHTML = `
     <section class="container">
@@ -164,26 +240,20 @@ export function mountStarter(app){
         <pre id="starter-log" class="mono" style="margin-top:10px"></pre>
         <button id="starter-copy" style="margin-top:8px">📋 결과 복사</button>
 
-        <!-- ▼▼ 몬테카를로 20강 기대/케이스 -->
+        <!-- ▼▼ 몬테카를로(10,000,000회 고정) -->
         <div class="card" style="margin-top:12px">
           <h3>20강 기대값(몬테카를로)</h3>
-          <p class="muted">지정한 0강으로 5회 강화 시퀀스를 다회 시뮬합니다. 결과가 가장 자주 나온(모드) "강화횟수·최종수치"를 기대값으로 표시하고, 각 옵션이 메인이 되는 4가지 케이스도 함께 보여줍니다.</p>
-          <div class="grid cols-3" style="gap:8px">
-            <div>
-              <label>시뮬레이션 횟수</label>
-              <input id="mc-n" type="number" min="1000" step="1000" value="1000000" />
-            </div>
-            <div style="display:flex; align-items:flex-end">
-              <button id="mc-run" class="hero-btn">20강 시뮬 돌리기</button>
-            </div>
-            <div style="display:flex; align-items:flex-end">
-              <span id="mc-status" class="muted"></span>
-            </div>
+          <p class="muted">
+            0강 구성으로 5회 강화를 <b>10,000,000회</b> 시뮬.  
+            - <b>공동 최빈 분배</b>: 시뮬 전체에서 가장 자주 나온 (k1,k2,k3,k4), 합계=5 보장<br>
+            - 개별 옵션 <b>최빈</b> k 및 최빈 최종값<br>
+            - 옵션별 <b>최고 케이스 4종</b>
+          </p>
+          <div style="display:flex; gap:8px; align-items:center">
+            <button id="mc-run" class="hero-btn">20강 시뮬 돌리기 (10,000,000회)</button>
+            <span id="mc-status" class="muted" style="margin-left:6px"></span>
           </div>
-
-          <div id="mc-out" style="margin-top:10px">
-            <!-- 결과 출력 -->
-          </div>
+          <div id="mc-out" style="margin-top:10px"></div>
         </div>
       </div>
     </section>
@@ -363,7 +433,6 @@ export function mountStarter(app){
       });
     });
 
-    // 초기 표시 + 초기 계산
     setRemaining();
     refreshValueChoices();
     try { compute(); } catch(e) { showComputeError(e); }
@@ -383,9 +452,7 @@ export function mountStarter(app){
     const startCfg = getStartCfg();
     const names = Object.keys(startCfg);
 
-    // kMap / targetMap 수집
-    const kMap = {};
-    const targetMap = {};
+    const kMap = {}; const targetMap = {};
     names.forEach((opt, idx)=>{
       const id = `g${idx+1}`;
       kMap[opt] = parseInt(byId(`${id}-k`).value,10);
@@ -403,12 +470,11 @@ export function mountStarter(app){
     byId('starter-out-stones-exp').textContent = (p>0 ? `${expectedStones.toFixed(2)} 개` : '∞');
     byId('starter-out-p').textContent = `성공확률 p ≈ ${(p*100).toFixed(6)}%`;
 
-    // 로그(요약)
     const optionLog = names.map(n=>`${n} : ${fmt(n, startCfg[n])}`).join('\n');
     const kLog = names.map(n=>`${n} : ${kMap[n]}회`).join('\n');
     const targetLog = names.map(n=>`${n} : ${fmt(n, targetMap[n])}`).join('\n');
 
-    const text =
+    byId('starter-log').textContent =
 `시뮬레이션 요약
 
 옵션
@@ -424,8 +490,6 @@ ${targetLog}
 - 성공확률 p ≈ ${(p*100).toFixed(6)}%
 - 기대 시동무기 개수 = ${p>0 ? (1/p).toFixed(4) : '∞'}
 - 기대 고급숫돌 개수 = ${p>0 ? (HIGH_STONES_PER_RUN/p).toFixed(4) : '∞'} (1회 완주 27개)`;
-
-    byId('starter-log').textContent = text;
   }
 
   // 복사
@@ -434,99 +498,50 @@ ${targetLog}
       .then(()=> alert('시뮬레이션 결과가 복사되었습니다!'));
   });
 
-  /* ========== 20강 몬테카를로 시뮬 ========== */
-  function mcSimulate(startCfg, N){
-    const names = Object.keys(startCfg); // 4개
-    const idxMap = Object.fromEntries(names.map((n,i)=>[n,i]));
-    const incArr = names.map(n => INCS[n]); // [[],[],[],[]]
-    const startScaled = names.map(n => scale(startCfg[n]));
-
-    // 통계 구조
-    const hitCounts = names.map(()=> new Uint32Array(STEPS+1));      // [4][0..5]
-    const valueFreq = names.map(()=> Array.from({length:STEPS+1},()=> new Map())); // [4][k] -> Map(valueScaled -> count)
-    const atLeast1 = names.map(()=>0); // 각 옵션이 1회 이상 맞은 횟수
-
-    // 루프
-    for(let t=0;t<N;t++){
-      const hits = [0,0,0,0];
-      const sumScaled = [0,0,0,0];
-
-      // 5회
-      for(let s=0;s<STEPS;s++){
-        const i = rand(4);                      // 어떤 옵션이 맞았는가 (균등)
-        const incs = incArr[i];
-        const inc = incs[rand(incs.length)];    // 증가치 후보 균등
-        sumScaled[i] += scale(inc);
-        hits[i]++;
-      }
-
-      // 통계 반영
-      for(let i=0;i<4;i++){
-        const k = hits[i];
-        hitCounts[i][k]++;
-
-        const finalScaled = startScaled[i] + sumScaled[i];
-        const vf = valueFreq[i][k];
-        vf.set(finalScaled, (vf.get(finalScaled)||0)+1);
-
-        if(k>0) atLeast1[i]++;
-      }
-    }
-
-    return { names, startCfg, hitCounts, valueFreq, atLeast1, N };
-  }
-
-  function argmaxIndex(arr){
-    let mi=0, mv=arr[0];
-    for(let i=1;i<arr.length;i++){
-      if(arr[i]>mv){ mv=arr[i]; mi=i; }
-    }
-    return mi;
-  }
-  function modalValueForK(mapForK){ // Map(scaledValue -> count)에서 최빈값(동률이면 큰 값)
-    let bestV=null, bestC=-1;
-    for(const [v,c] of mapForK.entries()){
-      if(c>bestC || (c===bestC && v>bestV)){ bestC=c; bestV=v; }
-    }
-    return bestV;
-  }
-
+  /* ========== 20강 몬테카를로(10,000,000회 고정) ========== */
   function renderMCResult(stat){
-    const { names, startCfg, hitCounts, valueFreq, atLeast1, N } = stat;
+    const { names, startCfg, hitCounts, valueFreq, atLeast1, hitVectorCounts, N } = stat;
 
-    // A) 모드 기반 기대 결과
-    const expRows = names.map((opt, i)=>{
+    // 1) 공동 최빈 분배(합=5)
+    const joint = findJointMode(hitVectorCounts); // [k1,k2,k3,k4], 합=5
+    const jointRows = names.map((opt,i)=>{
+      const k = joint[i];
+      const mapK = valueFreq[i][k];
+      let v = startCfg[opt];
+      if(k>0 && mapK && mapK.size){
+        const vScaled = modalValueForK(mapK);
+        v = vScaled / SCALE;
+      }
+      return { opt, k, v };
+    });
+
+    // 2) 개별 옵션 모드
+    const indivRows = names.map((opt,i)=>{
       const kMode = argmaxIndex(hitCounts[i]);
       const mapK = valueFreq[i][kMode];
-      const vScaled = modalValueForK(mapK);
-      const v = (vScaled??scale(startCfg[opt]))/SCALE;
+      let v = startCfg[opt];
+      if(mapK && mapK.size){
+        const vScaled = modalValueForK(mapK);
+        v = vScaled / SCALE;
+      }
       return { opt, kMode, v };
     });
 
-    // B) 옵션별 최고 케이스 4종
-    // 규칙:
-    //  - 메인 X: kx = X의 최빈 강화횟수
-    //  - R = 5 - kx
-    //  - 나머지 옵션은 "1회 이상 맞은 빈도"가 높은 순으로 1씩 배분 (R개), 나머지는 0
-    //  - 각 옵션 값은 해당 k에서 "최빈 최종값" (없으면 가능한 최대값) 사용
+    // 3) 옵션별 최고 케이스 4종
     const rankBy1 = atLeast1.map((c,i)=>({i,c})).sort((a,b)=>b.c-a.c).map(o=>o.i);
-
-    function valueFor(i, k){
+    const valueFor = (i,k)=>{
       if(k===0) return startCfg[names[i]];
       const mapK = valueFreq[i][k];
       if(mapK && mapK.size){
         const vScaled = modalValueForK(mapK);
         return vScaled/SCALE;
       }
-      // fallback: 가능한 최대 증가치 기준의 상한값
       const maxInc = Math.max(...INCS[names[i]]);
       return startCfg[names[i]] + k*maxInc;
-    }
-
+    };
     const cases = names.map((optX, ix)=>{
       const kx = argmaxIndex(hitCounts[ix]);
-      const assign = [0,0,0,0];
-      assign[ix]=kx;
+      const assign = [0,0,0,0]; assign[ix]=kx;
       let R = STEPS - kx;
       if(R>0){
         for(const j of rankBy1){
@@ -535,73 +550,106 @@ ${targetLog}
           assign[j] += 1; R--;
         }
       }
-      const entry = names.map((opt, i)=>({
-        opt, k: assign[i], v: valueFor(i, assign[i])
-      }));
-      return { main: optX, rows: entry };
+      const rows = names.map((opt,i)=>({ opt, k: assign[i], v: valueFor(i,assign[i]) }));
+      return { main: optX, rows };
     });
 
-    // ===== 출력 HTML =====
-    const expHtml = `
+    // ===== 출력 =====
+    const jointSum = joint.reduce((a,b)=>a+b,0);
+    const jointHtml = `
       <div class="card" style="margin-top:8px">
-        <h4 style="margin:0 0 6px">모드 기반 기대 결과</h4>
+        <h4 style="margin:0 0 6px">공동 최빈 분배 (합=${jointSum})</h4>
         <div class="grid cols-2" style="gap:8px">
-          ${expRows.map(r=>`
+          ${jointRows.map(r=>`
             <div class="card" style="padding:10px">
               <div><b>${r.opt}</b></div>
-              <div class="muted">기대 강화횟수(모드): ${r.kMode}회</div>
-              <div>기대 최종값: <b>${fmt(r.opt, r.v)}</b></div>
+              <div class="muted">강화: ${r.k}회</div>
+              <div>값: <b>${fmt(r.opt,r.v)}</b></div>
             </div>
           `).join('')}
         </div>
+        <small class="muted">※ 시뮬 전체에서 가장 자주 나온 (k1,k2,k3,k4) 조합입니다. 항상 합계가 5입니다.</small>
+      </div>
+    `;
+
+    const indivHtml = `
+      <div class="card" style="margin-top:8px">
+        <h4 style="margin:0 0 6px">개별 옵션 최빈(모드) 결과</h4>
+        <div class="grid cols-2" style="gap:8px">
+          ${indivRows.map(r=>`
+            <div class="card" style="padding:10px">
+              <div><b>${r.opt}</b></div>
+              <div class="muted">최빈 강화횟수: ${r.kMode}회</div>
+              <div>최빈 최종값: <b>${fmt(r.opt,r.v)}</b></div>
+            </div>
+          `).join('')}
+        </div>
+        <small class="muted">※ 개별 모드의 합계는 5가 아닐 수 있습니다. 위의 "공동 최빈 분배"를 참고하세요.</small>
       </div>
     `;
 
     const casesHtml = `
       <div class="card" style="margin-top:8px">
-        <h4 style="margin:0 0 6px">옵션별 최고 케이스 4종 (모드 기반 규칙)</h4>
-        ${cases.map(c=>{
-          return `
-            <div class="card" style="margin-bottom:8px">
-              <div class="big" style="margin-bottom:6px">메인: ${c.main}</div>
-              <div class="grid cols-2" style="gap:8px">
-                ${c.rows.map(r=>`
-                  <div class="card" style="padding:10px">
-                    <div><b>${r.opt}</b></div>
-                    <div class="muted">강화: ${r.k}회</div>
-                    <div>값: <b>${fmt(r.opt, r.v)}</b></div>
-                  </div>
-                `).join('')}
-              </div>
+        <h4 style="margin:0 0 6px">옵션별 최고 케이스 4종</h4>
+        ${cases.map(c=>`
+          <div class="card" style="margin-bottom:8px">
+            <div class="big" style="margin-bottom:6px">메인: ${c.main}</div>
+            <div class="grid cols-2" style="gap:8px">
+              ${c.rows.map(r=>`
+                <div class="card" style="padding:10px">
+                  <div><b>${r.opt}</b></div>
+                  <div class="muted">강화: ${r.k}회</div>
+                  <div>값: <b>${fmt(r.opt,r.v)}</b></div>
+                </div>
+              `).join('')}
             </div>
-          `;
-        }).join('')}
+          </div>
+        `).join('')}
       </div>
     `;
 
-    return expHtml + casesHtml;
+    return `
+      <div class="muted">완료: ${stat.N.toLocaleString()} 회</div>
+      ${jointHtml}
+      ${indivHtml}
+      ${casesHtml}
+    `;
+  }
+
+  function runMonteCarlo(startCfg){
+    const names = Object.keys(startCfg);
+    const stat = mcInitStats(names, startCfg);
+
+    const totalBatches = Math.ceil(MC_TOTAL / MC_BATCH);
+    let doneBatches = 0;
+    byId('mc-status').textContent = `진행 중... (0 / ${totalBatches} 배치)`;
+    byId('mc-out').innerHTML = '';
+
+    const step = ()=>{
+      const remain = MC_TOTAL - stat.N;
+      if(remain<=0){
+        // 완료
+        const html = renderMCResult(stat);
+        byId('mc-out').innerHTML = html;
+        byId('mc-status').textContent = `완료 (${stat.N.toLocaleString()} 회)`;
+        return;
+      }
+      mcRunBatch(stat);
+      doneBatches++;
+      if(doneBatches % 2 === 0){ // 과도한 DOM 업데이트 방지
+        byId('mc-status').textContent = `진행 중... (${doneBatches} / ${totalBatches} 배치)`;
+      }
+      // 다음 프레임
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
   }
 
   byId('mc-run').addEventListener('click', ()=>{
     try{
       const startCfg = getStartCfg();
-      let N = parseInt(byId('mc-n').value,10);
-      if(!Number.isFinite(N) || N<1000){ N=1000; byId('mc-n').value = '1000'; }
-
-      // 진행 표시
-      byId('mc-status').textContent = `진행 중... ( ${N.toLocaleString()} 회 )`;
-      // UI 잠깐 비움
-      byId('mc-out').innerHTML = '';
-
-      // 큰 N 처리: 프레임 쉬어가며 돌리기
-      // 간단히 한 번에 처리 (최적화된 루프) → 렌더 후 실행
-      setTimeout(()=>{
-        const stat = mcSimulate(startCfg, N);
-        const html = renderMCResult(stat);
-        byId('mc-out').innerHTML = html;
-        byId('mc-status').textContent = `완료 ( ${N.toLocaleString()} 회 )`;
-      }, 0);
-
+      byId('mc-status').textContent = `준비 중...`;
+      runMonteCarlo(startCfg);
     }catch(e){
       byId('mc-status').textContent = '오류';
       byId('mc-out').innerHTML = `<div class="bad">⚠️ ${e.message}</div>`;
