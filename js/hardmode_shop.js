@@ -21,8 +21,8 @@ export async function mountShop(container){
     <div class="container">
       <div class="card" style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap">
         <div style="display:flex;gap:8px;align-items:center">
-          <button id="go-home" style="width:auto">← 돌아가기</button>
-          <h2 style="margin:0">개척상점 계산기</h2>
+          <button id="go-home" class="btn btn-ghost" style="width:auto">← 돌아가기</button>
+          <h2 class="section-title" style="margin:0">개척상점 계산기</h2>
         </div>
       </div>
 
@@ -56,8 +56,8 @@ export async function mountShop(container){
           <input id="search-input" type="text" placeholder="아이템 검색 (이름/카테고리)" style="max-width:280px">
           <div id="filter-chips" class="filter-bar"></div>
           <div style="flex:1"></div>
-          <button id="btn-select-all" style="width:auto">전체 선택</button>
-          <button id="btn-deselect-all" style="width:auto">전체 해제</button>
+          <button id="btn-select-all" class="btn" style="width:auto">전체 선택</button>
+          <button id="btn-deselect-all" class="btn btn-ghost" style="width:auto">전체 해제</button>
         </div>
       </div>
 
@@ -85,8 +85,8 @@ export async function mountShop(container){
           <label class="filter-chip"><input type="radio" name="copyfmt" value="short" checked> 짧게</label>
           <label class="filter-chip"><input type="radio" name="copyfmt" value="full"> 자세히</label>
           <div style="flex:1"></div>
-          <button id="btnNeed" style="width:auto">부족 시 최소 층 계산</button>
-          <button id="btnCopy" style="width:auto">결과 복사</button>
+          <button id="btnNeed" class="btn" style="width:auto">부족 시 최소 층 계산</button>
+          <button id="btnCopy" class="btn btn-primary" style="width:auto">결과 복사</button>
         </div>
         <pre id="copyText" class="muted" style="margin-top:8px; white-space:pre-wrap"></pre>
       </div>
@@ -107,7 +107,7 @@ export async function mountShop(container){
             <div id="sticky-sum" class="big"></div>
           </div>
           <div style="display:flex;gap:8px;align-items:center;justify-content:flex-end">
-            <button id="sticky-copy" style="width:auto">복사</button>
+            <button id="sticky-copy" class="btn btn-ghost" style="width:auto">복사</button>
           </div>
         </div>
       </div>
@@ -135,7 +135,6 @@ export async function mountShop(container){
   }
 
   if(!items.length){
-    // 렌더를 멈추지 않음: 진단만 띄우고 종료
     return;
   }
 
@@ -198,7 +197,6 @@ export async function mountShop(container){
     const img = document.createElement('img');
     img.alt = r.cat; img.loading = 'lazy';
 
-    // ./ 프리픽스 강제(프로젝트 페이지 경로 보정)
     const src0 = r.img.startsWith('http') ? r.img : (r.img.startsWith('./') ? r.img : ('./'+r.img));
     img.src = src0;
     img.onerror = () => {
