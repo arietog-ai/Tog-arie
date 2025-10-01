@@ -117,20 +117,55 @@ function updateDisplayFlags(){
   }
 }
 
+/* ===== 상단 요약 카드 ===== */
+function renderSummaryCard(host, rec){
+  if(!rec){ host.innerHTML = ''; return; }
+  host.innerHTML = `
+    <div class="summary-card">
+      <div class="title">[${rec.grade}] ${rec.part}</div>
+      <div class="meta">주스탯: <b>${rec.main}</b></div>
+      <div class="meta">부스탯: ${rec.subs.join(', ')}</div>
+      <div class="details" style="display:flex; gap:8px; margin-top:8px">
+        <button class="btn btn-ghost" id="sum-to-starter">시동무기 강화</button>
+        <span class="tag">${rec.src==='single'?'단일':'자동'} 결과</span>
+      </div>
+    </div>
+  `;
+  host.querySelector('#sum-to-starter').addEventListener('click', ()=>{
+    const four = rec.subs.slice(0,4);
+    const preset = { starter4: four.map(stat=>{
+      const vals = INIT_VALUES[stat] || [1,1.5,2,2.5];
+      return { stat, value: choice(vals) };
+    })};
+    sessionStorage.setItem('starter_preset', JSON.stringify(preset));
+    location.hash = '#starter';
+  });
+}
+
 function renderResultList(){
   updateDisplayFlags();
   const list = results.filter(r=>r.display);
   const host = byId('draw-results');
 
+  // 상단 요약: 최신(단일 or 자동 성공) 1건
+  const summaryHost = byId('draw-summary');
+  let summary = null;
+  for(let i=results.length-1;i>=0;i--){
+    if(results[i].src==='single' || (results[i].src==='auto' && results[i].forceEnable)){
+      summary = results[i]; break;
+    }
+  }
+  renderSummaryCard(summaryHost, summary);
+
   host.innerHTML = list.map((r)=>{
     const enable = r.forceEnable || (r.grade==='A' && r.subs.length===4);
     return `
-      <div class="card" style="padding:10px; margin-bottom:10px; ${enable?'border:2px solid var(--ok)':''}">
+      <div class="card ${enable?'emph':''}" style="padding:10px; margin-bottom:10px">
         <div><b>${r.src==='single'?'단일':'자동'} 결과</b> · [${r.grade}] ${r.part}</div>
         <div>주스탯: ${r.main}</div>
         <div>부스탯: ${r.subs.join(', ')}</div>
         <div style="display:flex; align-items:center; gap:8px; margin-top:6px">
-          <button class="hero-btn ${enable?'enabled':'disabled'} to-starter" data-when="${r.when}">시동무기 강화</button>
+          <button class="btn ${enable?'':'disabled'} to-starter" data-when="${r.when}">시동무기 강화</button>
           <span class="hint">※ 수동: A+부옵4개 / 자동: 조건 달성 시 즉시 활성화</span>
         </div>
       </div>
@@ -147,7 +182,6 @@ function renderResultList(){
 
       // 주옵 제외, 부옵만 4개
       let four = r.subs.slice(0,4);
-      // 프리셋 생성
       const preset = {
         starter4: four.map(stat=>{
           const vals = INIT_VALUES[stat] || [1,1.5,2,2.5];
@@ -174,8 +208,8 @@ function showTotalCardWith(text){
       <div style="display:flex; align-items:center; justify-content:space-between; gap:8px">
         <div class="big">총 결과</div>
         <div style="display:flex; gap:8px; align-items:center">
-          <button id="copy-total" class="hero-btn">📋 총 결과 복사</button>
-          <button id="close-total" class="hero-btn">닫기</button>
+          <button id="copy-total" class="btn btn-ghost">📋 총 결과 복사</button>
+          <button id="close-total" class="btn">닫기</button>
         </div>
       </div>
       <div style="white-space:pre-wrap; margin-top:6px" id="draw-total-text">${text}</div>
@@ -267,7 +301,7 @@ export function mountDraw(app){
   app.innerHTML = `
     <section class="container">
       <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px">
-        <button class="hero-btn" id="draw-home">← 홈으로</button>
+        <button class="btn btn-ghost" id="draw-home">← 홈으로</button>
         <span class="pill">시동무기 뽑기</span>
         <span class="badge" style="margin-left:auto">
           <img src="${ICON_KEY}" alt="key" /> 사용한 열쇠: <b id="used-keys">0</b>개
@@ -276,16 +310,16 @@ export function mountDraw(app){
 
       <div class="card">
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center">
-          <button class="hero-btn" id="single-draw">
+          <button class="btn btn-primary" id="single-draw">
             <img src="${ICON_KEY}" alt="" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;border-radius:4px" />
             단일 뽑기
           </button>
-          <button class="hero-btn" id="multi-open">
+          <button class="btn" id="multi-open">
             <img src="${ICON_KEY}" alt="" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;border-radius:4px" />
             ??? 뽑기
           </button>
-          <button class="hero-btn" id="auto-open">자동 뽑기(조건)</button>
-          <button class="hero-btn" id="show-total" style="margin-left:auto">총 결과보기</button>
+          <button class="btn" id="auto-open">자동 뽑기(조건)</button>
+          <button class="btn btn-ghost" id="show-total" style="margin-left:auto">총 결과보기</button>
         </div>
 
         <!-- ??? 뽑기 패널 -->
@@ -293,8 +327,8 @@ export function mountDraw(app){
           <label>열쇠를 몇 개 사용하여 뽑기를 진행할까요? <b>(한 번에 최대 1000회)</b></label>
           <input type="number" id="multi-count" min="1" max="1000" value="10" />
           <div style="margin-top:6px; display:flex; gap:8px">
-            <button class="hero-btn" id="multi-run">뽑기</button>
-            <button class="hero-btn" id="multi-cancel">취소</button>
+            <button class="btn btn-primary" id="multi-run">뽑기</button>
+            <button class="btn" id="multi-cancel">취소</button>
           </div>
         </div>
 
@@ -324,13 +358,16 @@ export function mountDraw(app){
             </div>
           </div>
           <div style="margin-top:8px; display:flex; gap:8px; align-items:center">
-            <button class="hero-btn disabled" id="auto-run">조건 달성까지 자동 뽑기 시작</button>
-            <button class="hero-btn" id="auto-stop">중지</button>
-            <button class="hero-btn" id="auto-cancel" style="margin-left:auto">닫기</button>
+            <button class="btn btn-primary disabled" id="auto-run">조건 달성까지 자동 뽑기 시작</button>
+            <button class="btn" id="auto-stop">중지</button>
+            <button class="btn btn-ghost" id="auto-cancel" style="margin-left:auto">닫기</button>
           </div>
           <small class="hint">※ 자동 뽑기 중에도 "중지"로 즉시 멈출 수 있습니다.</small>
         </div>
       </div>
+
+      <!-- ✅ 상단 요약 카드 -->
+      <div id="draw-summary" style="margin-top:12px"></div>
 
       <div id="draw-results" style="margin-top:12px"></div>
       <div id="draw-total" style="margin-top:12px"></div>
