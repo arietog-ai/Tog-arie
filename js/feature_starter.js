@@ -149,8 +149,8 @@ function mcRunBatch(stat){
     const sumIncScaled = [0,0,0,0];
 
     for(let s=0; s<STEPS; s++){
-      const i = rand(4);
-      const inc = incArr[i][rand(incArr[i].length)];
+      const i = (Math.random()*4)|0;
+      const inc = incArr[i][(Math.random()*incArr[i].length)|0];
       sumIncScaled[i] += scale(inc);
       hits[i]++;
     }
@@ -177,28 +177,28 @@ export function mountStarter(app){
   app.innerHTML = `
     <section class="container">
       <div style="display:flex; gap:8px; margin-bottom:8px">
-        <button id="starter-home-btn" class="hero-btn">← 홈으로</button>
-        <button id="starter-draw-btn" class="hero-btn">← 시동무기 뽑기로</button>
+        <button id="starter-home-btn" class="btn btn-ghost">← 홈으로</button>
+        <button id="starter-draw-btn" class="btn">← 시동무기 뽑기로</button>
         <span class="pill">시동무기 강화 시뮬레이터</span>
       </div>
 
       <!-- 카드 #1: 0강 옵션 -->
       <div class="card">
-        <h2 style="margin:0 0 8px">0강 옵션</h2>
+        <h2 class="section-title">0강 옵션</h2>
         <div id="starter-start"></div>
       </div>
 
       <!-- 카드 #2: 20강 기대값 -->
       <div class="card" style="margin-top:12px">
-        <h2 style="margin:0 0 8px">20강 기대값</h2>
+        <h2 class="section-title">20강 기대값</h2>
         <p class="muted" style="margin:6px 0 10px">
           0강 구성으로 5회 강화를 대량 시뮬해 옵션별 기대 최종값을 보여줍니다.
           (퍼센트형 0.5 단위, 수치형 정수 반올림)
         </p>
         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
-          <button id="mc-run" class="hero-btn">20강 기대값</button>
-          <button id="mc-stop" class="hero-btn">중지</button>
-          <button id="mc-reset" class="hero-btn">초기화</button>
+          <button id="mc-run" class="btn btn-primary">20강 기대값</button>
+          <button id="mc-stop" class="btn">중지</button>
+          <button id="mc-reset" class="btn btn-ghost">초기화</button>
           <span id="mc-status" class="muted" style="margin-left:6px"></span>
         </div>
         <div id="mc-out" style="margin-top:10px"></div>
@@ -206,7 +206,7 @@ export function mountStarter(app){
 
       <!-- 카드 #3: 목표 & 정확 확률 -->
       <div class="card" style="margin-top:12px">
-        <h2 style="margin:0 0 8px">목표 설정 & 성공확률</h2>
+        <h2 class="section-title">목표 설정 & 성공확률</h2>
         <div>
           <div class="pill" id="starter-remaining" style="margin-bottom:6px">남은 강화횟수: 5</div>
           <div id="starter-goal"></div>
@@ -226,7 +226,7 @@ export function mountStarter(app){
         </div>
 
         <pre id="starter-log" class="mono" style="margin-top:10px"></pre>
-        <button id="starter-copy" style="margin-top:8px">📋 결과 복사</button>
+        <button id="starter-copy" class="btn btn-ghost" style="margin-top:8px">📋 결과 복사</button>
       </div>
     </section>
   `;
