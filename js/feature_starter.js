@@ -1,9 +1,7 @@
 // js/feature_starter.js
 // 시동무기 강화 시뮬레이터
 // - 정확 확률 계산(목표 k합=5, 값 정확히 일치)
-// - 몬테카를로(고정 100,000,000회) 기대 결과:
-//     • 기대 강화횟수 E[k] → 합계=5 보장 정수 배분(내부 계산만, 화면 표기는 숨김)
-//     • 기대 최종값(퍼센트 0.5 단위 / 수치 정수 반올림) → "옵션명 : 초기값 -> 기대값" 만 표기
+// - 20강 기대값(몬테카를로 고정 100,000,000회) → "옵션 : 초기값 -> 기대값"만 표기
 // - 드로우(뽑기) 프리셋 연동: 부옵 4개만 0강 셋팅
 
 /* ===== 옵션 그룹/값 정의 ===== */
@@ -131,8 +129,8 @@ function mcInit(names, startCfg){
     names,
     startCfg,
     N: 0,
-    sumHits: [0,0,0,0],           // 옵션별 누적 강화횟수(표시는 안 함)
-    sumFinalScaled: [0,0,0,0],    // 옵션별 최종값(스케일) 누적
+    sumHits: [0,0,0,0],           // 내부 계산용(표시 안함)
+    sumFinalScaled: [0,0,0,0],    // 최종값 누적(스케일)
     stop: false,
     doneBatches: 0,
     totalBatches: Math.ceil(MC_TOTAL / MC_BATCH),
@@ -174,18 +172,6 @@ function roundDisplayValue(opt, v){ // 표시용 반올림 규칙
   }
 }
 
-function assignIntHitsSum5(avgHits){
-  // 바닥합 + 소수 큰 순으로 (5 - 바닥합) 배분 → 합=5 보장 (내부 계산용)
-  const floors = avgHits.map(x=>Math.floor(x));
-  let need = 5 - floors.reduce((a,b)=>a+b,0);
-  const decs = avgHits.map((x,i)=>({i, d: x - Math.floor(x), base: x}));
-  decs.sort((a,b)=> b.d === a.d ? b.base - a.base : b.d - a.d);
-  for(let k=0;k<need;k++){
-    floors[decs[k].i] += 1;
-  }
-  return floors; // 합=5
-}
-
 /* ================== 뷰 ================== */
 export function mountStarter(app){
   app.innerHTML = `
@@ -196,30 +182,44 @@ export function mountStarter(app){
         <span class="pill">시동무기 강화 시뮬레이터</span>
       </div>
 
+      <!-- 카드 #1: 0강 옵션 -->
       <div class="card">
-        <h2 style="margin:0 0 8px">시동무기 강화 시뮬레이터</h2>
-        <p class="muted">0→20강 동안 총 5회 강화. 목표(k 합=5)를 분배하고 결과를 확인하세요.</p>
+        <h2 style="margin:0 0 8px">0강 옵션</h2>
+        <div id="starter-start"></div>
+      </div>
 
-        <div class="grid cols-2" style="margin-top:10px">
-          <div>
-            <h3>1) 0강 옵션</h3>
-            <div id="starter-start"></div>
-          </div>
-          <div>
-            <h3>2) 목표 설정</h3>
-            <div class="pill" id="starter-remaining" style="margin-bottom:6px">남은 강화횟수: 5</div>
-            <div id="starter-goal"></div>
-          </div>
+      <!-- 카드 #2: 20강 기대값 -->
+      <div class="card" style="margin-top:12px">
+        <h2 style="margin:0 0 8px">20강 기대값</h2>
+        <p class="muted" style="margin:6px 0 10px">
+          0강 구성으로 5회 강화를 대량 시뮬해 옵션별 기대 최종값을 보여줍니다.
+          (퍼센트형 0.5 단위, 수치형 정수 반올림)
+        </p>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+          <button id="mc-run" class="hero-btn">20강 기대값</button>
+          <button id="mc-stop" class="hero-btn">중지</button>
+          <button id="mc-reset" class="hero-btn">초기화</button>
+          <span id="mc-status" class="muted" style="margin-left:6px"></span>
+        </div>
+        <div id="mc-out" style="margin-top:10px"></div>
+      </div>
+
+      <!-- 카드 #3: 목표 & 정확 확률 -->
+      <div class="card" style="margin-top:12px">
+        <h2 style="margin:0 0 8px">목표 설정 & 성공확률</h2>
+        <div>
+          <div class="pill" id="starter-remaining" style="margin-bottom:6px">남은 강화횟수: 5</div>
+          <div id="starter-goal"></div>
         </div>
 
         <div class="grid cols-2" style="margin-top:10px">
           <div class="card">
-            <div class="big">① 시동무기 사용 갯수(기대)</div>
+            <div class="big">시동무기 사용 갯수(기대)</div>
             <div id="starter-out-weapons" class="big ok">-</div>
             <div id="starter-out-p" class="muted">성공확률 p: -</div>
           </div>
           <div class="card">
-            <div class="big">② 예상 고급숫돌 사용갯수</div>
+            <div class="big">예상 고급숫돌 사용갯수</div>
             <div id="starter-out-stones-exp" class="big ok">-</div>
             <div class="muted">고급숫돌 1개 = 10,000 XP (20강 1회=27개)</div>
           </div>
@@ -227,22 +227,6 @@ export function mountStarter(app){
 
         <pre id="starter-log" class="mono" style="margin-top:10px"></pre>
         <button id="starter-copy" style="margin-top:8px">📋 결과 복사</button>
-
-        <!-- ▼▼ 몬테카를로 (1억회) -->
-        <div class="card" style="margin-top:12px">
-          <h3>20강 기대값</h3>
-          <p class="muted">
-            0강 구성으로 5회 강화를 <b>대량 시뮬</b>하여 옵션별 기대 최종값을 보여줍니다.<br>
-            (퍼센트형 0.5 단위, 수치형 정수 반올림)
-          </p>
-          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
-            <button id="mc-run" class="hero-btn">20강 기대값</button>
-            <button id="mc-stop" class="hero-btn">중지</button>
-            <button id="mc-reset" class="hero-btn">초기화</button>
-            <span id="mc-status" class="muted" style="margin-left:6px"></span>
-          </div>
-          <div id="mc-out" style="margin-top:10px"></div>
-        </div>
       </div>
     </section>
   `;
@@ -252,11 +236,13 @@ export function mountStarter(app){
 
   /* ---------- 0강 폼 ---------- */
   const startHost = byId('starter-start');
+
+  // 한 줄(항목 | 0강 값) 레이아웃
   function startRow(id){
     return `
-      <div class="grid cols-2" style="align-items:end; gap:8px; margin-bottom:6px">
+      <div class="grid cols-2" style="align-items:end; gap:8px; margin-bottom:8px">
         <div>
-          <label>옵션 ${id}</label>
+          <label>항목</label>
           <select class="s-name" id="s${id}-name">
             ${OPTION_NAMES.map(n=>`<option value="${n}">${n}</option>`).join('')}
           </select>
@@ -485,12 +471,10 @@ ${targetLog}
 
   /* ========== 20강 몬테카를로 (1억회) ========== */
   function renderMC(stat){
-    const { names, startCfg, sumHits, sumFinalScaled, N } = stat;
-    const avgHits = sumHits.map(h=>h/N);                  // 내부 계산용
-    assignIntHitsSum5(avgHits.slice());                   // 합=5 보장(표시하지 않음)
+    const { names, startCfg, sumFinalScaled, N } = stat;
     const avgVals = sumFinalScaled.map(s => (s/N)/SCALE); // 기대 최종값(실수)
 
-    // "옵션명 : 초기값 -> 기대값" 만 출력
+    // "옵션 : 초기값 -> 기대값"만 출력
     const lines = names.map((opt,i)=>{
       const disp = roundDisplayValue(opt, avgVals[i]);
       return `<div class="card" style="padding:10px">${opt} : ${fmt(opt, startCfg[opt])} -> <b>${disp.txt}</b></div>`;
@@ -512,7 +496,7 @@ ${targetLog}
 
     const step = ()=>{
       if(stat.stop){
-        byId('mc-status').textContent = '완료'; // 중지 시에도 화면은 간단히 '완료'
+        byId('mc-status').textContent = '완료';
         byId('mc-out').innerHTML = renderMC(stat);
         return;
       }
