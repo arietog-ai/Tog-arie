@@ -47,10 +47,6 @@ button{ cursor:pointer; font-weight:700 }
 .hero .btn-wrap{
   width:min(520px,85vw); display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-start; margin-top:10px;
 }
-.hero .hero-btn{
-  flex:0 0 auto; padding:12px 14px; border-radius:12px; border:1px solid var(--line); background:#111726; color:var(--text);
-  position:relative; z-index:2;
-}
 
 /* ===== 아이템 그리드: 자동 칼럼 ===== */
 .item-grid{
@@ -85,7 +81,8 @@ button{ cursor:pointer; font-weight:700 }
   padding:8px 10px; border-radius:999px; border:1px solid var(--line); background:#0f1420; color:var(--text);
   cursor:pointer; user-select:none;
 }
-.filter-chip.active{ outline:2px solid #3b82f6; }
+.filter-chip:hover { background:#151b2b }
+.filter-chip.active{ outline:2px solid #3b82f6; background:#0f1930 }
 
 /* ===== Sticky 결과바 ===== */
 .sticky-bar{
@@ -109,17 +106,6 @@ button{ cursor:pointer; font-weight:700 }
   .item-bottom{ grid-template-columns:1fr 38px }
 }
 
-/* ===== 추가: 버튼 상태 ===== */
-.hero-btn.disabled{
-  opacity:.45;
-  cursor:not-allowed !important;
-  filter:saturate(.6);
-}
-.hero-btn.enabled{
-  outline:2px solid #7cf29a;
-  box-shadow:0 0 0 3px rgba(124,242,154,.1);
-}
-
 /* ===== 추가: 힌트/작은 설명 ===== */
 .hint{ margin-top:4px; font-size:12px; color:var(--muted) }
 
@@ -141,3 +127,53 @@ button{ cursor:pointer; font-weight:700 }
 .checkbox-grid label{
   display:flex; align-items:center; gap:6px; font-size:13px;
 }
+
+/* ======== 리뉴얼 유틸(새로 추가) ======== */
+
+/* 섹션 타이틀 */
+.section-title {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: .2px;
+}
+
+/* 공통 버튼 */
+.btn { 
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:10px 14px; border-radius:12px; border:1px solid var(--line);
+  background:#111726; color:var(--text); cursor:pointer; font-weight:700;
+}
+.btn:disabled { opacity:.5; cursor:not-allowed }
+.btn-primary { background:#2563eb; border-color:#1e40af; }
+.btn-primary:hover { background:#1d4ed8 }
+.btn-ghost { background:#00000066; border-color:#00000055; }
+.btn-ghost:hover { background:#00000088 }
+
+/* 요약(결과 상단) 카드 */
+.summary-card {
+  border-radius: 16px;
+  padding: 14px;
+  background: linear-gradient(90deg,#6b3bbd 0%, #3a7bd5 100%);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(0,0,0,.25);
+}
+.summary-card .title { font-size: 18px; font-weight: 900; margin: 0 0 4px }
+.summary-card .meta { font-size: 13px; opacity: .95 }
+
+/* 강조 카드 */
+.card.emph { border-color: var(--ok); box-shadow: 0 0 0 2px rgba(124,242,154,.18) }
+
+/* 2/3열 헬퍼 */
+.grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap:12px }
+.grid-3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px }
+@media (max-width: 900px){
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+}
+
+/* 진행바 */
+.progress { width:100%; height:12px; border-radius:999px; background:#2b3547; overflow:hidden }
+.progress > .bar { height:100%; background:#22c55e }
+
+/* 상세 영역 */
+.details { border-top:1px dashed var(--line); margin-top:8px; padding-top:8px }
