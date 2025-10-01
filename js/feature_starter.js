@@ -1,5 +1,5 @@
 // js/feature_starter.js
-// 시동무기 강화 시뮬레이터 (정확 확률 계산 버전)
+// 시동무기 강화 시뮬레이터 (정확 확률 계산 + 20강 기대값 카드)
 
 const GROUP_A = ["물리관통력","마법관통력","물리저항력","마법저항력","치명타확률","치명타데미지증가"]; // %
 const GROUP_B = ["회피","명중","효과적중","효과저항"]; // 수치
@@ -108,7 +108,37 @@ function exactProbability(startCfg,kMap,targetMap){
   return p;
 }
 
-// ================== 뷰 ==================
+/* ============== 20강 랜덤 기대값(옵션 균등, 증가치 균등) ============== */
+function mean(arr){ return arr.reduce((a,b)=>a+b,0)/arr.length; }
+function buildExpectTable(startCfg){
+  const names = Object.keys(startCfg);
+  const rows = names.map(opt=>{
+    const start = startCfg[opt];
+    const avgInc = mean(INIT_VALUES[opt]);          // 한 번 맞았을 때 평균 증가량
+    const expHits = STEPS / names.length;           // 5회 × 1/4 = 1.25
+    const expFinal = start + expHits * avgInc;      // 선형성 이용
+    const worstFinal = start;                        // 한 번도 안 맞는 경우
+    const bestFinal = start + STEPS * Math.max(...INIT_VALUES[opt]); // 5번 모두 + 최대증가
+    const pfx = PERCENT_SET.has(opt) ? '%' : '';
+    return { opt, start, expHits, avgInc, expFinal, worstFinal, bestFinal, pfx };
+  });
+
+  const lines = [
+    '20강 랜덤(균등) 기대값',
+    '',
+    '가정: 각 강화 시 4옵션 중 하나가 균등(1/4)로 선택, 해당 옵션의 증가치 후보도 균등.',
+    '표 설명: expHits=기대 강화횟수, avgInc=한 번 맞을 때 평균 증가량',
+    '',
+    '옵션 | 0강 | expHits | avgInc | 기대 최종 | 최저(한번도X) | 최고(5회 모두 최대)',
+    '-----|-----|---------|--------|-----------|---------------|------------------'
+  ];
+  rows.forEach(r=>{
+    lines.push(`${r.opt} | ${fmt(r.opt,r.start)} | ${r.expHits.toFixed(2)} | ${r.pfx?fmt(r.opt,r.avgInc):r.avgInc} | ${fmt(r.opt, +r.expFinal.toFixed(3))} | ${fmt(r.opt,r.worstFinal)} | ${fmt(r.opt, +r.bestFinal.toFixed(3))}`);
+  });
+  return lines.join('\n');
+}
+
+/* ================== 뷰 ================== */
 export function mountStarter(app){
   app.innerHTML=`
     <section class="container">
@@ -120,6 +150,7 @@ export function mountStarter(app){
       <div class="card">
         <h2>시동무기 강화 시뮬레이터</h2>
         <p class="muted">0→20강 동안 총 5회 강화. 목표(k 합=5)를 분배하세요.</p>
+
         <div class="grid cols-2">
           <div><h3>1) 0강 옵션</h3><div id="starter-start"></div></div>
           <div><h3>2) 목표 설정</h3>
@@ -127,6 +158,7 @@ export function mountStarter(app){
             <div id="starter-goal"></div>
           </div>
         </div>
+
         <div class="grid cols-2" style="margin-top:10px">
           <div class="card">
             <div class="big">① 시동무기 사용 갯수(기대)</div>
@@ -139,8 +171,16 @@ export function mountStarter(app){
             <div class="muted">고급숫돌 1개 = 10,000 XP (20강 1회=27개)</div>
           </div>
         </div>
+
         <pre id="starter-log" class="mono"></pre>
         <button id="starter-copy">📋 결과 복사</button>
+
+        <div class="card" style="margin-top:12px">
+          <h3>추가: 20강 랜덤 강화 기대값</h3>
+          <p class="muted">현재 0강 구성으로 5회 강화가 완전 랜덤일 때(옵션 균등, 증가치 균등) 옵션별 기대/최저/최고 값을 봅니다.</p>
+          <button id="exp-run" class="hero-btn">20강 기대값 계산</button>
+          <pre id="exp-log" class="mono" style="margin-top:8px"></pre>
+        </div>
       </div>
     </section>
   `;
@@ -160,7 +200,7 @@ export function mountStarter(app){
   }
   startHost.innerHTML=startRow(1)+startRow(2)+startRow(3)+startRow(4);
 
-  // 기본값 (랜덤 or 프리셋)
+  // 기본값 (랜덤 or 프리셋: 부옵 4개만)
   let defaultStart=makeInitialStartCfg();
   try{
     const raw=sessionStorage.getItem('starter_preset');
@@ -328,5 +368,16 @@ ${targetLog}
   byId('starter-copy').addEventListener('click',()=>{
     navigator.clipboard.writeText(byId('starter-log').textContent)
       .then(()=>alert('시뮬레이션 결과 복사됨!'));
+  });
+
+  // ▶ 20강 기대값 버튼
+  byId('exp-run').addEventListener('click', ()=>{
+    try{
+      const startCfg = getStartCfg();
+      const table = buildExpectTable(startCfg);
+      byId('exp-log').textContent = table;
+    }catch(e){
+      byId('exp-log').textContent = '⚠️ ' + e.message;
+    }
   });
 }
