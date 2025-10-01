@@ -512,7 +512,7 @@ ${targetLog}
 
     const step = ()=>{
       if(stat.stop){
-        byId('mc-status')..textContent = '완료'; // 중지 시에도 화면은 간단히 '완료'
+        byId('mc-status').textContent = '완료'; // 중지 시에도 화면은 간단히 '완료'
         byId('mc-out').innerHTML = renderMC(stat);
         return;
       }
