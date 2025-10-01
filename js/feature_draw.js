@@ -206,7 +206,7 @@ function syncAutoMain(){
   }else{
     mainSel.innerHTML = MAIN_STATS[part].map(s=>`<option value="${s}">${s}</option>`).join('');
     mainSel.dataset.fixed = '0';
-    hint.text내용 = '무기/옷/모자는 주옵 고정, 신발/장갑은 선택 가능';
+    hint.textContent = '무기/옷/모자는 주옵 고정, 신발/장갑은 선택 가능';
   }
   syncAutoSubs();
 }
@@ -253,7 +253,6 @@ function matchCondition(rec, cond){
   if(rec.main !== cond.main) return false;
   if(rec.grade !== 'A') return false; // A급만 성공
   if(rec.subs.length !== 4) return false; // 총 부옵 4개
-  // 선택한 부옵이 모두 포함되어야 함
   for(const s of cond.subs){
     if(!rec.subs.includes(s)) return false;
   }
@@ -389,7 +388,7 @@ A급 총: ${aTotal}개
     showTotalCardWith(txt);
   });
 
-  // 자동(조건)
+  // 자동(조건) — 🔁 1회씩 돌며 화면 갱신
   byId('auto-open').addEventListener('click', ()=>{
     autoHideTotal();
     byId('auto-panel').style.display='block';
@@ -410,26 +409,25 @@ A급 총: ${aTotal}개
     const startCount = results.length;
     const startKeys = usedKeys;
 
-    const BATCH = 200;
+    // 1개씩 뽑고 UI 갱신 (프레임 루프)
     const step = ()=>{
       if(autoStop){ autoRunning=false; return; }
-      for(let i=0;i<BATCH;i++){
-        const rec = makeRecord('auto', false);
-        if(matchCondition(rec, cond)){
-          rec.forceEnable = true; // 강화 버튼 활성
-          renderResultList();
-          const drew = results.length - startCount;
-          const used = usedKeys - startKeys;
-          const txt = `자동 뽑기 결과\n\n조건 달성! 총 ${drew}회 뽑음 (열쇠 ${used}개 사용)`;
-          showTotalCardWith(txt);
-          autoRunning=false;
-          return;
-        }
+      const rec = makeRecord('auto', false);
+      const matched = matchCondition(rec, cond);
+      if(matched){
+        rec.forceEnable = true;
+        renderResultList();
+        const drew = results.length - startCount;
+        const used = usedKeys - startKeys;
+        const txt = `자동 뽑기 결과\n\n조건 달성! 총 ${drew}회 뽑음 (열쇠 ${used}개 사용)`;
+        showTotalCardWith(txt);
+        autoRunning=false;
+        return;
       }
       renderResultList();
-      setTimeout(step, 0);
+      requestAnimationFrame(step);
     };
-    step();
+    requestAnimationFrame(step);
   });
 
   byId('auto-stop').addEventListener('click', ()=>{
