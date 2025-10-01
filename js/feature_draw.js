@@ -5,9 +5,9 @@ const byId = (id)=>document.getElementById(id);
 const rand = (n)=>(Math.random()*n)|0;
 const choice = (arr)=>arr[rand(arr.length)];
 
-const ICON_KEY = "./assets/img/key.jpg"; // 확장자 .jpg로 고정 (이미지 경로 문제 해결)
+const ICON_KEY = "./assets/img/key.jpg"; // key 이미지 (jpg)
 
-// === 옵션 키(강화와 동일) ===
+/* === 옵션 키(강화와 동일) === */
 const SUB_OPTIONS = [
   "체력","공격력","방어력",
   "치명타확률","치명타데미지증가",
@@ -18,7 +18,7 @@ const SUB_OPTIONS = [
   "명중","회피"
 ];
 
-// 부위별 주스탯
+/* 부위별 주스탯 */
 const MAIN_STATS = {
   weapon:["공격력"],
   armor:["방어력"],
@@ -27,10 +27,10 @@ const MAIN_STATS = {
   gloves:["치명타확률","치명타 저항률","물리저항력","마법관통력","물리관통력"],
 };
 
-// 등급별 부옵 개수 50:50
+/* 등급별 부옵 개수 (50:50) */
 const SUB_COUNT_RULE = { A:[3,4], B:[2,3], C:[1,2] };
 
-// 0강 수치 후보(강화 프리셋 생성용)
+/* 0강 수치 후보(강화 프리셋 생성용) */
 const INIT_VALUES = {
   "물리관통력":[1.5,2.5,3.5,4.5],
   "마법관통력":[1.5,2.5,3.5,4.5],
@@ -49,7 +49,7 @@ const INIT_VALUES = {
   "치명타 대미지 감소율":[1.5,2.5,3.5,4.5],
 };
 
-// ===== 세션 상태 =====
+/* ===== 세션 상태 ===== */
 let results = [];  // {part, grade, main, subs, src, display, forceEnable, when}
 let usedKeys = 0;
 let autoRunning = false;
@@ -72,7 +72,7 @@ function saveSession(){
   sessionStorage.setItem('used_keys', usedKeys);
 }
 
-// 등급 분포(예시값)
+/* 확률 (A/B/C) */
 function rollGrade(){
   const r=Math.random();
   if(r<0.20) return 'A'; // 20%
@@ -103,7 +103,7 @@ function makeRecord(src, forceEnable=false){
   return rec;
 }
 
-// 표시 규칙: 단일은 마지막 1개만, 자동은 조건 달성 1개만, ???는 표시 안함
+/* 표시 규칙: 단일은 마지막 1개만, 자동은 조건 달성 1개만, ???는 상세 미표시 */
 function updateDisplayFlags(){
   results.forEach(r => r.display = false);
 
@@ -147,6 +147,7 @@ function renderResultList(){
 
       // 주옵 제외, 부옵만 4개
       let four = r.subs.slice(0,4);
+      // 프리셋 생성
       const preset = {
         starter4: four.map(stat=>{
           const vals = INIT_VALUES[stat] || [1,1.5,2,2.5];
@@ -159,8 +160,6 @@ function renderResultList(){
   });
 
   // 사용 키 표시
-  const k0 = document.querySelector('#key-count');
-  if(k0) k0.textContent = usedKeys;
   const k1 = byId('used-keys');
   if(k1) k1.textContent = usedKeys;
 }
@@ -207,7 +206,7 @@ function syncAutoMain(){
   }else{
     mainSel.innerHTML = MAIN_STATS[part].map(s=>`<option value="${s}">${s}</option>`).join('');
     mainSel.dataset.fixed = '0';
-    hint.textContent = '무기/옷/모자는 주옵 고정, 신발/장갑은 선택 가능';
+    hint.text내용 = '무기/옷/모자는 주옵 고정, 신발/장갑은 선택 가능';
   }
   syncAutoSubs();
 }
@@ -217,9 +216,7 @@ function syncAutoSubs(){
   const pool = SUB_OPTIONS.filter(x=>x!==main);
   box.innerHTML = pool.map(s=>{
     const id = `sub-${s}`;
-    return `
-      <label><input type="checkbox" class="auto-sub" id="${id}" value="${s}" /> <span>${s}</span></label>
-    `;
+    return `<label><input type="checkbox" class="auto-sub" id="${id}" value="${s}" /> <span>${s}</span></label>`;
   }).join('');
   enforceSubSelectLimit();
 }
@@ -231,7 +228,7 @@ function enforceSubSelectLimit(){
   function refresh(){
     const checks = Array.from(subsBox.querySelectorAll('.auto-sub'));
     const chosen = checks.filter(c=>c.checked);
-    counter.textContent = `선택: ${chosen.length}개`;
+    counter.textContent = `선택: ${chosen.length}개 (최대 4)`;
 
     // 4개 초과 방지
     if(chosen.length>=4){
@@ -239,7 +236,7 @@ function enforceSubSelectLimit(){
     }else{
       checks.forEach(c=> c.disabled = false);
     }
-    // 1개 이상 선택 시 시작 가능
+    // 1~4개일 때만 시작 가능
     btnStart.classList.toggle('disabled', chosen.length<1 || chosen.length>4);
   }
   subsBox.addEventListener('change', refresh);
@@ -254,19 +251,18 @@ function getAutoCondition(){
 function matchCondition(rec, cond){
   if(rec.part !== cond.part) return false;
   if(rec.main !== cond.main) return false;
-  if(rec.grade !== 'A') return false; // A급 고정
-  // 선택된 subs가 모두 포함돼야 함
+  if(rec.grade !== 'A') return false; // A급만 성공
+  if(rec.subs.length !== 4) return false; // 총 부옵 4개
+  // 선택한 부옵이 모두 포함되어야 함
   for(const s of cond.subs){
     if(!rec.subs.includes(s)) return false;
   }
-  // 총 부옵션은 반드시 4개
-  if(rec.subs.length !== 4) return false;
   return true;
 }
 
 /* ===== 메인 마운트 ===== */
 export function mountDraw(app){
-  // 세션 유지 (초기화 제거!)
+  // 세션 유지(초기화 X)
   loadSession();
 
   app.innerHTML = `
@@ -325,7 +321,7 @@ export function mountDraw(app){
             <div>
               <label>부옵션(1~4개)</label>
               <div id="auto-subs" class="checkbox-grid"></div>
-              <div class="hint" id="auto-counter">선택: 0개</div>
+              <div class="hint" id="auto-counter">선택: 0개 (최대 4)</div>
             </div>
           </div>
           <div style="margin-top:8px; display:flex; gap:8px; align-items:center">
@@ -338,21 +334,19 @@ export function mountDraw(app){
       </div>
 
       <div id="draw-results" style="margin-top:12px"></div>
-
       <div id="draw-total" style="margin-top:12px"></div>
     </section>
   `;
 
-  // 공통: 뽑기류 버튼 누르면 총 결과 카드 자동 닫기
   const autoHideTotal = ()=> closeTotalCard();
 
-  // 홈 → 즉시 세션 초기화
+  // 홈 → 세션 초기화 후 나가기
   byId('draw-home').addEventListener('click', ()=>{
     resetDrawSession();
     location.hash='';
   });
 
-  // 단일
+  // 단일 뽑기
   byId('single-draw').addEventListener('click', ()=>{
     autoHideTotal();
     makeRecord('single', false);
@@ -374,11 +368,122 @@ export function mountDraw(app){
       return;
     }
     const startLen = results.length;
-    for(let i=0;i<n;i++) makeRecord('multi', false); // 저장
+    for(let i=0;i<n;i++) makeRecord('multi', false);
     byId('multi-panel').style.display='none';
-    renderResultList(); // 키 카운트만 갱신
+    renderResultList(); // 키 카운트 갱신
 
-    // ✅ 요약 출력
+    // 이번 배치 요약 팝업
     const batch = results.slice(startLen);
     const A = batch.filter(r=>r.grade==='A');
-    const aTotal = A.length
+    const aTotal = A.length;
+    const a3 = A.filter(r=>r.subs.length===3).length;
+    const a4 = A.filter(r=>r.subs.length===4).length;
+
+    const txt =
+`이번 ??? 뽑기 결과 요약
+
+총 뽑기 횟수(이번 실행): ${n}
+A급 총: ${aTotal}개
+- A급(부옵 3개): ${a3}개
+- A급(부옵 4개): ${a4}개`;
+    showTotalCardWith(txt);
+  });
+
+  // 자동(조건)
+  byId('auto-open').addEventListener('click', ()=>{
+    autoHideTotal();
+    byId('auto-panel').style.display='block';
+    buildAutoUI();
+  });
+  byId('auto-cancel').addEventListener('click', ()=>{
+    byId('auto-panel').style.display='none';
+  });
+  byId('auto-part').addEventListener('change', syncAutoMain);
+  byId('auto-main').addEventListener('change', syncAutoSubs);
+
+  byId('auto-run').addEventListener('click', ()=>{
+    if(byId('auto-run').classList.contains('disabled')) return;
+    if(autoRunning) return;
+    autoRunning = true; autoStop = false;
+
+    const cond = getAutoCondition();
+    const startCount = results.length;
+    const startKeys = usedKeys;
+
+    const BATCH = 200;
+    const step = ()=>{
+      if(autoStop){ autoRunning=false; return; }
+      for(let i=0;i<BATCH;i++){
+        const rec = makeRecord('auto', false);
+        if(matchCondition(rec, cond)){
+          rec.forceEnable = true; // 강화 버튼 활성
+          renderResultList();
+          const drew = results.length - startCount;
+          const used = usedKeys - startKeys;
+          const txt = `자동 뽑기 결과\n\n조건 달성! 총 ${drew}회 뽑음 (열쇠 ${used}개 사용)`;
+          showTotalCardWith(txt);
+          autoRunning=false;
+          return;
+        }
+      }
+      renderResultList();
+      setTimeout(step, 0);
+    };
+    step();
+  });
+
+  byId('auto-stop').addEventListener('click', ()=>{
+    autoStop = true;
+  });
+
+  // 총 결과보기(전체 집계)
+  byId('show-total').addEventListener('click', ()=>{
+    const total = results.length;
+    const A = results.filter(r=>r.grade==='A');
+    const counts = {weapon:0,armor:0,hat:0,shoes:0,gloves:0};
+    A.forEach(r=>counts[r.part]++);
+    const a4 = A.filter(r=>r.subs.length===4).length;
+
+    // 무기/옷/모자: 특수 조합
+    const WAH = A.filter(r=>['weapon','armor','hat'].includes(r.part));
+    const pairEff = WAH.filter(r=>r.subs.includes('효과적중') && r.subs.includes('효과저항')).length;
+    const pairRes = WAH.filter(r=>r.subs.includes('물리저항력') && r.subs.includes('마법저항력')).length;
+    const quadAll = WAH.filter(r=>
+      ['효과적중','효과저항','물리저항력','마법저항력'].every(s=>r.subs.includes(s))
+    ).length;
+
+    // 신발: 주옵-부옵 교차
+    const shoesMainEffHit = A.filter(r=>r.part==='shoes' && r.main==='효과적중' && r.subs.includes('효과저항')).length;
+    const shoesMainEffRes = A.filter(r=>r.part==='shoes' && r.main==='효과저항' && r.subs.includes('효과적중')).length;
+
+    // 장갑
+    const glovesPhysEffBoth = A.filter(r=>
+      r.part==='gloves' && r.main==='물리저항력' &&
+      r.subs.includes('효과적중') && r.subs.includes('효과저항')
+    ).length;
+
+    const totalText =
+`총 결과
+
+총 뽑기 횟수: ${total}
+
+A급 시동무기 총 갯수 [무기:${counts.weapon} , 옷:${counts.armor} , 모자:${counts.hat} , 신발:${counts.shoes} , 장갑:${counts.gloves}]
+A급 시동무기 중에 부옵션 4개인 총 갯수: ${a4}
+
+무기/옷/모자 부위
+- (효과적중 + 효과저항): ${pairEff}
+- (물리저항력 + 마법저항력): ${pairRes}
+- (효과적중 + 효과저항 + 물리저항력 + 마법저항력): ${quadAll}
+
+신발 부위
+- 주스탯: 효과적중 & 부스탯: 효과저항 → ${shoesMainEffHit}
+- 주스탯: 효과저항 & 부스탯: 효과적중 → ${shoesMainEffRes}
+
+장갑 부위
+- 주스탯: 물리저항력 & 부스탯: (효과적중 + 효과저항) → ${glovesPhysEffBoth}
+`;
+    showTotalCardWith(totalText);
+  });
+
+  renderResultList();
+}
