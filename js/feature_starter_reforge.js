@@ -1,14 +1,14 @@
 // js/feature_starter_reforge.js
-// 세공하자 v2.4.3 (공식 규칙 반영)
-// - 영혼 주사위(파랑): 강화 단계(k) 재분배 + 수치 전면 재분배
-// - 시동 주사위(빨강): k 유지 + 수치 전면 재분배
-// - 표 컬럼: [옵션 | 0강 | 강화 | 현재 | 범위]
-// - 0강(기초) 항상 표시, 모바일 1줄 5칸 압축 보기
+// 세공하자 v2.4.4 (모바일 초압축 3열)
+// - 영혼(파랑): k 재분배 + 수치 전면 재분배
+// - 시동(빨강): k 유지 + 수치 전면 재분배
+// - 데스크탑: [옵션 | 0강 | 강화 | 현재 | 범위]
+// - 모바일: 3열 [옵션 | 0강 | 값(●●○○○ · 현재 · (범위))]
 
-const GROUP_A = ["물리관통력","마법관통력","물리저항력","마법저항력","치명타확률","치명타데미지증가"]; // %
-const GROUP_B = ["회피","명중","효과적중","효과저항"]; // 수치
-const GROUP_C = ["공격력","방어력","체력"]; // %
-const GROUP_D = ["치명타 저항률","치명타 대미지 감소율"]; // %
+const GROUP_A = ["물리관통력","마법관통력","물리저항력","마법저항력","치명타확률","치명타데미지증가"];
+const GROUP_B = ["회피","명중","효과적중","효과저항"];
+const GROUP_C = ["공격력","방어력","체력"];
+const GROUP_D = ["치명타 저항률","치명타 대미지 감소율"];
 const PERCENT_SET = new Set([...GROUP_A, ...GROUP_C, ...GROUP_D]);
 
 const INIT_VALUES = {
@@ -45,7 +45,7 @@ function rangeFor(opt, k){
   return { min: roundP(opt, min), max: roundP(opt, max) };
 }
 
-// 영혼 주사위(파랑): k 재분배 + 0강/증가치 전면 재분배
+// 영혼(파랑): k 재분배 + 전면 재배정
 function rerollBlue(names){
   const k = [0,0,0,0];
   for(let i=0;i<STEPS;i++) k[(Math.random()*4)|0]++;
@@ -58,7 +58,7 @@ function rerollBlue(names){
   return { base, final, counts };
 }
 
-// 시동 주사위(빨강): k 유지 + 0강/증가치 전면 재분배
+// 시동(빨강): k 유지 + 전면 재배정
 function rerollRed(names, countsFixed){
   const base={}, final={};
   names.forEach(opt=>{
@@ -69,14 +69,21 @@ function rerollRed(names, countsFixed){
   return { base, final };
 }
 
-// 강화 점칸(UI)
+// 강화 점칸(UI) – 데스크탑 셀
 function kDotsCell(k){
   let html = '<div class="kdots" aria-label="강화 단계">';
-  for(let i=0;i<5;i++){
-    html += `<span class="${i<k?'on':''}"></span>`;
-  }
+  for(let i=0;i<5;i++) html += `<span class="${i<k?'on':''}"></span>`;
   html += '</div>';
   return html;
+}
+// 모바일 압축용 한 줄
+function compactValue(opt, base, k, now, rng){
+  // 점칸을 아주 작은 인라인 점들로
+  let dots = '<span class="kdots-inline">';
+  for(let i=0;i<5;i++) dots += `<i class="${i<k?'on':''}"></i>`;
+  dots += '</span>';
+  const nowTxt = k ? fmt(opt, now) : '-';
+  return `${dots} <b class="now">${nowTxt}</b> <span class="range">(${fmt(opt, rng.min)} ~ ${fmt(opt, rng.max)})</span>`;
 }
 
 export function mountStarterReforge(app){
@@ -99,7 +106,7 @@ export function mountStarterReforge(app){
   let base    = {};                 // 0강(기초)
   let final   = {};                 // 현재값
 
-  // 첫 렌더: 현재 k 기준으로 0강을 새로 굴려서 표시 구성
+  // 첫 렌더: 현재 k 기준으로 0강을 새로 굴려서 표시
   names.forEach(opt=>{
     base[opt]  = rollBase(opt);
     final[opt] = applyIncrements(opt, base[opt], counts[opt]||0);
@@ -111,21 +118,33 @@ export function mountStarterReforge(app){
     const rows = names.map(opt=>{
       const k = counts[opt]||0;
       const rng = rangeFor(opt, k);
-      const now = k ? fmt(opt, final[opt]) : '-';
+      const nowVal = final[opt];
+
       return `
         <tr>
           <td class="optcell"><span class="optdot"></span>${opt}</td>
           <td class="basecell">${fmt(opt, base[opt])}</td>
-          <td class="kcell">${kDotsCell(k)}</td>
-          <td class="valcell"><b>${now}</b></td>
-          <td class="rangecell">${fmt(opt, rng.min)} ~ ${fmt(opt, rng.max)}</td>
+
+          <!-- 데스크탑용 개별 셀 -->
+          <td class="kcell only-desktop">${kDotsCell(k)}</td>
+          <td class="valcell only-desktop"><b>${k ? fmt(opt, nowVal) : '-'}</b></td>
+          <td class="rangecell only-desktop">${fmt(opt, rng.min)} ~ ${fmt(opt, rng.max)}</td>
+
+          <!-- 모바일 초압축 한 셀 -->
+          <td class="compact only-mobile">
+            ${compactValue(opt, base[opt], k, nowVal, rng)}
+          </td>
         </tr>`;
     }).join('');
+
     return `
       <div class="table-wrap">
         <table class="gear-table">
-          <thead>
+          <thead class="only-desktop">
             <tr><th>옵션</th><th>0강</th><th>강화</th><th>현재</th><th>범위</th></tr>
+          </thead>
+          <thead class="only-mobile">
+            <tr><th>옵션</th><th>0강</th><th>값</th></tr>
           </thead>
           <tbody>${rows}</tbody>
         </table>
