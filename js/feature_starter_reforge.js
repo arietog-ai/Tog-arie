@@ -1,12 +1,14 @@
 // js/feature_starter_reforge.js
-// 세공하자 v2.4.1 (모바일 한 줄 압축 레이아웃)
-// - 모바일: 4칸 그리드(옵션 | 강화 | 현재 | 범위)로 "한눈에" 보이도록
-// - 파랑/빨강 동작은 이전 버전과 동일
+// 세공하자 v2.4.3 (공식 규칙 반영)
+// - 영혼 주사위(파랑): 강화 단계(k) 재분배 + 수치 전면 재분배
+// - 시동 주사위(빨강): k 유지 + 수치 전면 재분배
+// - 표 컬럼: [옵션 | 0강 | 강화 | 현재 | 범위]
+// - 0강(기초) 항상 표시, 모바일 1줄 5칸 압축 보기
 
-const GROUP_A = ["물리관통력","마법관통력","물리저항력","마법저항력","치명타확률","치명타데미지증가"];
-const GROUP_B = ["회피","명중","효과적중","효과저항"];
-const GROUP_C = ["공격력","방어력","체력"];
-const GROUP_D = ["치명타 저항률","치명타 대미지 감소율"];
+const GROUP_A = ["물리관통력","마법관통력","물리저항력","마법저항력","치명타확률","치명타데미지증가"]; // %
+const GROUP_B = ["회피","명중","효과적중","효과저항"]; // 수치
+const GROUP_C = ["공격력","방어력","체력"]; // %
+const GROUP_D = ["치명타 저항률","치명타 대미지 감소율"]; // %
 const PERCENT_SET = new Set([...GROUP_A, ...GROUP_C, ...GROUP_D]);
 
 const INIT_VALUES = {
@@ -43,7 +45,7 @@ function rangeFor(opt, k){
   return { min: roundP(opt, min), max: roundP(opt, max) };
 }
 
-// 파랑: k 재분배 + 기초/증가치 전부 재배정
+// 영혼 주사위(파랑): k 재분배 + 0강/증가치 전면 재분배
 function rerollBlue(names){
   const k = [0,0,0,0];
   for(let i=0;i<STEPS;i++) k[(Math.random()*4)|0]++;
@@ -56,17 +58,13 @@ function rerollBlue(names){
   return { base, final, counts };
 }
 
-// 빨강: k 유지 + 기초 재배정 + 강화증가치(k회) 재배정
+// 시동 주사위(빨강): k 유지 + 0강/증가치 전면 재분배
 function rerollRed(names, countsFixed){
   const base={}, final={};
   names.forEach(opt=>{
     const k = countsFixed[opt]||0;
-    base[opt] = rollBase(opt);
-    let v = base[opt];
-    for(let i=0;i<k;i++){
-      v = roundP(opt, v + choice(INIT_VALUES[opt]));
-    }
-    final[opt] = v;
+    base[opt]  = rollBase(opt);
+    final[opt] = applyIncrements(opt, base[opt], k);
   });
   return { base, final };
 }
@@ -97,10 +95,11 @@ export function mountStarterReforge(app){
   }
 
   const names = item.names;
-  let counts  = { ...item.counts };
-  let base    = {};
-  let final   = {};
+  let counts  = { ...item.counts }; // k 초기값
+  let base    = {};                 // 0강(기초)
+  let final   = {};                 // 현재값
 
+  // 첫 렌더: 현재 k 기준으로 0강을 새로 굴려서 표시 구성
   names.forEach(opt=>{
     base[opt]  = rollBase(opt);
     final[opt] = applyIncrements(opt, base[opt], counts[opt]||0);
@@ -116,6 +115,7 @@ export function mountStarterReforge(app){
       return `
         <tr>
           <td class="optcell"><span class="optdot"></span>${opt}</td>
+          <td class="basecell">${fmt(opt, base[opt])}</td>
           <td class="kcell">${kDotsCell(k)}</td>
           <td class="valcell"><b>${now}</b></td>
           <td class="rangecell">${fmt(opt, rng.min)} ~ ${fmt(opt, rng.max)}</td>
@@ -125,7 +125,7 @@ export function mountStarterReforge(app){
       <div class="table-wrap">
         <table class="gear-table">
           <thead>
-            <tr><th>옵션</th><th>강화</th><th>현재</th><th>범위</th></tr>
+            <tr><th>옵션</th><th>0강</th><th>강화</th><th>현재</th><th>범위</th></tr>
           </thead>
           <tbody>${rows}</tbody>
         </table>
@@ -139,10 +139,10 @@ export function mountStarterReforge(app){
           <button class="hero-btn" id="back">← 강화로</button>
           <span class="pill">세공하자</span>
           <span class="badge" style="margin-left:auto">
-            <img src="./assets/img/dice_blue.jpg" alt="" class="dicon" /> 파랑: <b id="blue-used">${blueUsed}</b>
+            <img src="./assets/img/dice_blue.jpg" alt="" class="dicon" /> 영혼: <b id="blue-used">${blueUsed}</b>
           </span>
           <span class="badge">
-            <img src="./assets/img/dice_red.jpg" alt="" class="dicon" /> 빨강: <b id="red-used">${redUsed}</b>
+            <img src="./assets/img/dice_red.jpg" alt="" class="dicon" /> 시동: <b id="red-used">${redUsed}</b>
           </span>
         </div>
 
@@ -150,10 +150,10 @@ export function mountStarterReforge(app){
           <div class="titlebar">
             <h2 class="section-title">현재 시동무기</h2>
             <div class="title-actions">
-              <button class="dice-btn" id="roll-blue" aria-label="파랑 주사위">
+              <button class="dice-btn" id="roll-blue" aria-label="영혼 주사위">
                 <img src="./assets/img/dice_blue.jpg" alt="" /><span>돌리기</span>
               </button>
-              <button class="dice-btn" id="roll-red" aria-label="빨강 주사위">
+              <button class="dice-btn" id="roll-red" aria-label="시동 주사위">
                 <img src="./assets/img/dice_red.jpg" alt="" /><span>돌리기</span>
               </button>
             </div>
