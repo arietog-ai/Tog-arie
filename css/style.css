@@ -33,11 +33,11 @@ body{
   padding:14px;
 }
 
-/* 🔒 강조 카드(보라/파랑 그라데이션 금지) */
+/* 🔒 강조 카드: 그라데이션 금지, 테두리만 */
 .card.emph{
-  background:var(--card) !important;   /* 그라데이션 강제 차단 */
+  background:var(--card) !important;
   color:var(--text) !important;
-  border:2px solid var(--ok);          /* 강조는 테두리만 */
+  border:2px solid var(--ok);
   box-shadow:none !important;
 }
 
@@ -57,6 +57,7 @@ input,select,button{
   border:1px solid #2b3547; background:#0f1420; color:var(--text)
 }
 button{ cursor:pointer; font-weight:700 }
+button[disabled], .hero-btn.disabled{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6); }
 
 .pill{
   display:inline-block; padding:4px 8px; border-radius:999px;
@@ -80,15 +81,6 @@ button{ cursor:pointer; font-weight:700 }
 }
 .hero .hero-btn{
   flex:0 0 auto; padding:12px 14px; border-radius:12px; border:1px solid var(--line); background:#111726; color:var(--text);
-  position:relative; z-index:2;
-}
-
-/* ===== 버튼 상태 (비활성) ===== */
-.hero-btn.disabled,
-.hero-btn[disabled]{
-  opacity:.45;
-  cursor:not-allowed !important;
-  filter:saturate(.6);
 }
 
 /* ===== 아이템 그리드 ===== */
@@ -139,7 +131,7 @@ button{ cursor:pointer; font-weight:700 }
   .sticky-inner{ grid-template-columns:1fr 1fr; }
 }
 
-/* ===== 반응형 ===== */
+/* ===== 그리드 ===== */
 .grid{ display:grid; gap:12px }
 .cols-3{ grid-template-columns:1fr 1fr 1fr }
 .cols-2{ grid-template-columns:1fr 1fr }
@@ -152,9 +144,8 @@ button{ cursor:pointer; font-weight:700 }
   .item-bottom{ grid-template-columns:1fr 38px }
 }
 
-/* ===== 부가 요소 ===== */
+/* ===== 부가 ===== */
 .hint{ margin-top:4px; font-size:12px; color:var(--muted) }
-
 .badge{
   display:inline-flex; align-items:center; gap:6px;
   padding:4px 8px; border-radius:999px;
@@ -173,7 +164,5 @@ button{ cursor:pointer; font-weight:700 }
   display:flex; align-items:center; gap:6px; font-size:13px;
 }
 
-/* ===== 강제 리셋: 의도치 않은 그라데이션/배경색 차단 ===== */
-.card, .summary-card{
-  background-image:none !important;
-}
+/* ===== 강제 리셋: 그라데이션 차단 ===== */
+.card, .summary-card{ background-image:none !important; }
