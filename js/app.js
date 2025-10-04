@@ -8,7 +8,6 @@ const app = document.getElementById('app');
 function scrollTop(){ try{ window.scrollTo({top:0, behavior:'instant'}); }catch(_){} }
 
 function renderHome(){
-  // 홈 입장 시 뽑기 세션은 초기화된 상태로 시작하게 두는 게 안전
   app.innerHTML = `
     <section class="hero container">
       <img src="./assets/img/blur_guild.png" alt="블러 연합" class="hero-img" />
@@ -44,7 +43,7 @@ function renderGearHub(){
     </section>
   `;
   app.querySelector('[data-route="draw"]').addEventListener('click', ()=> {
-    resetDrawSession();           // 허브에서 뽑기 진입 시 매번 초기화
+    resetDrawSession();
     navigate('draw');
   });
   app.querySelector('[data-route="starter"]').addEventListener('click', ()=> navigate('starter'));
