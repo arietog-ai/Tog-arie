@@ -1,5 +1,11 @@
 // js/feature_draw.js
-// 시동무기 뽑기 시뮬레이터 (원본 톤 유지, 라벨/표기/동작 수정)
+// 시동무기 뽑기 시뮬레이터 (원본 톤 유지, 라벨/표기/동작 확정)
+// - 모드(viewMode)별 표시 일원화: single | multi | auto
+// - 모드 전환 시 이전 리스트/패널/요약 완전 초기화
+// - 단일/자동은 항상 최신 1건만 표시 (중복 금지)
+// - ???는 리스트 미노출, "N회 결과" 요약만 표시
+// - 자동 결과 카드 타이틀은 "자동 뽑기 결과", 총 결과는 "총 결과"
+// - 열쇠 카운트 두 곳 실시간 동기화
 
 const byId = (id)=>document.getElementById(id);
 const rand = (n)=>(Math.random()*n)|0;
@@ -50,7 +56,7 @@ const INIT_VALUES = {
 };
 
 /* ===== 세션 상태 ===== */
-let results = [];  // {part, grade, main, subs, src, display, forceEnable, when}
+let results = [];  // {part, grade, main, subs, src, forceEnable, when}
 let usedKeys = 0;
 let autoRunning = false;
 let autoStop = false;
@@ -100,30 +106,13 @@ function makeRecord(src, forceEnable=false){
   const grade = rollGrade();
   const main = rollMainStat(part);
   const subs = rollSubs(grade, main);
-  const rec = { part, grade, main, subs, src, forceEnable, display:false, when:Date.now() + Math.random() };
+  const rec = { part, grade, main, subs, src, forceEnable, when:Date.now() + Math.random() };
   results.push(rec);
   saveSession();
   return rec;
 }
 
-/* 표시 규칙: 모드별로만 보여줌 */
-function updateDisplayFlags(){
-  results.forEach(r => r.display = false);
-
-  if(viewMode==='single'){
-    for(let i=results.length-1;i>=0;i--){
-      if(results[i].src==='single'){ results[i].display = true; break; }
-    }
-  }else if(viewMode==='auto'){
-    for(let i=results.length-1;i>=0;i--){
-      if(results[i].src==='auto' && results[i].forceEnable){ results[i].display = true; break; }
-    }
-  }else{
-    // viewMode==='multi'일 땐 리스트 표시 안 함(요약 카드만)
-  }
-}
-
-/* ===== 카드 유틸 ===== */
+/* ===== 정보 카드 ===== */
 function closeInfoCard(){ byId('draw-total').innerHTML = ''; }
 function showInfoCard(title, text){
   byId('draw-total').innerHTML = `
@@ -145,19 +134,34 @@ function showInfoCard(title, text){
   byId('close-total').addEventListener('click', closeInfoCard);
 }
 
+/* ===== 모드별 최신 1건 선택 ===== */
+function pickLatestForMode(){
+  if(viewMode==='single'){
+    for(let i=results.length-1;i>=0;i--){
+      if(results[i].src==='single') return results[i];
+    }
+  }else if(viewMode==='auto'){
+    for(let i=results.length-1;i>=0;i--){
+      if(results[i].src==='auto' && results[i].forceEnable) return results[i];
+    }
+  }
+  return null;
+}
+
 /* ===== 메인 리스트 ===== */
 function renderResultList(){
-  updateDisplayFlags();
   const host = byId('draw-results');
 
-  // 모드가 multi면 리스트 비움 (요약만)
+  // 멀티 모드: 리스트 미노출
   if(viewMode==='multi'){
     host.innerHTML = '';
   }else{
-    const list = results.filter(r=>r.display);
-    host.innerHTML = list.map((r)=>{
+    const r = pickLatestForMode();
+    if(!r){
+      host.innerHTML = '';
+    }else{
       const eligible = r.forceEnable || (r.grade==='A' && r.subs.length===4);
-      return `
+      host.innerHTML = `
         <div class="card" style="padding:10px; margin-bottom:10px; ${eligible?'border:2px solid var(--ok)':''}">
           <div><b>[${r.grade}] ${r.part}</b></div>
           <div>주스탯: ${r.main}</div>
@@ -168,15 +172,14 @@ function renderResultList(){
           </div>
         </div>
       `;
-    }).join('');
 
-    host.querySelectorAll('.to-starter').forEach(btn=>{
+      const btn = host.querySelector('.to-starter');
       btn.addEventListener('click', ()=>{
         if(btn.hasAttribute('disabled')) return;
         const when = parseFloat(btn.dataset.when);
-        const r = results.find(x=>x.when===when);
-        if(!r) return;
-        const four = r.subs.slice(0,4);
+        const r2 = results.find(x=>x.when===when);
+        if(!r2) return;
+        const four = r2.subs.slice(0,4);
         const preset = { starter4: four.map(stat=>{
           const vals = INIT_VALUES[stat] || [1,1.5,2,2.5];
           return { stat, value: choice(vals) };
@@ -184,15 +187,15 @@ function renderResultList(){
         sessionStorage.setItem('starter_preset', JSON.stringify(preset));
         location.hash = '#starter';
       });
-    });
+    }
   }
 
-  // 열쇠 카운트 2곳 갱신
+  // 열쇠 카운트 2곳 동기화
   const k1 = byId('used-keys'); if(k1) k1.textContent = usedKeys;
   const k2 = byId('used-keys-2'); if(k2) k2.textContent = `열쇠: ${usedKeys}`;
 }
 
-/* ===== 자동 패널 구성 ===== */
+/* ===== 자동 패널 ===== */
 function syncAutoMain(){
   const part = byId('auto-part').value;
   const mainSel = byId('auto-main');
@@ -235,7 +238,6 @@ function enforceSubSelectLimit(){
     }else{
       checks.forEach(c=> c.disabled = false);
     }
-    // 1~4개일 때만 시작 가능
     btnStart.classList.toggle('disabled', chosen.length<1 || chosen.length>4);
     btnStart.toggleAttribute('disabled', chosen.length<1 || chosen.length>4);
   }
@@ -259,7 +261,7 @@ function matchCondition(rec, cond){
   return true;
 }
 
-/* ===== 메인 마운트 ===== */
+/* ===== 마운트 ===== */
 export function mountDraw(app){
   loadSession();
 
@@ -337,17 +339,11 @@ export function mountDraw(app){
     </section>
   `;
 
+  /* 패널 유틸 */
   const mp = byId('multi-panel');
   const ap = byId('auto-panel');
-
-  function hidePanels(){
-    if(mp) mp.style.display='none';
-    if(ap) ap.style.display='none';
-  }
-  function closeAndClear(){
-    hidePanels();
-    closeInfoCard();
-  }
+  const hidePanels = ()=>{ if(mp) mp.style.display='none'; if(ap) ap.style.display='none'; };
+  const closeAll = ()=>{ hidePanels(); closeInfoCard(); };
 
   // 홈으로
   byId('draw-home').addEventListener('click', ()=>{
@@ -358,7 +354,7 @@ export function mountDraw(app){
   // 단일
   byId('single-draw').addEventListener('click', ()=>{
     viewMode = 'single';
-    closeAndClear();
+    closeAll();
     makeRecord('single', false);
     renderResultList();
   });
@@ -369,7 +365,7 @@ export function mountDraw(app){
     closeInfoCard();
     if(ap) ap.style.display='none';
     mp.style.display='block';
-    renderResultList(); // 모드변경에 따라 리스트 숨김
+    renderResultList(); // 멀티 모드이므로 리스트 숨김
   });
   byId('multi-cancel').addEventListener('click', ()=>{ mp.style.display='none'; });
 
@@ -384,7 +380,7 @@ export function mountDraw(app){
     const startLen = results.length;
     for(let i=0;i<n;i++) makeRecord('multi', false);
     mp.style.display='none';
-    renderResultList(); // 리스트는 비워둠(모드=multi)
+    renderResultList(); // 리스트 비움
 
     // N회 요약 (총 결과 아님)
     const batch = results.slice(startLen);
@@ -409,7 +405,7 @@ A급 총: ${aTotal}개
     if(mp) mp.style.display='none';
     ap.style.display='block';
     buildAutoUI();
-    renderResultList(); // 모드=auto → 성공건만 표시
+    renderResultList(); // 자동 모드: 조건 달성 1건만 표시
   });
   byId('auto-cancel').addEventListener('click', ()=>{ ap.style.display='none'; });
 
@@ -436,7 +432,7 @@ A급 총: ${aTotal}개
         const drew = results.length - startCount;
         const used = usedKeys - startKeys;
         const txt = `조건 달성! 총 ${drew}회 뽑음 (열쇠 ${used}개 사용)`;
-        showInfoCard('자동 뽑기 결과', txt);
+        showInfoCard('자동 뽑기 결과', txt); // 총 결과 아님
         autoRunning=false;
         return;
       }
@@ -496,4 +492,9 @@ A급 시동무기 중에 부옵션 4개인 총 갯수: ${a4}
   });
 
   renderResultList();
+}
+
+function buildAutoUI(){
+  syncAutoMain();
+  enforceSubSelectLimit();
 }
