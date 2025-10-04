@@ -1,8 +1,8 @@
 // js/app.js
-// import에 버전 쿼리 부여 (캐시 무시)
-import { mountShop } from './hardmode_shop.js?v=20251005-2';
-import { mountStarter } from './feature_starter.js?v=20251005-2';
-import { mountDraw, resetDrawSession } from './feature_draw.js?v=20251005-2';
+// 모듈 import에 버전 쿼리 부여 (캐시 무시)
+import { mountShop } from './hardmode_shop.js?v=20251005-3';
+import { mountStarter } from './feature_starter.js?v=20251005-3';
+import { mountDraw, resetDrawSession } from './feature_draw.js?v=20251005-3';
 
 const app = document.getElementById('app');
 
@@ -44,7 +44,7 @@ function renderGearHub(){
     </section>
   `;
   app.querySelector('[data-route="draw"]').addEventListener('click', ()=> {
-    // 뽑기 들어갈 때 세션 초기화
+    // 허브에서 뽑기 진입 시 세션 초기화 (중복 잔상 방지)
     resetDrawSession();
     navigate('draw');
   });
