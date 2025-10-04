@@ -1,9 +1,8 @@
-// js/app.js
-// 모듈 import에 버전 쿼리 부여 (캐시 무시)
+// js/app.js  (v=20251005-6)  — estimator 스텁 포함, 모든 import 존재 보장
 import { mountShop } from './hardmode_shop.js?v=20251005-3';
-import { mountStarter } from './feature_starter.js?v=20251005-3';
-import { mountStarterEstimator } from './feature_starter_estimator.js?v=20251005-3';
-import { mountStarterReforge } from './feature_starter_reforge.js?v=20251005-3';
+import { mountStarter } from './feature_starter.js?v=20251005-6';
+import { mountStarterEstimator } from './feature_starter_estimator.js?v=20251005-6';
+import { mountStarterReforge } from './feature_starter_reforge.js?v=20251005-6';
 import { mountDraw, resetDrawSession } from './feature_draw.js?v=20251005-3';
 
 const app = document.getElementById('app');
@@ -54,51 +53,28 @@ function renderGearHub(){
 }
 
 export function navigate(route){
-  if(route==='shop')                         location.hash = '#shop';
-  else if(route==='gear')                    location.hash = '#gear';
-  else if(route==='draw')                    location.hash = '#draw';
-  else if(route==='starter')                 location.hash = '#starter';
-  else if(route==='starter/estimator'
-       || route==='starter/estimate')        location.hash = '#starter/estimator';
-  else if(route==='starter/reforge')         location.hash = '#starter/reforge';
-  else                                       location.hash = ''; // home
+  if(route==='shop')                  location.hash = '#shop';
+  else if(route==='gear')             location.hash = '#gear';
+  else if(route==='draw')             location.hash = '#draw';
+  else if(route==='starter')          location.hash = '#starter';
+  else if(route==='starter/estimator')location.hash = '#starter/estimator';
+  else if(route==='starter/reforge')  location.hash = '#starter/reforge';
+  else                                location.hash = ''; // home
 }
 
 function renderFromHash(){
   switch(location.hash){
-    case '#shop':
-      app.innerHTML = '';
-      mountShop(app);
-      break;
-    case '#gear':
-      renderGearHub();
-      break;
-    case '#draw':
-      app.innerHTML = '';
-      mountDraw(app);
-      break;
-    case '#starter':
-      app.innerHTML = '';
-      mountStarter(app);
-      break;
-    case '#starter/estimator':
-      app.innerHTML = '';
-      mountStarterEstimator(app);
-      break;
-    case '#starter/reforge':
-      app.innerHTML = '';
-      mountStarterReforge(app);
-      break;
+    case '#shop':             app.innerHTML=''; mountShop(app); break;
+    case '#gear':             renderGearHub(); break;
+    case '#draw':             app.innerHTML=''; mountDraw(app); break;
+    case '#starter':          app.innerHTML=''; mountStarter(app); break;
+    case '#starter/estimator':app.innerHTML=''; mountStarterEstimator(app); break;
+    case '#starter/reforge':  app.innerHTML=''; mountStarterReforge(app); break;
     case '':
-    case '#':
-      renderHome();
-      break;
-    default:
-      location.hash = '';
-      return;
+    case '#':                 renderHome(); break;
+    default:                  location.hash=''; return;
   }
   scrollTop();
 }
-
 window.addEventListener('hashchange', renderFromHash, { passive:true });
 document.addEventListener('DOMContentLoaded', renderFromHash, { passive:true });
