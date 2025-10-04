@@ -191,3 +191,49 @@ button[disabled], .hero-btn.disabled{ opacity:.45; cursor:not-allowed !important
   .mc-progress{ width: 140px; }
   .grid.cols-2#list { grid-template-columns: 1fr; }
 }
+
+/* 타이틀 라인에 주사위 버튼 배치 */
+.titlebar{
+  display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+}
+.title-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+
+/* 테이블 스타일 */
+.table-wrap{ overflow:auto; }
+.gear-table{
+  width:100%; border-collapse:separate; border-spacing:0; min-width:520px;
+}
+.gear-table thead th{
+  text-align:left; font-weight:700; color:var(--muted); padding:10px 12px; border-bottom:1px solid var(--line);
+}
+.gear-table tbody td{
+  padding:12px; border-bottom:1px solid var(--line);
+}
+.optcell{ display:flex; align-items:center; gap:8px; font-weight:700; }
+.optdot{ width:8px; height:8px; border-radius:50%; background:#7aa7ff; display:inline-block; }
+.kcell .dots{ color:var(--muted); }
+.valcell b{ font-weight:800; }
+.rangecell{ color:var(--muted); }
+
+/* 주사위 아이콘 */
+.dicon{ width:14px; height:14px; border-radius:3px; }
+.dicon-lg{ width:18px; height:18px; margin-right:6px; vertical-align:middle; border-radius:4px; }
+
+/* 상단 줄바꿈 최적화 */
+.toprow{ display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
+
+@media (max-width: 680px){
+  .title-actions{ width:100%; }
+  .gear-table{ min-width:auto; }
+  .gear-table thead{ display:none; }
+  .gear-table tbody tr{
+    display:grid; grid-template-columns: 1fr 1fr; gap:4px; padding:10px 0;
+  }
+  .gear-table tbody td{
+    border:none; padding:6px 8px;
+  }
+  .optcell{ grid-column: 1 / -1; padding-top:12px; }
+  .kcell{ justify-self:start; }
+  .valcell{ justify-self:end; }
+  .rangecell{ grid-column: 1 / -1; color:var(--muted); padding-bottom:12px; border-bottom:1px solid var(--line); }
+}
