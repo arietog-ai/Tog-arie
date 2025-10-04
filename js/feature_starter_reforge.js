@@ -1,16 +1,17 @@
 // js/feature_starter_reforge.js
-// 세공하자 (리팩토링)
-// - 표(table)로 한눈에 보기: [옵션 | k | 현재 | 범위]
-// - 0강 표시는 제거 (주사위마다 랜덤 재설정됨)
-// - 파랑/빨강 주사위 버튼을 타이틀 옆에 배치
-// - 저장 버튼 제거, 주사위 클릭 시 자동 저장
-// - 파랑: k 재분배 + 0강 재롤 + 증가치 랜덤
-// - 빨강: k 유지 + 0강 재롤 + 증가치 랜덤
+// 세공하자 (표 레이아웃 + 주사위 작게 + 저장버튼 제거)
+// - 표 컬럼: [옵션 | 강화 | 현재 | 범위]
+// - 강화 표기: k=0 → "–", k>0 → "•", "••", "•••", "••••", "•••••"
+// - 현재: k=0 이면 "-" 로 표시
+// - 범위: (기초 최솟값 + k×증가치 최솟값) ~ (기초 최댓값 + k×증가치 최댓값)
+// - 파랑: k 재분배 + 0강(기초) 재롤 + 증가치 랜덤
+// - 빨강: k 유지 + 0강(기초) 재롤 + 증가치 랜덤
+// - 모든 동작은 sessionStorage('starter_item')에 자동 저장
 
-const GROUP_A = ["물리관통력","마법관통력","물리저항력","마법저항력","치명타확률","치명타데미지증가"];
-const GROUP_B = ["회피","명중","효과적중","효과저항"];
-const GROUP_C = ["공격력","방어력","체력"];
-const GROUP_D = ["치명타 저항률","치명타 대미지 감소율"];
+const GROUP_A = ["물리관통력","마법관통력","물리저항력","마법저항력","치명타확률","치명타데미지증가"]; // %
+const GROUP_B = ["회피","명중","효과적중","효과저항"]; // 수치
+const GROUP_C = ["공격력","방어력","체력"]; // %
+const GROUP_D = ["치명타 저항률","치명타 대미지 감소율"]; // %
 const PERCENT_SET = new Set([...GROUP_A, ...GROUP_C, ...GROUP_D]);
 
 const INIT_VALUES = {
@@ -26,9 +27,10 @@ const choice = (arr)=>arr[(Math.random()*arr.length)|0];
 const fmt = (opt,v)=> PERCENT_SET.has(opt) ? `${v}%` : `${v}`;
 const roundP = (opt, v)=> PERCENT_SET.has(opt) ? Math.round(v*2)/2 : Math.round(v);
 
-/* 0강(기초) 1회 롤 */
+// 0강(기초) 1회 롤
 function rollBase(opt){ return choice(INIT_VALUES[opt]); }
-/* k회 증가 적용 */
+
+// k회 증가 적용
 function applyIncrements(opt, baseVal, k){
   let v = baseVal;
   for(let i=0;i<k;i++){
@@ -36,15 +38,17 @@ function applyIncrements(opt, baseVal, k){
   }
   return v;
 }
-/* 범위(최소~최대) */
-function rangeFor(opt, baseVal, k){
-  const incs = INIT_VALUES[opt];
-  const min = roundP(opt, baseVal + k * Math.min(...incs));
-  const max = roundP(opt, baseVal + k * Math.max(...incs));
-  return { min, max };
+
+// 범위(기초 min/max 포함)
+function rangeFor(opt, k){
+  const bases = INIT_VALUES[opt];
+  const incs  = INIT_VALUES[opt];
+  const min = Math.min(...bases) + k * Math.min(...incs);
+  const max = Math.max(...bases) + k * Math.max(...incs);
+  return { min: roundP(opt, min), max: roundP(opt, max) };
 }
 
-/* 파랑: k 재분배 + 0강 재롤 */
+// 파랑: k 재분배 + 0강 재롤
 function rerollBlue(names){
   const k = [0,0,0,0];
   for(let i=0;i<STEPS;i++) k[(Math.random()*4)|0]++;
@@ -56,7 +60,8 @@ function rerollBlue(names){
   });
   return { base, final, counts };
 }
-/* 빨강: k 유지 + 0강 재롤 */
+
+// 빨강: k 유지 + 0강 재롤
 function rerollRed(names, countsFixed){
   const base={}, final={};
   names.forEach(opt=>{
@@ -65,6 +70,12 @@ function rerollRed(names, countsFixed){
     final[opt] = applyIncrements(opt, base[opt], k);
   });
   return { base, final };
+}
+
+// 강화 점표기
+function kDots(k){
+  if(!k) return '–';
+  return '•'.repeat(Math.max(0, Math.min(5, k)));
 }
 
 export function mountStarterReforge(app){
@@ -83,11 +94,11 @@ export function mountStarterReforge(app){
   }
 
   const names = item.names;
-  let counts  = { ...item.counts }; // 초기 k는 만들기 결과
-  let base    = {};                 // 세공 기준 0강(표시용, 매회 재롤)
+  let counts  = { ...item.counts }; // 초깃값: 만들기 결과의 k
+  let base    = {};
   let final   = {};
 
-  // 최초 상태: 현재 k 기준으로 0강을 새로 굴려서 표시 구성
+  // 첫 렌더: 현재 k 기준으로 0강을 새로 굴려서 표시 구성
   names.forEach(opt=>{
     base[opt]  = rollBase(opt);
     final[opt] = applyIncrements(opt, base[opt], counts[opt]||0);
@@ -98,13 +109,12 @@ export function mountStarterReforge(app){
   function renderTable(){
     const rows = names.map(opt=>{
       const k = counts[opt]||0;
-      const dots = k>0 ? '•'.repeat(k) : '−';
-      const rng = rangeFor(opt, base[opt], k);
+      const rng = rangeFor(opt, k);
       return `
         <tr>
           <td class="optcell"><span class="optdot"></span>${opt}</td>
-          <td class="kcell">k=${k} <span class="dots">(${dots})</span></td>
-          <td class="valcell"><b>${fmt(opt, final[opt])}</b></td>
+          <td class="kcell">${kDots(k)}</td>
+          <td class="valcell"><b>${k ? fmt(opt, final[opt]) : '-'}</b></td>
           <td class="rangecell">${fmt(opt, rng.min)} ~ ${fmt(opt, rng.max)}</td>
         </tr>`;
     }).join('');
@@ -112,7 +122,7 @@ export function mountStarterReforge(app){
       <div class="table-wrap">
         <table class="gear-table">
           <thead>
-            <tr><th>옵션</th><th>k</th><th>현재</th><th>범위</th></tr>
+            <tr><th>옵션</th><th>강화</th><th>현재</th><th>범위</th></tr>
           </thead>
           <tbody>${rows}</tbody>
         </table>
@@ -126,12 +136,10 @@ export function mountStarterReforge(app){
           <button class="hero-btn" id="back">← 강화로</button>
           <span class="pill">세공하자</span>
           <span class="badge" style="margin-left:auto">
-            <img src="./assets/img/dice_blue.jpg" alt="" class="dicon" />
-            파랑: <b id="blue-used">${blueUsed}</b>
+            <img src="./assets/img/dice_blue.jpg" alt="" class="dicon" /> 파랑: <b id="blue-used">${blueUsed}</b>
           </span>
           <span class="badge">
-            <img src="./assets/img/dice_red.jpg" alt="" class="dicon" />
-            빨강: <b id="red-used">${redUsed}</b>
+            <img src="./assets/img/dice_red.jpg" alt="" class="dicon" /> 빨강: <b id="red-used">${redUsed}</b>
           </span>
         </div>
 
@@ -139,11 +147,13 @@ export function mountStarterReforge(app){
           <div class="titlebar">
             <h2 class="section-title">현재 시동무기</h2>
             <div class="title-actions">
-              <button class="hero-btn" id="roll-blue">
-                <img src="./assets/img/dice_blue.jpg" alt="" class="dicon-lg" /> 파랑 주사위 돌리기
+              <button class="dice-btn" id="roll-blue" aria-label="파랑 주사위">
+                <img src="./assets/img/dice_blue.jpg" alt="" />
+                <span>돌리기</span>
               </button>
-              <button class="hero-btn" id="roll-red">
-                <img src="./assets/img/dice_red.jpg" alt="" class="dicon-lg" /> 빨강 주사위 돌리기
+              <button class="dice-btn" id="roll-red" aria-label="빨강 주사위">
+                <img src="./assets/img/dice_red.jpg" alt="" />
+                <span>돌리기</span>
               </button>
             </div>
           </div>
