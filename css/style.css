@@ -195,7 +195,9 @@ button[disabled], .hero-btn.disabled{ opacity:.45; cursor:not-allowed !important
 
 /* css/style.css — 맨 아래 추가/보강 */
 
-/* 타이틀 라인 + 주사위 버튼(더 작게) */
+/* css/style.css — 세공 페이지용(모바일 잘림 방지 + 0강 컬럼 포함) */
+
+/* 타이틀 + 주사위 버튼(작게) */
 .titlebar{
   display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
 }
@@ -207,30 +209,29 @@ button[disabled], .hero-btn.disabled{ opacity:.45; cursor:not-allowed !important
   cursor:pointer;
 }
 .dice-btn img{
-  width:28px;  /* ← 더 줄임 */
-  height:28px;
-  object-fit:contain; border-radius:6px;
+  width:28px; height:28px; object-fit:contain; border-radius:6px;
 }
 .dice-btn span{ font-weight:700 }
 
-/* 테이블 기본(데스크탑) */
+/* 표 (데스크탑) */
 .table-wrap{ overflow:auto; }
 .gear-table{
-  width:100%; border-collapse:separate; border-spacing:0; min-width:520px;
+  width:100%; border-collapse:separate; border-spacing:0; min-width:700px;
 }
 .gear-table thead th{
   text-align:left; font-weight:700; color:var(--muted);
   padding:10px 12px; border-bottom:1px solid var(--line);
 }
 .gear-table tbody td{
-  padding:12px; border-bottom:1px solid var(--line);
+  padding:10px 12px; border-bottom:1px solid var(--line);
 }
 .optcell{ display:flex; align-items:center; gap:8px; font-weight:700; }
 .optdot{ width:8px; height:8px; border-radius:50%; background:#7aa7ff; display:inline-block; }
+.basecell{ white-space:nowrap; }
 .valcell b{ font-weight:800 }
-.rangecell{ color:var(--muted) }
+.rangecell{ color:var(--muted); font-size:13px; }
 
-/* 강화 점칸 UI (●●○○○) */
+/* 강화 점칸 UI */
 .kcell{ width:120px }
 .kdots{
   display:grid; grid-template-columns:repeat(5, 12px); gap:4px; justify-content:flex-start; align-items:center;
@@ -245,25 +246,33 @@ button[disabled], .hero-btn.disabled{ opacity:.45; cursor:not-allowed !important
 .toprow{ display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
 .dicon{ width:14px; height:14px; border-radius:3px; }
 
-/* ⬇️ 모바일: 한 줄 4칸 압축 (옵션 | 강화 | 현재 | 범위) */
+/* 모바일: 1줄 5칸 압축 + 범위 더 작게/넓게 */
 @media (max-width: 680px){
   .title-actions{ width:100%; }
+  .dice-btn img{ width:26px; height:26px; }
+
   .gear-table{ min-width:auto; }
   .gear-table thead{ display:none; }
   .gear-table tbody tr{
     display:grid;
-    grid-template-columns: minmax(110px, 1.2fr) 78px minmax(40px, .6fr) minmax(90px, 1fr);
+    /* 옵션 | 0강 | 강화 | 현재 | 범위 */
+    grid-template-columns: minmax(110px, 1.3fr) minmax(58px, .7fr) 66px minmax(48px, .7fr) minmax(130px, 1.7fr);
     align-items:center;
     gap:6px;
-    padding:8px 4px;
+    padding:6px 2px;
   }
   .gear-table tbody td{
-    border:none; padding:4px 6px;
+    border:none; padding:4px 4px;
   }
   .optcell{ order:1; font-size:15px; }
-  .kcell{ order:2; }
-  .valcell{ order:3; text-align:right; font-size:15px; }
-  .rangecell{ order:4; text-align:right; font-size:12px; color:var(--muted); }
+  .basecell{ order:2; font-size:13px; white-space:nowrap; }
+  .kcell{ order:3; }
+  .valcell{ order:4; text-align:right; font-size:15px; }
+  .rangecell{
+    order:5; text-align:right; font-size:11.5px;
+    color:var(--muted); letter-spacing:.1px;
+  }
+
   .kdots{ grid-template-columns:repeat(5, 10px); gap:3px; }
   .kdots span{ width:7px; height:7px; }
 }
