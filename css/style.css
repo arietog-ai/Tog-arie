@@ -27,13 +27,8 @@ body{
 /* ===== 공통 ===== */
 .container{ max-width:1200px; margin:18px auto; padding:0 14px }
 .card{
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:16px;
-  padding:14px;
+  background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px;
 }
-.card.emph{ border:2px solid var(--ok); box-shadow:none; }
-
 label{ display:block; font-size:12px; color:var(--muted); margin-bottom:6px }
 input,select,button{
   width:100%; padding:12px; border-radius:12px;
@@ -41,94 +36,34 @@ input,select,button{
 }
 button{ cursor:pointer; font-weight:700 }
 button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6); }
-
 .pill{ display:inline-block; padding:4px 8px; border-radius:999px; background:#0f1420; border:1px solid #2b3547; color:var(--muted); font-size:12px }
-.big{ font-size:22px; font-weight:800 }
 .muted{ color:var(--muted) }
-.ok{ color:var(--ok) }
-.bad{ color:var(--bad) }
-
-/* ===== 히어로 ===== */
-.hero{
-  min-height:calc(100dvh - 80px);
-  display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding-top:24px;
-}
-.hero-img{
-  width:min(520px, 85vw); height:auto; object-fit:contain; display:block; margin:0 auto; pointer-events:none;
-}
-.hero .btn-wrap{
-  width:min(520px,85vw); display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-start; margin-top:10px;
-}
-.hero-btn{
-  flex:0 0 auto; padding:12px 14px; border-radius:12px; border:1px solid var(--line); background:#111726; color:var(--text);
-}
-
-/* ===== 필터 / 스티키 바 ===== */
-.filter-bar{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:10px; }
-.filter-chip{
-  padding:8px 10px; border-radius:999px; border:1px solid var(--line); background:#0f1420; color:var(--text);
-  cursor:pointer; user-select:none;
-}
-.filter-chip.active{ outline:2px solid #3b82f6; }
-
-.sticky-bar{
-  position:fixed; left:0; right:0; bottom:0;
-  background:#10151f; border-top:1px solid var(--line);
-  padding:10px 14px; z-index:50;
-}
-.sticky-inner{
-  max-width:1200px; margin:0 auto; display:grid; gap:10px; grid-template-columns:1fr auto auto auto;
-}
-@media (max-width:900px){
-  .sticky-inner{ grid-template-columns:1fr 1fr; }
-}
-
-/* ===== 배지 ===== */
 .badge{
   display:inline-flex; align-items:center; gap:6px;
-  padding:4px 8px; border-radius:999px;
-  border:1px solid var(--line); background:#0f1420; color:var(--text); font-size:12px;
+  padding:4px 8px; border-radius:999px; border:1px solid var(--line);
+  background:#0f1420; color:var(--text); font-size:12px;
 }
 .badge img{ width:14px; height:14px; border-radius:3px; }
+.toprow{ display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
 
-/* ===== Monte Carlo 진행률 바 ===== */
-.mc-progress{
-  position: relative;
-  width: 200px;
-  height: 10px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: #0f1420;
-  overflow: hidden;
-}
-.mc-progress__bar{
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, #5dd2ff, #00ffa9);
-  border-radius: 999px;
-  transition: width .12s linear;
-}
-@media (max-width: 560px){
-  .mc-progress{ width: 140px; }
-}
+/* ===== Monte Carlo 진행률 바 (기존 기능 유지) ===== */
+.mc-progress{ position:relative; width:200px; height:10px; border:1px solid var(--line); border-radius:999px; background:#0f1420; overflow:hidden; }
+.mc-progress__bar{ height:100%; width:0%; background:linear-gradient(90deg,#5dd2ff,#00ffa9); border-radius:999px; transition:width .12s linear; }
 
-/* ===== 세공 페이지 ===== */
-
-/* 타이틀 + 주사위 버튼 */
+/* ===== 세공 타이틀/주사위 ===== */
 .titlebar{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
 .title-actions{ display:flex; gap:8px; flex-wrap:wrap; }
 .dice-btn{
   display:inline-flex; align-items:center; gap:6px;
   padding:6px 8px; border-radius:12px;
   border:1px solid var(--line); background:#111726; color:var(--text);
-  cursor:pointer;
 }
 .dice-btn img{ width:24px; height:24px; object-fit:contain; border-radius:6px; }
 .dice-btn span{ font-weight:700 }
 
-/* 표 기본 */
+/* ===== 표 4컬럼: [강화 | 옵션 | 현재 | 범위] ===== */
 .table-wrap{ overflow:auto; }
-.gear-table{ width:100%; border-collapse:separate; border-spacing:0; min-width:700px; }
+.gear-table{ width:100%; border-collapse:separate; border-spacing:0; min-width:560px; }
 .gear-table thead th{
   text-align:left; font-weight:700; color:var(--muted);
   padding:10px 12px; border-bottom:1px solid var(--line);
@@ -136,63 +71,37 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
 .gear-table tbody td{
   padding:10px 12px; border-bottom:1px solid var(--line);
 }
-.optcell{ display:flex; align-items:center; gap:8px; font-weight:700; }
-.optdot{ width:8px; height:8px; border-radius:50%; background:#7aa7ff; display:inline-block; }
-.basecell{ white-space:nowrap; }
-.valcell b{ font-weight:800 }
-.rangecell{ color:var(--muted); font-size:13px; }
 
-/* 강화 점칸 (데스크탑) */
-.kcell{ width:120px }
-.kdots{
-  display:grid; grid-template-columns:repeat(5, 12px); gap:4px; justify-content:flex-start; align-items:center;
-}
-.kdots span{
-  width:8px; height:8px; border-radius:50%; background:var(--line);
-}
+/* 강화 점칸 */
+.kcell{ width:88px; }
+.kdots{ display:grid; grid-template-columns:repeat(5, 12px); gap:4px; }
+.kdots span{ width:8px; height:8px; border-radius:50%; background:var(--line); display:block; }
 .kdots span.on{ background:#7aa7ff; }
 
-/* 상단 배지 */
-.toprow{ display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
-.dicon{ width:14px; height:14px; border-radius:3px; }
+/* 옵션/값/범위 */
+.optcell{ font-weight:700; }
+.valcell{ text-align:right; font-weight:800; white-space:nowrap; }
+.rangecell{ text-align:right; color:var(--muted); font-size:12.5px; white-space:nowrap; }
 
-/* 공통 가시성 */
-.only-desktop{ display:table-header-group; }
-.only-mobile{ display:none; }
-
-/* ===== 모바일: 초압축 3열 ===== */
+/* ===== 모바일(세로) — 한 줄에 딱 맞춤 ===== */
 @media (max-width: 680px){
-  .only-desktop{ display:none !important; }
-  .only-mobile{ display:table-header-group; }
+  .gear-table{ min-width:auto; }
+  .gear-table thead th{ font-size:12px; padding:8px 8px; }
 
-  .gear-table{ min-width:auto; width:100%; }
-  .gear-table thead.only-mobile th{
-    text-align:left; font-weight:700; color:var(--muted);
-    padding:6px 8px; border-bottom:1px solid var(--line);
-  }
-
-  /* 옵션 | 0강 | 값(강화·현재·범위) */
   .gear-table tbody tr{
     display:grid;
-    grid-template-columns: minmax(120px, 1.1fr) minmax(58px, .6fr) minmax(160px, 1.7fr);
+    /* 강화 | 옵션 | 현재 | 범위 */
+    grid-template-columns: 74px minmax(120px,1fr) auto minmax(120px,1.2fr);
     align-items:center;
     gap:4px;
-    padding:6px 4px;
+    padding:4px 2px;
   }
-  .gear-table tbody td{ border:none; padding:6px 4px; }
+  .gear-table tbody td{ border:none; padding:6px 6px; }
 
-  .optcell{ order:1; font-size:15px; }
-  .basecell{ order:2; font-size:13px; white-space:nowrap; }
-  .compact{ order:3; text-align:right; font-size:13px; color:var(--text); white-space:nowrap; }
-  .compact .now{ font-weight:800; margin-left:6px; }
-  .compact .range{ color:var(--muted); margin-left:6px; font-size:11.5px; letter-spacing:.1px; }
+  .kdots{ grid-template-columns:repeat(5, 10px); gap:3px; }
+  .kdots span{ width:7px; height:7px; }
 
-  /* 인라인 점칸 */
-  .kdots-inline{ display:inline-grid; grid-template-columns:repeat(5, 8px); gap:2px; vertical-align:middle; }
-  .kdots-inline i{
-    width:6px; height:6px; border-radius:50%; display:inline-block; background:var(--line);
-  }
-  .kdots-inline i.on{ background:#7aa7ff; }
-
-  .dice-btn img{ width:22px; height:22px; }
+  .optcell{ font-size:15px; }
+  .valcell{ font-size:15px; }
+  .rangecell{ font-size:11.5px; }
 }
