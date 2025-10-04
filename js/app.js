@@ -2,6 +2,7 @@
 // 모듈 import에 버전 쿼리 부여 (캐시 무시)
 import { mountShop } from './hardmode_shop.js?v=20251005-3';
 import { mountStarter } from './feature_starter.js?v=20251005-3';
+import { mountStarterEstimator } from './feature_starter_estimator.js?v=20251005-3';
 import { mountDraw, resetDrawSession } from './feature_draw.js?v=20251005-3';
 
 const app = document.getElementById('app');
@@ -57,6 +58,8 @@ export function navigate(route){
   else if(route==='gear')   location.hash = '#gear';
   else if(route==='draw')   location.hash = '#draw';
   else if(route==='starter')location.hash = '#starter';
+  else if(route==='starter/estimator' || route==='starter/estimate')
+                            location.hash = '#starter/estimator';
   else                      location.hash = ''; // home
 }
 
@@ -76,6 +79,10 @@ function renderFromHash(){
     case '#starter':
       app.innerHTML = '';
       mountStarter(app);
+      break;
+    case '#starter/estimator':
+      app.innerHTML = '';
+      mountStarterEstimator(app);
       break;
     case '':
     case '#':
