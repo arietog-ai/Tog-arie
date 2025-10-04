@@ -1,12 +1,20 @@
-/* ===== 공통 색/기본 ===== */
+/* ===== 테마 색 ===== */
 :root{
-  --bg:#0b0d11; --card:#141821; --line:#222b3a; --text:#e8eef6; --muted:#a7b0bf;
-  --ok:#7cf29a; --bad:#ff8a8a;
+  --bg:#0b0d11;
+  --card:#141821;
+  --line:#222b3a;
+  --text:#e8eef6;
+  --muted:#a7b0bf;
+  --ok:#7cf29a;
+  --bad:#ff8a8a;
 }
+
 *{ box-sizing:border-box }
 html,body{ height:100% }
 body{
-  margin:0; background:var(--bg); color:var(--text);
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
   font-family:ui-sans-serif,system-ui,Pretendard,Roboto,AppleSDGothicNeo;
   overflow-x:hidden;
 }
@@ -19,24 +27,47 @@ body{
 /* ===== 레이아웃 공통 ===== */
 .container{ max-width:1200px; margin:18px auto; padding:0 14px }
 .card{
-  background:var(--card); border:1px solid var(--line);
-  border-radius:16px; padding:14px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:14px;
 }
-.grid{ display:grid; gap:12px }
-.cols-3{ grid-template-columns:1fr 1fr 1fr }
-.cols-2{ grid-template-columns:1fr 1fr }
+
+/* 🔒 강조 카드(보라/파랑 그라데이션 금지) */
+.card.emph{
+  background:var(--card) !important;   /* 그라데이션 강제 차단 */
+  color:var(--text) !important;
+  border:2px solid var(--ok);          /* 강조는 테두리만 */
+  box-shadow:none !important;
+}
+
+/* 상단 요약 카드도 동일 톤 */
+.summary-card{
+  background:var(--card) !important;
+  color:var(--text) !important;
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:14px;
+}
+
+/* 기본 글 요소 */
 label{ display:block; font-size:12px; color:var(--muted); margin-bottom:6px }
 input,select,button{
   width:100%; padding:12px; border-radius:12px;
   border:1px solid #2b3547; background:#0f1420; color:var(--text)
 }
 button{ cursor:pointer; font-weight:700 }
-.pill{ display:inline-block; padding:4px 8px; border-radius:999px; background:#0f1420; border:1px solid #2b3547; color:var(--muted); font-size:12px }
+
+.pill{
+  display:inline-block; padding:4px 8px; border-radius:999px;
+  background:#0f1420; border:1px solid #2b3547; color:var(--muted); font-size:12px
+}
 .big{ font-size:22px; font-weight:800 }
 .muted{ color:var(--muted) }
-.ok{ color:var(--ok) } .bad{ color:var(--bad) }
+.ok{ color:var(--ok) }
+.bad{ color:var(--bad) }
 
-/* ===== 메인(히어로) ===== */
+/* ===== 홈/히어로 ===== */
 .hero{
   min-height:calc(100dvh - 80px);
   display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding-top:24px;
@@ -47,8 +78,20 @@ button{ cursor:pointer; font-weight:700 }
 .hero .btn-wrap{
   width:min(520px,85vw); display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-start; margin-top:10px;
 }
+.hero .hero-btn{
+  flex:0 0 auto; padding:12px 14px; border-radius:12px; border:1px solid var(--line); background:#111726; color:var(--text);
+  position:relative; z-index:2;
+}
 
-/* ===== 아이템 그리드: 자동 칼럼 ===== */
+/* ===== 버튼 상태 (비활성) ===== */
+.hero-btn.disabled,
+.hero-btn[disabled]{
+  opacity:.45;
+  cursor:not-allowed !important;
+  filter:saturate(.6);
+}
+
+/* ===== 아이템 그리드 ===== */
 .item-grid{
   display:grid;
   grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));
@@ -81,8 +124,7 @@ button{ cursor:pointer; font-weight:700 }
   padding:8px 10px; border-radius:999px; border:1px solid var(--line); background:#0f1420; color:var(--text);
   cursor:pointer; user-select:none;
 }
-.filter-chip:hover { background:#151b2b }
-.filter-chip.active{ outline:2px solid #3b82f6; background:#0f1930 }
+.filter-chip.active{ outline:2px solid #3b82f6; }
 
 /* ===== Sticky 결과바 ===== */
 .sticky-bar{
@@ -98,6 +140,10 @@ button{ cursor:pointer; font-weight:700 }
 }
 
 /* ===== 반응형 ===== */
+.grid{ display:grid; gap:12px }
+.cols-3{ grid-template-columns:1fr 1fr 1fr }
+.cols-2{ grid-template-columns:1fr 1fr }
+
 @media (max-width: 900px){
   .cols-3, .cols-2{ grid-template-columns:1fr }
   input,select,button{ padding:14px; font-size:16px }
@@ -106,10 +152,9 @@ button{ cursor:pointer; font-weight:700 }
   .item-bottom{ grid-template-columns:1fr 38px }
 }
 
-/* ===== 추가: 힌트/작은 설명 ===== */
+/* ===== 부가 요소 ===== */
 .hint{ margin-top:4px; font-size:12px; color:var(--muted) }
 
-/* ===== 추가: 작은 배지 ===== */
 .badge{
   display:inline-flex; align-items:center; gap:6px;
   padding:4px 8px; border-radius:999px;
@@ -117,7 +162,7 @@ button{ cursor:pointer; font-weight:700 }
 }
 .badge img{ width:14px; height:14px; border-radius:3px; }
 
-/* ===== 추가: 체크박스 그리드 ===== */
+/* 체크박스 그리드 */
 .checkbox-grid{
   display:grid;
   grid-template-columns:repeat(2, minmax(120px, 1fr));
@@ -128,52 +173,7 @@ button{ cursor:pointer; font-weight:700 }
   display:flex; align-items:center; gap:6px; font-size:13px;
 }
 
-/* ======== 리뉴얼 유틸(새로 추가) ======== */
-
-/* 섹션 타이틀 */
-.section-title {
-  margin: 0 0 8px;
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: .2px;
+/* ===== 강제 리셋: 의도치 않은 그라데이션/배경색 차단 ===== */
+.card, .summary-card{
+  background-image:none !important;
 }
-
-/* 공통 버튼 */
-.btn { 
-  display:inline-flex; align-items:center; justify-content:center;
-  padding:10px 14px; border-radius:12px; border:1px solid var(--line);
-  background:#111726; color:var(--text); cursor:pointer; font-weight:700;
-}
-.btn:disabled { opacity:.5; cursor:not-allowed }
-.btn-primary { background:#2563eb; border-color:#1e40af; }
-.btn-primary:hover { background:#1d4ed8 }
-.btn-ghost { background:#00000066; border-color:#00000055; }
-.btn-ghost:hover { background:#00000088 }
-
-/* 요약(결과 상단) 카드 */
-.summary-card {
-  border-radius: 16px;
-  padding: 14px;
-  background: linear-gradient(90deg,#6b3bbd 0%, #3a7bd5 100%);
-  color: #fff;
-  box-shadow: 0 6px 18px rgba(0,0,0,.25);
-}
-.summary-card .title { font-size: 18px; font-weight: 900; margin: 0 0 4px }
-.summary-card .meta { font-size: 13px; opacity: .95 }
-
-/* 강조 카드 */
-.card.emph { border-color: var(--ok); box-shadow: 0 0 0 2px rgba(124,242,154,.18) }
-
-/* 2/3열 헬퍼 */
-.grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap:12px }
-.grid-3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px }
-@media (max-width: 900px){
-  .grid-2, .grid-3 { grid-template-columns: 1fr; }
-}
-
-/* 진행바 */
-.progress { width:100%; height:12px; border-radius:999px; background:#2b3547; overflow:hidden }
-.progress > .bar { height:100%; background:#22c55e }
-
-/* 상세 영역 */
-.details { border-top:1px dashed var(--line); margin-top:8px; padding-top:8px }
