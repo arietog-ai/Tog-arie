@@ -1,7 +1,5 @@
 // js/feature_starter_reforge.js
-// 세공하자 v2.4.5 — 표 4컬럼(강화 | 옵션 | 현재 | 범위) 단순화
-// - 영혼(파랑): k 재분배 + 수치 전면 재분배
-// - 시동(빨강): k 유지 + 수치 전면 재분배
+// 세공하자 v2.4.6 — 4컬럼 테이블, 0강값 미노출, k 좌정렬, CSS 네임스페이스(.reforge)
 
 const GROUP_A = ["물리관통력","마법관통력","물리저항력","마법저항력","치명타확률","치명타데미지증가"];
 const GROUP_B = ["회피","명중","효과적중","효과저항"];
@@ -22,7 +20,7 @@ const choice = (arr)=>arr[(Math.random()*arr.length)|0];
 const fmt = (opt,v)=> PERCENT_SET.has(opt) ? `${v}%` : `${v}`;
 const roundP = (opt, v)=> PERCENT_SET.has(opt) ? Math.round(v*2)/2 : Math.round(v);
 
-// 0강(기초) 1회
+// 0강 1회
 function rollBase(opt){ return choice(INIT_VALUES[opt]); }
 // k회 강화 적용
 function applyIncrements(opt, baseVal, k){
@@ -32,17 +30,17 @@ function applyIncrements(opt, baseVal, k){
 }
 // 범위(기초±증가치 포함)
 function rangeFor(opt, k){
-  const bases = INIT_VALUES[opt], incs = INIT_VALUES[opt];
-  const min = Math.min(...bases) + k * Math.min(...incs);
-  const max = Math.max(...bases) + k * Math.max(...incs);
+  const b = INIT_VALUES[opt], inc = INIT_VALUES[opt];
+  const min = Math.min(...b) + k * Math.min(...inc);
+  const max = Math.max(...b) + k * Math.max(...inc);
   return { min: roundP(opt, min), max: roundP(opt, max) };
 }
 
 // 영혼(파랑): k 재분배 + 전면 재롤
 function rerollBlue(names){
-  const k = [0,0,0,0]; for(let i=0;i<STEPS;i++) k[(Math.random()*4)|0]++;
+  const ks = [0,0,0,0]; for(let i=0;i<STEPS;i++) ks[(Math.random()*4)|0]++;
   const base={}, final={}, counts={};
-  names.forEach((opt,i)=>{ base[opt]=rollBase(opt); counts[opt]=k[i]; final[opt]=applyIncrements(opt, base[opt], k[i]); });
+  names.forEach((opt,i)=>{ base[opt]=rollBase(opt); counts[opt]=ks[i]; final[opt]=applyIncrements(opt, base[opt], ks[i]); });
   return { base, final, counts };
 }
 // 시동(빨강): k 유지 + 전면 재롤
@@ -52,7 +50,7 @@ function rerollRed(names, countsFixed){
   return { base, final };
 }
 
-// 강화 점칸
+// k 점
 function kDotsCell(k){
   let s='<div class="kdots" aria-label="강화 단계">';
   for(let i=0;i<5;i++) s+=`<span class="${i<k?'on':''}"></span>`;
@@ -63,7 +61,7 @@ export function mountStarterReforge(app){
   let item; try{ item=JSON.parse(sessionStorage.getItem('starter_item')||'null'); }catch{ item=null; }
   if(!item){
     app.innerHTML = `
-      <section class="container">
+      <section class="container reforge">
         <div class="card">
           <h2 style="margin-top:0">세공하자</h2>
           <p class="muted">먼저 <b>#starter</b>에서 "20강 강화하기 → 만들기"를 실행해 주세요.</p>
@@ -75,7 +73,7 @@ export function mountStarterReforge(app){
 
   const names = item.names;
   let counts = { ...item.counts };   // k 유지
-  let base = {}, final = {};         // 표시용 현재값 계산에만 사용
+  let base = {}, final = {};         // 현재 표시값
 
   // 초기 표시(현재 k 기준)
   names.forEach(opt=>{ base[opt]=rollBase(opt); final[opt]=applyIncrements(opt, base[opt], counts[opt]||0); });
@@ -108,7 +106,7 @@ export function mountStarterReforge(app){
 
   function render(){
     app.innerHTML = `
-      <section class="container">
+      <section class="container reforge">
         <div class="toprow">
           <button class="hero-btn" id="back">← 강화로</button>
           <span class="pill">세공하자</span>
