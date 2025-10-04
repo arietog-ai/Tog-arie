@@ -1,7 +1,7 @@
 // js/app.js
-import { mountShop } from './hardmode_shop.js';
-import { mountStarter } from './feature_starter.js';
-import { mountDraw, resetDrawSession } from './feature_draw.js';
+import { mountShop } from './hardmode_shop.js?v=20251004-2';
+import { mountStarter } from './feature_starter.js?v=20251004-2';
+import { mountDraw, resetDrawSession } from './feature_draw.js?v=20251004-2';
 
 const app = document.getElementById('app');
 
@@ -13,15 +13,15 @@ function renderHome(){
     <section class="hero container">
       <img src="./assets/img/blur_guild.png" alt="블러 연합" class="hero-img" />
       <div class="btn-wrap">
-        <button class="btn btn-primary" data-route="shop">개척상점계산기</button>
-        <button class="btn" data-route="gear">시동무기</button>
-        <button class="btn" disabled>기능생성예정1</button>
-        <button class="btn" disabled>기능생성예정2</button>
-        <button class="btn" disabled>기능생성예정3</button>
-        <button class="btn" disabled>기능생성예정4</button>
-        <button class="btn" disabled>기능생성예정5</button>
-        <button class="btn" disabled>기능생성예정6</button>
-        <button class="btn" disabled>기능생성예정7</button>
+        <button class="hero-btn" data-route="shop">개척상점계산기</button>
+        <button class="hero-btn" data-route="gear">시동무기</button>
+        <button class="hero-btn" disabled>기능생성예정1</button>
+        <button class="hero-btn" disabled>기능생성예정2</button>
+        <button class="hero-btn" disabled>기능생성예정3</button>
+        <button class="hero-btn" disabled>기능생성예정4</button>
+        <button class="hero-btn" disabled>기능생성예정5</button>
+        <button class="hero-btn" disabled>기능생성예정6</button>
+        <button class="hero-btn" disabled>기능생성예정7</button>
       </div>
     </section>
   `;
@@ -33,12 +33,12 @@ function renderGearHub(){
   app.innerHTML = `
     <section class="hero container">
       <div class="card" style="max-width:720px; width:100%; margin:0 auto">
-        <h2 class="section-title">시동무기</h2>
+        <h2 style="margin-top:0">시동무기</h2>
         <p class="muted" style="margin:6px 0 14px">원하는 기능을 선택하세요.</p>
         <div class="btn-wrap">
-          <button class="btn btn-primary" data-route="draw">시동무기 뽑기</button>
-          <button class="btn" data-route="starter">시동무기 강화</button>
-          <button class="btn btn-ghost" data-route="home" style="margin-left:auto">← 홈으로</button>
+          <button class="hero-btn" data-route="draw">시동무기 뽑기</button>
+          <button class="hero-btn" data-route="starter">시동무기 강화</button>
+          <button class="hero-btn" data-route="home" style="margin-left:auto">← 홈으로</button>
         </div>
       </div>
     </section>
