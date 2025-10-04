@@ -1,5 +1,5 @@
 // js/feature_draw.js
-// 시동무기 뽑기 시뮬레이터 (표시 중복 방지, 모드 전환시 이전 결과/패널 닫기)
+// 시동무기 뽑기 시뮬레이터 (원본 톤 유지, 라벨/표기/동작 수정)
 
 const byId = (id)=>document.getElementById(id);
 const rand = (n)=>(Math.random()*n)|0;
@@ -54,8 +54,7 @@ let results = [];  // {part, grade, main, subs, src, display, forceEnable, when}
 let usedKeys = 0;
 let autoRunning = false;
 let autoStop = false;
-
-/* 현재 화면 모드: 'single' | 'multi' | 'auto' */
+/* 현재 화면 모드: single | multi | auto */
 let viewMode = 'single';
 
 export function resetDrawSession(){
@@ -107,11 +106,7 @@ function makeRecord(src, forceEnable=false){
   return rec;
 }
 
-/* ===== 표시 규칙 =====
-   - single: 마지막 single 1개만 표시
-   - auto  : 마지막 auto + forceEnable 1개만 표시
-   - multi : 리스트 표시 안함(요약 카드만)
-*/
+/* 표시 규칙: 모드별로만 보여줌 */
 function updateDisplayFlags(){
   results.forEach(r => r.display = false);
 
@@ -123,10 +118,12 @@ function updateDisplayFlags(){
     for(let i=results.length-1;i>=0;i--){
       if(results[i].src==='auto' && results[i].forceEnable){ results[i].display = true; break; }
     }
-  } // multi는 표시 안함
+  }else{
+    // viewMode==='multi'일 땐 리스트 표시 안 함(요약 카드만)
+  }
 }
 
-/* ===== 공통 카드 ===== */
+/* ===== 카드 유틸 ===== */
 function closeInfoCard(){ byId('draw-total').innerHTML = ''; }
 function showInfoCard(title, text){
   byId('draw-total').innerHTML = `
@@ -148,28 +145,17 @@ function showInfoCard(title, text){
   byId('close-total').addEventListener('click', closeInfoCard);
 }
 
-/* ===== 모드 스위치: 이전 표시/패널/요약 전부 닫기 ===== */
-function switchMode(mode){
-  viewMode = mode;
-  results.forEach(r => r.display = false); // 모든 표시 플래그 해제
-  const rHost = byId('draw-results'); if(rHost) rHost.innerHTML = '';
-  const tHost = byId('draw-total');   if(tHost) tHost.innerHTML = '';
-  const mp = byId('multi-panel'); if(mp) mp.style.display='none';
-  const ap = byId('auto-panel');  if(ap) ap.style.display='none';
-}
-
-/* ===== 메인 리스트 렌더 ===== */
+/* ===== 메인 리스트 ===== */
 function renderResultList(){
   updateDisplayFlags();
   const host = byId('draw-results');
 
+  // 모드가 multi면 리스트 비움 (요약만)
   if(viewMode==='multi'){
-    host.innerHTML = ''; // 요약만 쓰므로 리스트 비움
+    host.innerHTML = '';
   }else{
     const list = results.filter(r=>r.display);
-    // 방어: 최대 1개만 남도록 슬라이스
-    const showList = list.slice(-1);
-    host.innerHTML = showList.map((r)=>{
+    host.innerHTML = list.map((r)=>{
       const eligible = r.forceEnable || (r.grade==='A' && r.subs.length===4);
       return `
         <div class="card" style="padding:10px; margin-bottom:10px; ${eligible?'border:2px solid var(--ok)':''}">
@@ -249,7 +235,7 @@ function enforceSubSelectLimit(){
     }else{
       checks.forEach(c=> c.disabled = false);
     }
-    // 1~4개만 시작 가능
+    // 1~4개일 때만 시작 가능
     btnStart.classList.toggle('disabled', chosen.length<1 || chosen.length>4);
     btnStart.toggleAttribute('disabled', chosen.length<1 || chosen.length>4);
   }
@@ -351,11 +337,17 @@ export function mountDraw(app){
     </section>
   `;
 
-  /* 공용 핸들러 */
   const mp = byId('multi-panel');
   const ap = byId('auto-panel');
 
-  const hidePanels = ()=>{ if(mp) mp.style.display='none'; if(ap) ap.style.display='none'; };
+  function hidePanels(){
+    if(mp) mp.style.display='none';
+    if(ap) ap.style.display='none';
+  }
+  function closeAndClear(){
+    hidePanels();
+    closeInfoCard();
+  }
 
   // 홈으로
   byId('draw-home').addEventListener('click', ()=>{
@@ -365,17 +357,21 @@ export function mountDraw(app){
 
   // 단일
   byId('single-draw').addEventListener('click', ()=>{
-    switchMode('single');
+    viewMode = 'single';
+    closeAndClear();
     makeRecord('single', false);
     renderResultList();
   });
 
   // ??? 열기
   byId('multi-open').addEventListener('click', ()=>{
-    switchMode('multi'); // 이전 단일/자동 표시 모두 제거
-    if(mp) mp.style.display='block';
+    viewMode = 'multi';
+    closeInfoCard();
+    if(ap) ap.style.display='none';
+    mp.style.display='block';
+    renderResultList(); // 모드변경에 따라 리스트 숨김
   });
-  byId('multi-cancel').addEventListener('click', ()=>{ if(mp) mp.style.display='none'; });
+  byId('multi-cancel').addEventListener('click', ()=>{ mp.style.display='none'; });
 
   // ??? 실행
   byId('multi-run').addEventListener('click', ()=>{
@@ -384,11 +380,11 @@ export function mountDraw(app){
       alert('1~1000 사이의 정수를 입력하세요. (한 번에 최대 1000회)');
       return;
     }
-    switchMode('multi');
+    viewMode = 'multi';
     const startLen = results.length;
     for(let i=0;i<n;i++) makeRecord('multi', false);
-    if(mp) mp.style.display='none';
-    renderResultList(); // 모드=multi라 리스트 비워둠
+    mp.style.display='none';
+    renderResultList(); // 리스트는 비워둠(모드=multi)
 
     // N회 요약 (총 결과 아님)
     const batch = results.slice(startLen);
@@ -408,12 +404,14 @@ A급 총: ${aTotal}개
 
   // 자동 열기
   byId('auto-open').addEventListener('click', ()=>{
-    switchMode('auto'); // 이전 단일/??? 표시 제거
-    if(ap) ap.style.display='block';
+    viewMode = 'auto';
+    closeInfoCard();
+    if(mp) mp.style.display='none';
+    ap.style.display='block';
     buildAutoUI();
-    renderResultList(); // 모드=auto → 성공건 1개만
+    renderResultList(); // 모드=auto → 성공건만 표시
   });
-  byId('auto-cancel').addEventListener('click', ()=>{ if(ap) ap.style.display='none'; });
+  byId('auto-cancel').addEventListener('click', ()=>{ ap.style.display='none'; });
 
   byId('auto-part').addEventListener('change', syncAutoMain);
   byId('auto-main').addEventListener('change', syncAutoSubs);
@@ -450,7 +448,7 @@ A급 총: ${aTotal}개
 
   byId('auto-stop').addEventListener('click', ()=>{ autoStop = true; });
 
-  // 총 결과보기 (전체 집계)
+  // 총 결과보기
   byId('show-total').addEventListener('click', ()=>{
     hidePanels();
     const total = results.length;
