@@ -185,3 +185,9 @@ button[disabled], .hero-btn.disabled{ opacity:.45; cursor:not-allowed !important
   border-radius: 999px;
   transition: width .12s linear;
 }
+
+/* 세공 리스트가 좁은 모바일에서 줄깨짐 최소화 */
+@media (max-width: 560px){
+  .mc-progress{ width: 140px; }
+  .grid.cols-2#list { grid-template-columns: 1fr; }
+}
