@@ -1,15 +1,12 @@
 // js/feature_starter_reforge.js
-// 세공하자 v2.4.0 최종버전
-// - 주사위 작게, 강화 수치 점칸 UI
-// - 파랑: k 재분배 + 0강+증가치 전부 재배정
-// - 빨강: k 유지 + 0강 재배정 + 강화수치(k회)별 증가치 재배정
-// - 범위: 기초 min/max 포함
-// - 저장버튼 제거, 자동 세션 저장
+// 세공하자 v2.4.1 (모바일 한 줄 압축 레이아웃)
+// - 모바일: 4칸 그리드(옵션 | 강화 | 현재 | 범위)로 "한눈에" 보이도록
+// - 파랑/빨강 동작은 이전 버전과 동일
 
-const GROUP_A = ["물리관통력","마법관통력","물리저항력","마법저항력","치명타확률","치명타데미지증가"]; // %
-const GROUP_B = ["회피","명중","효과적중","효과저항"]; // 수치
-const GROUP_C = ["공격력","방어력","체력"]; // %
-const GROUP_D = ["치명타 저항률","치명타 대미지 감소율"]; // %
+const GROUP_A = ["물리관통력","마법관통력","물리저항력","마법저항력","치명타확률","치명타데미지증가"];
+const GROUP_B = ["회피","명중","효과적중","효과저항"];
+const GROUP_C = ["공격력","방어력","체력"];
+const GROUP_D = ["치명타 저항률","치명타 대미지 감소율"];
 const PERCENT_SET = new Set([...GROUP_A, ...GROUP_C, ...GROUP_D]);
 
 const INIT_VALUES = {
@@ -66,7 +63,7 @@ function rerollRed(names, countsFixed){
     const k = countsFixed[opt]||0;
     base[opt] = rollBase(opt);
     let v = base[opt];
-    for(let i=0;i<k;i++){ // 강화수치도 새로 굴림
+    for(let i=0;i<k;i++){
       v = roundP(opt, v + choice(INIT_VALUES[opt]));
     }
     final[opt] = v;
@@ -74,9 +71,9 @@ function rerollRed(names, countsFixed){
   return { base, final };
 }
 
-// 강화 점칸 UI
+// 강화 점칸(UI)
 function kDotsCell(k){
-  let html = '<div class="kdots">';
+  let html = '<div class="kdots" aria-label="강화 단계">';
   for(let i=0;i<5;i++){
     html += `<span class="${i<k?'on':''}"></span>`;
   }
@@ -100,7 +97,7 @@ export function mountStarterReforge(app){
   }
 
   const names = item.names;
-  let counts  = { ...item.counts }; 
+  let counts  = { ...item.counts };
   let base    = {};
   let final   = {};
 
@@ -153,8 +150,12 @@ export function mountStarterReforge(app){
           <div class="titlebar">
             <h2 class="section-title">현재 시동무기</h2>
             <div class="title-actions">
-              <button class="dice-btn" id="roll-blue" aria-label="파랑 주사위"><img src="./assets/img/dice_blue.jpg" alt="" /><span>돌리기</span></button>
-              <button class="dice-btn" id="roll-red"  aria-label="빨강 주사위"><img src="./assets/img/dice_red.jpg"  alt="" /><span>돌리기</span></button>
+              <button class="dice-btn" id="roll-blue" aria-label="파랑 주사위">
+                <img src="./assets/img/dice_blue.jpg" alt="" /><span>돌리기</span>
+              </button>
+              <button class="dice-btn" id="roll-red" aria-label="빨강 주사위">
+                <img src="./assets/img/dice_red.jpg" alt="" /><span>돌리기</span>
+              </button>
             </div>
           </div>
           ${renderTable()}
