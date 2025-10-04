@@ -166,3 +166,22 @@ button[disabled], .hero-btn.disabled{ opacity:.45; cursor:not-allowed !important
 
 /* ===== 강제 리셋: 그라데이션 차단 ===== */
 .card, .summary-card{ background-image:none !important; }
+
+
+/* === Monte Carlo 진행률 바 === */
+.mc-progress{
+  position: relative;
+  width: 200px;
+  height: 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #0f1420;
+  overflow: hidden;
+}
+.mc-progress__bar{
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #5dd2ff, #00ffa9);
+  border-radius: 999px;
+  transition: width .12s linear;
+}
