@@ -195,7 +195,7 @@ button[disabled], .hero-btn.disabled{ opacity:.45; cursor:not-allowed !important
 
 /* css/style.css — 맨 아래 추가/보강 */
 
-/* 타이틀 라인 + 주사위 버튼(작게) */
+/* 타이틀 라인 + 주사위 버튼(더 작게) */
 .titlebar{
   display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
 }
@@ -207,14 +207,13 @@ button[disabled], .hero-btn.disabled{ opacity:.45; cursor:not-allowed !important
   cursor:pointer;
 }
 .dice-btn img{
-  width:32px;   /* ✅ 확 줄임 */
-  height:32px;
-  object-fit:contain;
-  border-radius:6px;
+  width:28px;  /* ← 더 줄임 */
+  height:28px;
+  object-fit:contain; border-radius:6px;
 }
 .dice-btn span{ font-weight:700 }
 
-/* 테이블 */
+/* 테이블 기본(데스크탑) */
 .table-wrap{ overflow:auto; }
 .gear-table{
   width:100%; border-collapse:separate; border-spacing:0; min-width:520px;
@@ -232,7 +231,7 @@ button[disabled], .hero-btn.disabled{ opacity:.45; cursor:not-allowed !important
 .rangecell{ color:var(--muted) }
 
 /* 강화 점칸 UI (●●○○○) */
-.kcell{ width:110px }
+.kcell{ width:120px }
 .kdots{
   display:grid; grid-template-columns:repeat(5, 12px); gap:4px; justify-content:flex-start; align-items:center;
 }
@@ -242,24 +241,29 @@ button[disabled], .hero-btn.disabled{ opacity:.45; cursor:not-allowed !important
 }
 .kdots span.on{ background:#7aa7ff; }
 
-/* 상단 줄바꿈 최적화 + 아이콘 */
+/* 상단 배지 */
 .toprow{ display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
 .dicon{ width:14px; height:14px; border-radius:3px; }
 
-/* 모바일 최적화 */
+/* ⬇️ 모바일: 한 줄 4칸 압축 (옵션 | 강화 | 현재 | 범위) */
 @media (max-width: 680px){
-  .dice-btn img{ width:28px; height:28px; }
   .title-actions{ width:100%; }
   .gear-table{ min-width:auto; }
   .gear-table thead{ display:none; }
   .gear-table tbody tr{
-    display:grid; grid-template-columns: 1fr auto; gap:6px; padding:8px 0;
+    display:grid;
+    grid-template-columns: minmax(110px, 1.2fr) 78px minmax(40px, .6fr) minmax(90px, 1fr);
+    align-items:center;
+    gap:6px;
+    padding:8px 4px;
   }
   .gear-table tbody td{
-    border:none; padding:6px 8px;
+    border:none; padding:4px 6px;
   }
-  .optcell{ grid-column: 1 / -1; padding-top:4px; }
-  .kcell{ grid-column: 1 / -1; }
-  .valcell{ justify-self:start; }
-  .rangecell{ grid-column: 1 / -1; color:var(--muted); padding-bottom:8px; border-bottom:1px solid var(--line); }
+  .optcell{ order:1; font-size:15px; }
+  .kcell{ order:2; }
+  .valcell{ order:3; text-align:right; font-size:15px; }
+  .rangecell{ order:4; text-align:right; font-size:12px; color:var(--muted); }
+  .kdots{ grid-template-columns:repeat(5, 10px); gap:3px; }
+  .kdots span{ width:7px; height:7px; }
 }
