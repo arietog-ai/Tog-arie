@@ -1,12 +1,10 @@
 // js/feature_starter_reforge.js
-// 세공하자 (표 레이아웃 + 주사위 작게 + 저장버튼 제거)
-// - 표 컬럼: [옵션 | 강화 | 현재 | 범위]
-// - 강화 표기: k=0 → "–", k>0 → "•", "••", "•••", "••••", "•••••"
-// - 현재: k=0 이면 "-" 로 표시
-// - 범위: (기초 최솟값 + k×증가치 최솟값) ~ (기초 최댓값 + k×증가치 최댓값)
-// - 파랑: k 재분배 + 0강(기초) 재롤 + 증가치 랜덤
-// - 빨강: k 유지 + 0강(기초) 재롤 + 증가치 랜덤
-// - 모든 동작은 sessionStorage('starter_item')에 자동 저장
+// 세공하자 v2.4.0 최종버전
+// - 주사위 작게, 강화 수치 점칸 UI
+// - 파랑: k 재분배 + 0강+증가치 전부 재배정
+// - 빨강: k 유지 + 0강 재배정 + 강화수치(k회)별 증가치 재배정
+// - 범위: 기초 min/max 포함
+// - 저장버튼 제거, 자동 세션 저장
 
 const GROUP_A = ["물리관통력","마법관통력","물리저항력","마법저항력","치명타확률","치명타데미지증가"]; // %
 const GROUP_B = ["회피","명중","효과적중","효과저항"]; // 수치
@@ -30,7 +28,7 @@ const roundP = (opt, v)=> PERCENT_SET.has(opt) ? Math.round(v*2)/2 : Math.round(
 // 0강(기초) 1회 롤
 function rollBase(opt){ return choice(INIT_VALUES[opt]); }
 
-// k회 증가 적용
+// k회 강화 적용 (증가치 랜덤)
 function applyIncrements(opt, baseVal, k){
   let v = baseVal;
   for(let i=0;i<k;i++){
@@ -48,7 +46,7 @@ function rangeFor(opt, k){
   return { min: roundP(opt, min), max: roundP(opt, max) };
 }
 
-// 파랑: k 재분배 + 0강 재롤
+// 파랑: k 재분배 + 기초/증가치 전부 재배정
 function rerollBlue(names){
   const k = [0,0,0,0];
   for(let i=0;i<STEPS;i++) k[(Math.random()*4)|0]++;
@@ -61,21 +59,29 @@ function rerollBlue(names){
   return { base, final, counts };
 }
 
-// 빨강: k 유지 + 0강 재롤
+// 빨강: k 유지 + 기초 재배정 + 강화증가치(k회) 재배정
 function rerollRed(names, countsFixed){
   const base={}, final={};
   names.forEach(opt=>{
     const k = countsFixed[opt]||0;
-    base[opt]  = rollBase(opt);
-    final[opt] = applyIncrements(opt, base[opt], k);
+    base[opt] = rollBase(opt);
+    let v = base[opt];
+    for(let i=0;i<k;i++){ // 강화수치도 새로 굴림
+      v = roundP(opt, v + choice(INIT_VALUES[opt]));
+    }
+    final[opt] = v;
   });
   return { base, final };
 }
 
-// 강화 점표기
-function kDots(k){
-  if(!k) return '–';
-  return '•'.repeat(Math.max(0, Math.min(5, k)));
+// 강화 점칸 UI
+function kDotsCell(k){
+  let html = '<div class="kdots">';
+  for(let i=0;i<5;i++){
+    html += `<span class="${i<k?'on':''}"></span>`;
+  }
+  html += '</div>';
+  return html;
 }
 
 export function mountStarterReforge(app){
@@ -94,11 +100,10 @@ export function mountStarterReforge(app){
   }
 
   const names = item.names;
-  let counts  = { ...item.counts }; // 초깃값: 만들기 결과의 k
+  let counts  = { ...item.counts }; 
   let base    = {};
   let final   = {};
 
-  // 첫 렌더: 현재 k 기준으로 0강을 새로 굴려서 표시 구성
   names.forEach(opt=>{
     base[opt]  = rollBase(opt);
     final[opt] = applyIncrements(opt, base[opt], counts[opt]||0);
@@ -110,11 +115,12 @@ export function mountStarterReforge(app){
     const rows = names.map(opt=>{
       const k = counts[opt]||0;
       const rng = rangeFor(opt, k);
+      const now = k ? fmt(opt, final[opt]) : '-';
       return `
         <tr>
           <td class="optcell"><span class="optdot"></span>${opt}</td>
-          <td class="kcell">${kDots(k)}</td>
-          <td class="valcell"><b>${k ? fmt(opt, final[opt]) : '-'}</b></td>
+          <td class="kcell">${kDotsCell(k)}</td>
+          <td class="valcell"><b>${now}</b></td>
           <td class="rangecell">${fmt(opt, rng.min)} ~ ${fmt(opt, rng.max)}</td>
         </tr>`;
     }).join('');
@@ -147,14 +153,8 @@ export function mountStarterReforge(app){
           <div class="titlebar">
             <h2 class="section-title">현재 시동무기</h2>
             <div class="title-actions">
-              <button class="dice-btn" id="roll-blue" aria-label="파랑 주사위">
-                <img src="./assets/img/dice_blue.jpg" alt="" />
-                <span>돌리기</span>
-              </button>
-              <button class="dice-btn" id="roll-red" aria-label="빨강 주사위">
-                <img src="./assets/img/dice_red.jpg" alt="" />
-                <span>돌리기</span>
-              </button>
+              <button class="dice-btn" id="roll-blue" aria-label="파랑 주사위"><img src="./assets/img/dice_blue.jpg" alt="" /><span>돌리기</span></button>
+              <button class="dice-btn" id="roll-red"  aria-label="빨강 주사위"><img src="./assets/img/dice_red.jpg"  alt="" /><span>돌리기</span></button>
             </div>
           </div>
           ${renderTable()}
