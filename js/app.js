@@ -3,6 +3,7 @@
 import { mountShop } from './hardmode_shop.js?v=20251005-3';
 import { mountStarter } from './feature_starter.js?v=20251005-3';
 import { mountStarterEstimator } from './feature_starter_estimator.js?v=20251005-3';
+import { mountStarterReforge } from './feature_starter_reforge.js?v=20251005-3';
 import { mountDraw, resetDrawSession } from './feature_draw.js?v=20251005-3';
 
 const app = document.getElementById('app');
@@ -45,7 +46,6 @@ function renderGearHub(){
     </section>
   `;
   app.querySelector('[data-route="draw"]').addEventListener('click', ()=> {
-    // 허브에서 뽑기 진입 시 세션 초기화 (중복 잔상 방지)
     resetDrawSession();
     navigate('draw');
   });
@@ -54,13 +54,14 @@ function renderGearHub(){
 }
 
 export function navigate(route){
-  if(route==='shop')        location.hash = '#shop';
-  else if(route==='gear')   location.hash = '#gear';
-  else if(route==='draw')   location.hash = '#draw';
-  else if(route==='starter')location.hash = '#starter';
-  else if(route==='starter/estimator' || route==='starter/estimate')
-                            location.hash = '#starter/estimator';
-  else                      location.hash = ''; // home
+  if(route==='shop')                         location.hash = '#shop';
+  else if(route==='gear')                    location.hash = '#gear';
+  else if(route==='draw')                    location.hash = '#draw';
+  else if(route==='starter')                 location.hash = '#starter';
+  else if(route==='starter/estimator'
+       || route==='starter/estimate')        location.hash = '#starter/estimator';
+  else if(route==='starter/reforge')         location.hash = '#starter/reforge';
+  else                                       location.hash = ''; // home
 }
 
 function renderFromHash(){
@@ -83,6 +84,10 @@ function renderFromHash(){
     case '#starter/estimator':
       app.innerHTML = '';
       mountStarterEstimator(app);
+      break;
+    case '#starter/reforge':
+      app.innerHTML = '';
+      mountStarterReforge(app);
       break;
     case '':
     case '#':
