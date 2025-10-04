@@ -3,8 +3,11 @@
 // - 20강 기대값(몬테카를로 고정 100,000,000회) → "옵션 : 초기값 -> 기대값"만 표기
 // - 드로우(뽑기) 프리셋 연동: 부옵 4개만 0강 셋팅
 // - "강화 예상 갯수" 페이지는 분리(#starter/estimator)로 이동 버튼 제공
+// - ✅ 추가: 진행률 UI(퍼센트 바) + 5회 상세 로그(개발자 옵션 토글)
 
-/* ===== 옵션 그룹/값 정의 ===== */
+///////////////////////////
+// 옵션/상수/유틸
+///////////////////////////
 const GROUP_A = ["물리관통력","마법관통력","물리저항력","마법저항력","치명타확률","치명타데미지증가"]; // %
 const GROUP_B = ["회피","명중","효과적중","효과저항"]; // 수치
 const GROUP_C = ["공격력","방어력","체력"]; // %
@@ -19,10 +22,10 @@ const INIT_VALUES = {
 };
 const INCS = INIT_VALUES;
 
-/* ===== 강화 상수 ===== */
-const STEPS = 5;                // 총 5회 강화
+const STEPS = 5; // 총 5회 강화
+const MC_TOTAL = 100000000; // 1억회
+const MC_BATCH = 200000;    // 프레임당 20만회
 
-/* ===== 유틸 ===== */
 const byId = (id)=>document.getElementById(id);
 const rand = (n)=>(Math.random()*n)|0;
 const choice = (arr)=>arr[rand(arr.length)];
@@ -32,7 +35,6 @@ const fmt = (opt,v)=> PERCENT_SET.has(opt) ? `${v}%` : `${v}`;
 const SCALE = 2;
 const scale = (x)=>Math.round(x*SCALE);
 
-/* ===== 0강 랜덤/프리셋 ===== */
 function randomDistinctOptions(n=4){
   const pool = OPTION_NAMES.slice();
   for(let i=pool.length-1;i>0;i--){ const j=rand(i+1); [pool[i],pool[j]]=[pool[j],pool[i]]; }
@@ -53,17 +55,25 @@ function checkStartCfg(cfg){
     if(!INIT_VALUES[k].includes(cfg[k])) throw new Error(`0강 값 불일치: ${k}=${cfg[k]}`);
   });
 }
+function roundDisplayValue(opt, v){
+  if(PERCENT_SET.has(opt)){
+    const r = Math.round(v*2)/2; // 0.5 단위
+    return { num:r, txt:`${r.toFixed(1)}%` };
+  }else{
+    const r = Math.round(v); // 정수
+    return { num:r, txt:String(r) };
+  }
+}
 
-/* =============== 몬테카를로: 100,000,000회 고정 =============== */
-const MC_TOTAL = 100000000;  // 1억회
-const MC_BATCH = 200000;     // 프레임당 20만회
-
+///////////////////////////
+// Monte Carlo 상태/실행
+///////////////////////////
 function mcInit(names, startCfg){
   return {
     names,
     startCfg,
     N: 0,
-    sumFinalScaled: [0,0,0,0],    // 최종값 누적(스케일)
+    sumFinalScaled: [0,0,0,0],
     stop: false,
     doneBatches: 0,
     totalBatches: Math.ceil(MC_TOTAL / MC_BATCH),
@@ -76,30 +86,46 @@ function mcRunBatch(stat){
 
   for(let t=0; t<MC_BATCH; t++){
     if(stat.stop) break;
-
     const sumIncScaled = [0,0,0,0];
+
+    // 5회 강화: 매회 4옵션 중 하나만 증가, 증가치는 후보에서 균등 랜덤
     for(let s=0; s<STEPS; s++){
       const i = (Math.random()*4)|0;
       const inc = incArr[i][(Math.random()*incArr[i].length)|0];
       sumIncScaled[i] += scale(inc);
     }
+
     for(let i=0;i<4;i++){
       stat.sumFinalScaled[i] += (startScaled[i] + sumIncScaled[i]);
     }
     stat.N++;
   }
 }
-function roundDisplayValue(opt, v){ // 표시용 반올림 규칙
-  if(PERCENT_SET.has(opt)){
-    const r = Math.round(v*2)/2;      // 0.5 단위
-    return { num: r, txt: `${r.toFixed(1)}%` };
-  }else{
-    const r = Math.round(v);          // 정수
-    return { num: r, txt: String(r) };
+
+///////////////////////////
+// 상세 로그(5회 시퀀스) 샘플
+///////////////////////////
+function runOneSequence(names, startCfg){
+  // 5회 강화에서 어떤 옵션이 선택되고, 어떤 증가치가 붙었는지 상세 로그 반환
+  const lines = [];
+  const state = { ...startCfg };
+  for(let s=1; s<=STEPS; s++){
+    const i = (Math.random()*4)|0;
+    const opt = names[i];
+    const inc = choice(INCS[opt]);
+    const before = state[opt];
+    const after = PERCENT_SET.has(opt)
+      ? Math.round((before + inc)*2)/2
+      : Math.round(before + inc);
+    state[opt] = after;
+    lines.push(`${s}회차: ${opt} +${fmt(opt, inc)}  (${fmt(opt, before)} → ${fmt(opt, after)})`);
   }
+  return { lines, final: state };
 }
 
-/* ================== 뷰 ================== */
+///////////////////////////
+// 렌더 / 마운트
+///////////////////////////
 export function mountStarter(app){
   app.innerHTML = `
     <section class="container">
@@ -110,13 +136,13 @@ export function mountStarter(app){
         <button id="go-estimator" class="hero-btn" style="margin-left:auto">강화 예상 갯수</button>
       </div>
 
-      <!-- 카드 #1: 0강 옵션 -->
+      <!-- 0강 옵션 -->
       <div class="card">
         <h2 class="section-title" style="margin-top:0">0강 옵션</h2>
         <div id="starter-start"></div>
       </div>
 
-      <!-- 카드 #2: 20강 기대값 -->
+      <!-- 20강 기대값 -->
       <div class="card" style="margin-top:12px">
         <h2 class="section-title" style="margin-top:0">20강 기대값</h2>
         <p class="muted" style="margin:6px 0 10px">
@@ -127,9 +153,19 @@ export function mountStarter(app){
           <button id="mc-run" class="hero-btn">20강 기대값</button>
           <button id="mc-stop" class="hero-btn">중지</button>
           <button id="mc-reset" class="hero-btn">초기화</button>
+          <label style="display:inline-flex; align-items:center; gap:6px; margin-left:6px">
+            <input type="checkbox" id="dev-log-toggle" />
+            <span class="muted">상세 로그(개발자)</span>
+          </label>
+          <button id="mc-sample" class="hero-btn" style="display:none">샘플 5회 실행</button>
           <span id="mc-status" class="muted" style="margin-left:6px"></span>
+          <!-- 진행률 바 -->
+          <div class="mc-progress" aria-hidden="true">
+            <div class="mc-progress__bar" id="mc-progress-bar" style="width:0%"></div>
+          </div>
         </div>
         <div id="mc-out" style="margin-top:10px"></div>
+        <pre id="mc-log" class="output" style="margin-top:10px; display:none"></pre>
       </div>
 
       <!-- 안내: 목표/성공확률은 분리 -->
@@ -144,10 +180,8 @@ export function mountStarter(app){
   byId('starter-draw-btn').addEventListener('click', ()=>{ location.hash='#draw'; });
   byId('go-estimator').addEventListener('click', ()=>{ location.hash='#starter/estimator'; });
 
-  /* ---------- 0강 폼 ---------- */
+  // 0강 구성 폼
   const startHost = byId('starter-start');
-
-  // 한 줄(항목 | 0강 값) 레이아웃
   function startRow(id){
     return `
       <div class="grid cols-2" style="align-items:end; gap:8px; margin-bottom:8px">
@@ -177,14 +211,12 @@ export function mountStarter(app){
       preset.starter4.forEach(o=>{ defaultStart[o.stat] = o.value; });
     }
   }catch(e){}
-
   const defNames = Object.keys(defaultStart);
   [1,2,3,4].forEach((i,idx)=>{
     const nameSel = byId(`s${i}-name`);
     const n = defNames[idx] || OPTION_NAMES[idx];
     nameSel.value = n;
   });
-
   function refreshInitVal(id, setRandom=false){
     const nameSel = byId(`s${id}-name`);
     const valSel  = byId(`s${id}-val`);
@@ -195,8 +227,6 @@ export function mountStarter(app){
     else if(defaultStart[name]!=null) valSel.value = defaultStart[name];
   }
   [1,2,3,4].forEach(i=> refreshInitVal(i, true));
-
-  // 중복 방지
   function selectedNames(){ return [1,2,3,4].map(i=>byId(`s${i}-name`).value); }
   function syncOptionDisables(){
     const chosen = selectedNames();
@@ -210,7 +240,6 @@ export function mountStarter(app){
     });
   }
   syncOptionDisables();
-
   [1,2,3,4].forEach(i=>{
     byId(`s${i}-name`).addEventListener('change', ()=>{
       refreshInitVal(i, false);
@@ -218,58 +247,95 @@ export function mountStarter(app){
     });
   });
 
-  /* ========== 20강 몬테카를로 (1억회) ========== */
+  ///////////////////////////
+  // 진행률 바 / 상세 로그 토글
+  ///////////////////////////
+  const devToggle = byId('dev-log-toggle');
+  const sampleBtn = byId('mc-sample');
+  const logBox    = byId('mc-log');
+  const statusEl  = byId('mc-status');
+  const barEl     = byId('mc-progress-bar');
+
+  devToggle.addEventListener('change', ()=>{
+    const on = devToggle.checked;
+    sampleBtn.style.display = on ? '' : 'none';
+    logBox.style.display = on ? '' : 'none';
+    if(!on){ logBox.textContent = ''; }
+  });
+
+  sampleBtn.addEventListener('click', ()=>{
+    try{
+      const names = selectedNames();
+      const vals  = [1,2,3,4].map(i => parseFloat(byId(`s${i}-val`).value));
+      const startCfg = Object.fromEntries(names.map((n,i)=>[n, vals[i]]));
+      checkStartCfg(startCfg);
+
+      const { lines, final } = runOneSequence(names, startCfg);
+      const lineText = lines.join('\n');
+      const tail = names.map(opt=>`${opt} 최종: ${fmt(opt, final[opt])}`).join('\n');
+      logBox.textContent = `샘플 5회 강화 로그\n\n${lineText}\n\n${tail}`;
+    }catch(e){
+      logBox.textContent = `⚠️ ${e.message}`;
+    }
+  });
+
+  ///////////////////////////
+  // Monte Carlo 실행
+  ///////////////////////////
   function renderMC(stat){
     const { names, startCfg, sumFinalScaled, N } = stat;
     if(N===0) return '';
-    const avgVals = sumFinalScaled.map(s => (s/N)/SCALE); // 기대 최종값(실수)
-
-    // "옵션 : 초기값 -> 기대값"만 출력
+    const avgVals = sumFinalScaled.map(s => (s/N)/SCALE);
     const lines = names.map((opt,i)=>{
       const disp = roundDisplayValue(opt, avgVals[i]);
       return `<div class="card" style="padding:10px">${opt} : ${fmt(opt, startCfg[opt])} -> <b>${disp.txt}</b></div>`;
     }).join('');
-
-    return `
-      <div class="grid cols-2" style="gap:8px; margin-top:6px">
-        ${lines}
-      </div>
-    `;
+    return `<div class="grid cols-2" style="gap:8px; margin-top:6px">${lines}</div>`;
   }
+
+  function updateProgress(stat){
+    const pct = Math.min(100, Math.floor((stat.N / MC_TOTAL) * 100));
+    barEl.style.width = pct + '%';
+    statusEl.textContent = `진행 중... (${stat.doneBatches} / ${stat.totalBatches} 배치, ${pct}%)`;
+  }
+
   function runMonteCarlo(startCfg){
     const names = Object.keys(startCfg);
     const stat = mcInit(names, startCfg);
 
-    byId('mc-status').textContent = `진행 중... (0 / ${stat.totalBatches} 배치)`;
+    statusEl.textContent = `진행 중... (0 / ${stat.totalBatches} 배치, 0%)`;
+    barEl.style.width = '0%';
     byId('mc-out').innerHTML = '';
 
     const step = ()=>{
       if(stat.stop){
-        byId('mc-status').textContent = '완료';
+        statusEl.textContent = '완료';
         byId('mc-out').innerHTML = renderMC(stat);
+        updateProgress(stat);
         return;
       }
       const remain = MC_TOTAL - stat.N;
       if(remain<=0){
-        byId('mc-status').textContent = '완료';
+        statusEl.textContent = '완료';
         byId('mc-out').innerHTML = renderMC(stat);
+        updateProgress(stat);
         return;
       }
       mcRunBatch(stat);
       stat.doneBatches++;
-      if(stat.doneBatches % 2 === 0){
-        byId('mc-status').textContent = `진행 중... (${stat.doneBatches} / ${stat.totalBatches} 배치)`;
+      if(stat.doneBatches % 2 === 0){ // 너무 자주 갱신하면 느려짐
+        updateProgress(stat);
       }
       requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
 
-    // 버튼 핸들러
     byId('mc-stop').onclick = ()=>{ stat.stop = true; };
     byId('mc-reset').onclick = ()=>{
       stat.stop = true;
-      byId('mc-status').textContent = '';
+      statusEl.textContent = '';
       byId('mc-out').innerHTML = '';
+      barEl.style.width = '0%';
     };
   }
 
@@ -281,7 +347,7 @@ export function mountStarter(app){
       checkStartCfg(startCfg);
       runMonteCarlo(startCfg);
     }catch(e){
-      byId('mc-status').textContent = '오류';
+      statusEl.textContent = '오류';
       byId('mc-out').innerHTML = `<div class="bad">⚠️ ${e.message}</div>`;
     }
   });
