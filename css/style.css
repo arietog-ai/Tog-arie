@@ -1,5 +1,3 @@
-/* css/style.css — 전역은 그대로, 세공 전용(.reforge)만 추가 */
-
 /* ===== 테마 색 ===== */
 :root{
   --bg:#0b0d11;
@@ -139,7 +137,7 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
 /* 강제 리셋 */
 .card, .summary-card{ background-image:none !important; }
 
-/* ===== Monte Carlo 진행률 바 (기존 기능 유지) ===== */
+/* ===== Monte Carlo 진행률 바 ===== */
 .mc-progress{
   position: relative;
   width: 200px;
@@ -163,7 +161,6 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
 /* ================================================================= */
 /* =======================  세공 전용(.reforge) ==================== */
 /* ================================================================= */
-
 .reforge .titlebar{
   display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
 }
@@ -177,7 +174,7 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
 .reforge .dice-btn span{ font-weight:700; }
 .reforge .dicon{ width:14px; height:14px; border-radius:3px; }
 
-/* 4컬럼: 강화 | 옵션 | 현재 | 범위 (thead 없음) */
+/* 4컬럼: 강화 | 옵션 | 현재 | 범위 */
 .reforge .table-wrap{ overflow:auto; }
 .reforge .gear-compact{ width:100%; border-collapse:separate; border-spacing:0; min-width:560px; }
 .reforge .gear-compact tbody td{ padding:10px 12px; border-bottom:1px solid var(--line); }
@@ -194,7 +191,7 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
 .reforge .valcell{ text-align:right; font-weight:800; white-space:nowrap; }
 .reforge .rangecell{ text-align:right; color:var(--muted); font-size:12.5px; white-space:nowrap; }
 
-/* 모바일(세로) — 한 줄에 들어오도록 */
+/* 모바일(세로) */
 @media (max-width:680px){
   .reforge .gear-compact{ min-width:auto; }
   .reforge .gear-compact tbody tr{
@@ -210,31 +207,21 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
   .reforge .rangecell{ font-size:11.5px; }
 }
 
-
 /* 강화 4이상 반짝 효과 */
-.reforge tr.flash {
-  animation: flashRow 1.4s ease-in-out;
-  background: rgba(124,242,154,0.08);
-}
-@keyframes flashRow {
-  0% { background: rgba(124,242,154,0.2); }
-  100% { background: transparent; }
-}
+.reforge tr.flash { animation: flashRow 1.4s ease-in-out; background: rgba(124,242,154,0.08); }
+@keyframes flashRow { 0%{background:rgba(124,242,154,0.2)} 100%{background:transparent} }
+.reforge .spark { animation: sparkVal 1.2s ease-in-out; color:#7cf29a; }
+@keyframes sparkVal { 0%,100%{text-shadow:none} 50%{text-shadow:0 0 8px #7cf29a} }
 
-/* 수치 반짝 */
-.reforge .spark {
-  animation: sparkVal 1.2s ease-in-out;
-  color: #7cf29a;
-}
-@keyframes sparkVal {
-  0%,100% { text-shadow:none; }
-  50% { text-shadow:0 0 8px #7cf29a; }
-}
-
-
-/* ===== GACHA (scoped) ===== */
+/* ================================================================= */
+/* ============================  GACHA  ============================ */
+/* ================================================================= */
 .gacha-hidden{display:none}
-.gacha-card{max-width:980px;margin:18px auto;padding:16px;border:1px solid #1f2a44;border-radius:16px;background:#0f1726;box-shadow:0 10px 24px rgba(0,0,0,.35);color:#e5ecf5}
+.gacha-card{
+  max-width:980px;margin:18px auto;padding:16px;
+  border:1px solid #1f2a44;border-radius:16px;
+  background:#0f1726;box-shadow:0 10px 24px rgba(0,0,0,.35);color:#e5ecf5
+}
 .gacha-card h1{margin:0 0 10px 0;font-size:24px}
 .gacha-muted{color:#9fb0c6;font-size:14px;margin:0 0 12px 0}
 .gacha-tile{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center;border:1px solid #1e2a3b;border-radius:14px;background:#0e1623;padding:12px}
@@ -244,46 +231,29 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
 .gacha-btn:hover{transform:translateY(-1px)}
 .gacha-btn-primary{background:linear-gradient(90deg,#2ad4b1,#5de3c4);color:#052b22;border:0}
 
-.gacha-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:18px;z-index:4000}
-.gacha-modal{width:min(700px,100%);background:#111826;border:1px solid #1f2a44;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.55);padding:16px}
-.gacha-modal header{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
-.gacha-modal h2{margin:0;font-size:20px}
-.gacha-field{display:flex;gap:8px;align-items:center}
-.gacha-input{width:140px;height:44px;border-radius:12px;border:1px solid #1f2a44;background:#0f1726;color:#e5ecf5;padding:0 12px;font-size:16px}
-.gacha-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
-.gacha-list{max-height:360px;overflow:auto;border:1px solid #1f2a44;border-radius:12px;padding:10px;background:#0f1726}
-.gacha-row{display:flex;justify-content:space-between;gap:10px;padding:8px 6px;border-bottom:1px dashed #20324d}
-.gacha-row:last-child{border-bottom:0}
-.gacha-pills{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
-.gacha-pill{background:#0e1a2a;border:1px solid #1c2c44;border-radius:999px;padding:6px 10px;font-size:13px;color:#cde5ff}
-
-.gacha-fab{position:fixed;right:16px;bottom:16px;z-index:3000;border-radius:999px;padding:12px 16px;font-weight:800}
-@media (max-width:560px){
-  .gacha-tile{grid-template-columns:1fr}
-  .gacha-tile img{width:100%;height:180px}
+/* 팝업(스크롤 개선) */
+.gacha-backdrop{
+  position:fixed;inset:0;background:rgba(0,0,0,.55);
+  display:none;align-items:flex-start;justify-content:center;
+  padding:18px;z-index:4000;overflow:auto; /* 배경 스크롤 허용 */
 }
-
-
-/* ===== GACHA (scoped) ===== */
-.gacha-hidden{display:none}
-.gacha-card{max-width:980px;margin:18px auto;padding:16px;border:1px solid #1f2a44;border-radius:16px;background:#0f1726;box-shadow:0 10px 24px rgba(0,0,0,.35);color:#e5ecf5}
-.gacha-card h1{margin:0 0 10px 0;font-size:24px}
-.gacha-muted{color:#9fb0c6;font-size:14px;margin:0 0 12px 0}
-.gacha-tile{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center;border:1px solid #1e2a3b;border-radius:14px;background:#0e1623;padding:12px}
-.gacha-tile img{width:120px;height:120px;object-fit:cover;border-radius:12px;border:1px solid #223147;cursor:pointer}
-.gacha-actions{display:flex;gap:8px;flex-wrap:wrap}
-.gacha-btn{appearance:none;border:1px solid #24334b;background:#142035;color:#e5ecf5;border-radius:12px;padding:9px 12px;font-weight:700;cursor:pointer;transition:.15s transform}
-.gacha-btn:hover{transform:translateY(-1px)}
-.gacha-btn-primary{background:linear-gradient(90deg,#2ad4b1,#5de3c4);color:#052b22;border:0}
-
-.gacha-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:18px;z-index:4000}
-.gacha-modal{width:min(700px,100%);background:#111826;border:1px solid #1f2a44;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.55);padding:16px}
+.gacha-modal{
+  width:min(760px,100%);
+  max-height:92vh; overflow:auto;           /* 모달 내부 스크롤 */
+  background:#111826;border:1px solid #1f2a44;border-radius:16px;
+  box-shadow:0 20px 60px rgba(0,0,0,.55);padding:16px
+}
 .gacha-modal header{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
 .gacha-modal h2{margin:0;font-size:20px}
 .gacha-field{display:flex;gap:8px;align-items:center}
 .gacha-input{width:140px;height:44px;border-radius:12px;border:1px solid #1f2a44;background:#0f1726;color:#e5ecf5;padding:0 12px;font-size:16px}
 .gacha-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
-.gacha-list{max-height:360px;overflow:auto;border:1px solid #1f2a44;border-radius:12px;padding:10px;background:#0f1726}
+
+/* 리스트 */
+.gacha-list{
+  max-height:60vh;overflow:auto;
+  border:1px solid #1f2a44;border-radius:12px;padding:10px;background:#0f1726
+}
 .gacha-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 6px;border-bottom:1px dashed #20324d}
 .gacha-row:last-child{border-bottom:0}
 .gacha-item{display:flex;align-items:center;gap:8px}
@@ -291,8 +261,18 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
 .gacha-pills{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
 .gacha-pill{background:#0e1a2a;border:1px solid #1c2c44;border-radius:999px;padding:6px 10px;font-size:13px;color:#cde5ff}
 
+/* 작은 팝업(배치 결과용) */
+.gacha-mini{
+  width:min(560px,100%);max-height:88vh;overflow:auto;
+  background:#111826;border:1px solid #1f2a44;border-radius:16px;
+  box-shadow:0 20px 60px rgba(0,0,0,.55);padding:16px
+}
+
+/* 모바일 */
 @media (max-width:560px){
   .gacha-tile{grid-template-columns:1fr}
   .gacha-tile img{width:100%;height:180px}
   .gacha-icon{width:42px;height:42px}
+  .gacha-modal{max-height:94vh}
+  .gacha-list{max-height:66vh}
 }
