@@ -308,3 +308,4 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
 
 /* 섹션 헤더 (결과 리스트 안의 구분 제목) */
 .gacha-section{margin:12px 6px 6px;font-weight:800;color:#cde5ff;opacity:.9}
+
