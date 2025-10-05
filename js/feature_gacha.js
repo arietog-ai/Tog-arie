@@ -1,11 +1,11 @@
-// js/feature_gacha.js  (v=20251005-3)
+// js/feature_gacha.js  (v=20251005-4)
 // 가챠 UI – 등록된 가챠 모듈을 자동으로 나열/실행
 
-import { FullMoonBox } from './gachas/full_moon_box.js?v=20251005-3';
-import { FleetRandomBox } from './gachas/fleet_box.js?v=20251005-3';
+// ✅ 실제 파일 위치가 /js 루트이므로 './full_moon_box.js' / './fleet_box.js' 로 바꿈
+import { FullMoonBox } from './full_moon_box.js?v=20251005-4';
+import { FleetRandomBox } from './fleet_box.js?v=20251005-4';
 
 export function mountGacha(appRoot){
-  // 등록된 가챠
   const GACHAS = [ FullMoonBox, FleetRandomBox ];
 
   appRoot.innerHTML = `
@@ -51,11 +51,9 @@ export function mountGacha(appRoot){
     </section>
   `;
 
-  // 타일 생성
   const tiles = appRoot.querySelector('#gachaListTiles');
   GACHAS.forEach((g, idx) => tiles.append(makeTile(g, idx)));
 
-  // 팝업 & 결과 제어
   const q = s => appRoot.querySelector(s);
   const inputBackdrop  = q('#inputBackdrop');
   const resultBackdrop = q('#resultBackdrop');
@@ -104,7 +102,6 @@ export function mountGacha(appRoot){
     });
   }
 
-  // 이벤트
   q('#cancelInput').addEventListener('click', ()=> hide(inputBackdrop));
   q('#confirmInput').addEventListener('click', run);
   q('#closeResult').addEventListener('click', ()=> hide(resultBackdrop));
@@ -114,7 +111,6 @@ export function mountGacha(appRoot){
   });
   drawCountEl.addEventListener('keydown', e=>{ if(e.key==='Enter') run(); });
 
-  // helpers
   function show(el){ el.style.display='flex'; el.classList.remove('gacha-hidden'); }
   function hide(el){ el.style.display='none'; el.classList.add('gacha-hidden'); }
 
