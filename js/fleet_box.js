@@ -1,6 +1,6 @@
-// js/fleet_box.js
-// 부유선 랜덤상자 — 제작도(일반/고급/희귀/전설) 추첨 → 해당 풀에서 부유선 추첨
-// 결과는 "제작도 요약" 섹션과 "부유선 합계" 섹션으로 분리하여 출력.
+// js/fleet_box.js  (v20251005-9)
+// 부유선 랜덤상자 — 제작도(일반/고급/희귀/전설) 추첨 → 해당 등급 풀에서 부유선 추첨
+// 전설 제작도는 SSR+ 2척만 50/50로 뽑히도록 수정
 
 import { buildCDF, drawOnce, buildCopyText } from './gacha_core.js';
 
@@ -25,7 +25,7 @@ const SHIP_IMG = {
   glider: './assets/img/fleet/glider.jpg',
   oculus: './assets/img/fleet/oculus.jpg',
 };
-// 제작도 아이콘(파일명은 네가 올려둔 그대로 사용)
+// 제작도 아이콘
 const BLUEPRINT_IMG = {
   '일반': './assets/img/fleet_blueprint_common.jpg',
   '고급': './assets/img/fleet_blueprint_advanced.jpg',
@@ -34,27 +34,38 @@ const BLUEPRINT_IMG = {
 };
 
 /* ===== 확률 ===== */
-// 제작도 등급 확률
+// 제작도 등급 확률(원래 쓰던 분포 유지 가능)
 const BLUEPRINT_TIER = [
   ['일반', 30.000],
   ['고급', 40.000],
   ['희귀', 20.000],
   ['전설', 10.000],
 ];
-// A=희귀~전설 / B=고급 / C=일반
-const FLEET_POOL_A = [
+
+// ★ 전설(legendary) — SSR+ 2척만 50/50
+const LEGEND_POOL = [
+  ['vigilantia', 50.000],
+  ['aquila_nova', 50.000],
+];
+
+// 희귀(rare)
+const RARE_POOL = [
   ['vigilantia', 5.000], ['aquila_nova', 5.000],
   ['albatross', 10.000], ['epervier', 10.000],
   ['libellula', 15.000], ['pathfinder', 15.000],
   ['glider', 20.000], ['oculus', 20.000],
 ];
-const FLEET_POOL_B = [
+
+// 고급(advanced)
+const ADV_POOL = [
   ['vigilantia', 1.000], ['aquila_nova', 1.000],
   ['albatross', 9.000], ['epervier', 9.000],
   ['libellula', 15.000], ['pathfinder', 15.000],
   ['glider', 25.000], ['oculus', 25.000],
 ];
-const FLEET_POOL_C = [
+
+// 일반(common)
+const COM_POOL = [
   ['vigilantia', 0.050], ['aquila_nova', 0.050],
   ['albatross', 5.000], ['epervier', 5.000],
   ['libellula', 10.000], ['pathfinder', 10.000],
@@ -68,10 +79,15 @@ export const FleetRandomBox = {
   description: '제작도 → 부유선 2단계 추첨',
 
   run(n) {
+    // 등급 CDF
     const tierCDF = buildCDF(BLUEPRINT_TIER);
-    const cdfA = buildCDF(FLEET_POOL_A);
-    const cdfB = buildCDF(FLEET_POOL_B);
-    const cdfC = buildCDF(FLEET_POOL_C);
+    // 등급별 풀 CDF
+    const poolCDF = {
+      '전설':   buildCDF(LEGEND_POOL),
+      '희귀':   buildCDF(RARE_POOL),
+      '고급':   buildCDF(ADV_POOL),
+      '일반':   buildCDF(COM_POOL),
+    };
 
     const byTier = new Map([['전설',0],['희귀',0],['고급',0],['일반',0]]);
     const byShip = new Map();
@@ -80,8 +96,7 @@ export const FleetRandomBox = {
       const tier = drawOnce(tierCDF);
       byTier.set(tier, byTier.get(tier) + 1);
 
-      const pool = (tier === '일반') ? cdfC : (tier === '고급') ? cdfB : cdfA;
-      const shipKey = drawOnce(pool);
+      const shipKey = drawOnce(poolCDF[tier]);   // ← 전설은 50/50 풀에서만 추첨!
       byShip.set(shipKey, (byShip.get(shipKey) || 0) + 1);
     }
 
@@ -98,10 +113,12 @@ export const FleetRandomBox = {
 
     // 섹션 2: 부유선 합계
     items.push({ type:'section', text:'부유선 합계' });
+    // 표기 순서: 전설 풀 → 희귀 → 고급 → 일반
     const orderKeys = [
-      ...FLEET_POOL_A.map(([k]) => k),
-      ...FLEET_POOL_B.map(([k]) => k),
-      ...FLEET_POOL_C.map(([k]) => k),
+      ...LEGEND_POOL.map(([k]) => k),
+      ...RARE_POOL.map(([k]) => k),
+      ...ADV_POOL.map(([k]) => k),
+      ...COM_POOL.map(([k]) => k),
     ];
     const seen = new Set();
     for (const k of orderKeys) {
