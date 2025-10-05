@@ -1,10 +1,9 @@
-// js/feature_gacha.js  (v=20251005-5)
-// 가챠 UI – 등록된 가챠 모듈을 자동으로 나열/실행
-// - 단일형(run → {items,pills,copy})
-// - 2단계형(run → {type:'staged', ...}) 모두 지원
+// js/feature_gacha.js  (v=20251005-7)
+// - 2단계(제작도) 진행 시, 각 티어 뽑기 결과는 "작은 팝업"으로만 표시
+// - "결과 보기"는 메인 팝업 안에 인라인으로 표시 + 복사/닫기 버튼
 
 import { FullMoonBox } from './full_moon_box.js?v=20251005-4';
-import { FleetRandomBox } from './fleet_box.js?v=20251005-5';
+import { FleetRandomBox } from './fleet_box.js?v=20251005-7';
 
 export function mountGacha(appRoot){
   const GACHAS = [ FullMoonBox, FleetRandomBox ];
@@ -34,7 +33,7 @@ export function mountGacha(appRoot){
         </div>
       </div>
 
-      <!-- 결과/단계 팝업 -->
+      <!-- 메인 결과(2단계 포함) 팝업 -->
       <div class="gacha-backdrop gacha-hidden" id="resultBackdrop">
         <div class="gacha-modal" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
           <header>
@@ -42,18 +41,26 @@ export function mountGacha(appRoot){
             <div class="gacha-muted" id="resultSub">“복사”를 눌러 카톡에 붙여넣기 하세요.</div>
           </header>
 
-          <!-- 요약 정보 -->
           <div class="gacha-pills" id="summaryPills"></div>
-
-          <!-- (단일형) 결과 리스트 / (2단계형) 제작도 안내 + 즉시 결과 영역 -->
           <div class="gacha-list" id="resultList" aria-live="polite"></div>
 
-          <!-- (2단계형) 전용 액션 버튼 박스 -->
+          <!-- 2단계 전용 버튼 박스 -->
           <div class="gacha-actions" id="stageActions" style="display:none; margin-top:10px; flex-wrap:wrap; gap:8px"></div>
 
           <div class="gacha-footer">
             <button class="gacha-btn" id="closeResult">닫기</button>
             <button class="gacha-btn" id="copyResult">결과 복사(카톡용)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 배치 결과 전용(작은) 팝업 -->
+      <div class="gacha-backdrop gacha-hidden" id="miniBackdrop">
+        <div class="gacha-mini" role="dialog" aria-modal="true" aria-labelledby="miniTitle">
+          <h3 id="miniTitle" style="margin:0 0 8px 0">이번 뽑기 결과</h3>
+          <div id="miniList" class="gacha-list" style="max-height:50vh"></div>
+          <div class="gacha-footer">
+            <button class="gacha-btn" id="miniClose">확인</button>
           </div>
         </div>
       </div>
@@ -63,10 +70,10 @@ export function mountGacha(appRoot){
   const tiles = appRoot.querySelector('#gachaListTiles');
   GACHAS.forEach((g, idx) => tiles.append(makeTile(g, idx)));
 
-  // 팝업 & 결과 제어
   const q = s => appRoot.querySelector(s);
   const inputBackdrop  = q('#inputBackdrop');
   const resultBackdrop = q('#resultBackdrop');
+  const miniBackdrop   = q('#miniBackdrop');
   const drawCountEl    = q('#drawCount');
   const resultList     = q('#resultList');
   const summaryPills   = q('#summaryPills');
@@ -74,10 +81,12 @@ export function mountGacha(appRoot){
   const resultTitleEl  = q('#resultTitle');
   const resultSubEl    = q('#resultSub');
   const stageActions   = q('#stageActions');
+  const miniTitleEl    = q('#miniTitle');
+  const miniList       = q('#miniList');
 
   let current = null;
   let lastCopyText = '';
-  let stagedCtrl = null; // 2단계형 컨트롤러
+  let stagedCtrl = null;
 
   function openInput(mod){
     current = mod;
@@ -94,15 +103,13 @@ export function mountGacha(appRoot){
 
     const res = current.run(n);
 
-    // === (A) 2단계형: 제작도 → 부유선 ===
     if(res && res.type === 'staged'){
-      stagedCtrl = res; // { title, pills, blueprint:{counts,drawTier,drawAll,getSummary,copySummary}, tierOrder }
+      stagedCtrl = res;
       renderStage1(res);
       show(resultBackdrop);
       return;
     }
 
-    // === (B) 단일형 ===
     const { items, pills, copy } = res;
     resultTitleEl.textContent = `${current.title} 결과`;
     resultSubEl.textContent = '“복사”를 눌러 카톡에 붙여넣기 하세요.';
@@ -124,157 +131,113 @@ export function mountGacha(appRoot){
     stageActions.style.display = 'flex';
 
     pills.forEach(t => summaryPills.append(pill(t)));
-    // 제작도 표 + 즉시 결과 영역
-    const counts = blueprint.counts; // {일반:x,고급:y,희귀:z,전설:w}
-    resultList.append(stageBlueprintTable(tierOrder, counts));
-    resultList.append(stageInstantArea());
 
-    // 액션 버튼들
+    // 제작도 테이블
+    resultList.append(stageBlueprintTable(tierOrder, blueprint.counts));
+
+    // 제작도 별 뽑기 버튼들 (보유한 제작도만 활성화)
     stageActions.innerHTML = '';
     tierOrder.forEach(tier=>{
       const btn = button(`「${tier}」 뽑기`);
-      if(!(counts[tier] > 0)) btn.disabled = true;
+      if(!(blueprint.counts[tier] > 0)) btn.disabled = true;
       btn.addEventListener('click', ()=>{
         const batch = blueprint.drawTier(tier); // {items, count}
-        // 즉시 결과 출력
-        renderInstant(batch, tier);
-        // 버튼/카운트 갱신
-        const left = blueprint.counts[tier];
+        // 작은 팝업으로 표시
+        openMini(`${tier} (${batch.count}회)`, batch.items);
+        // 남은 제작도/버튼 갱신
+        const left = blueprint.counts[tier]||0;
         if(left<=0) btn.disabled = true;
-        // 제작도 테이블도 갱신
-        updateBlueprintTable(tier, left);
+        updateBlueprintRow(tier, left);
+        // 복사 텍스트(총합 기준) 갱신
+        lastCopyText = blueprint.getSummary().copy;
       });
       stageActions.append(btn);
     });
 
-    // 전체 뽑기 / 결과 보기 / 복사
+    // 전체 뽑기 / 결과 보기
     const runAll = button('전체 뽑기');
     runAll.addEventListener('click', ()=>{
-      const batches = blueprint.drawAll(); // [{tier,items,count},...]
-      renderInstantMerge(batches);
-      // 모든 버튼 비활성화 + 테이블 0으로
+      const batches = blueprint.drawAll();
+      // 합쳐서 미니팝업으로 보여주기
+      const merged = new Map();
+      batches.forEach(b=>{
+        b.items.forEach(it=> merged.set(it.name, (merged.get(it.name)||0) + it.qty));
+      });
+      openMini('전체 뽑기', mapToItemArray(merged));
+      // 버튼 비활성화 + 테이블 0
       stageActions.querySelectorAll('button').forEach(b=>{
         if(b.textContent.includes('뽑기')) b.disabled = true;
       });
-      tierOrder.forEach(t=> updateBlueprintTable(t, 0));
+      tierOrder.forEach(t=> updateBlueprintRow(t, 0));
+      lastCopyText = blueprint.getSummary().copy;
     });
+
     const showSum = button('결과 보기');
     showSum.addEventListener('click', ()=>{
       const sum = blueprint.getSummary(); // {items, pills, copy}
       renderSummary(sum);
     });
-    const copyBtn = q('#copyResult');
-    copyBtn.onclick = ()=>{
-      const sum = blueprint.getSummary();
-      navigator.clipboard.writeText(sum.copy).then(()=> alert('복사 완료! 카톡에 붙여넣기 하세요.'));
-    };
 
     stageActions.append(runAll, showSum);
-    // 초기 복사 텍스트는 "현재까지 합계" 기준으로
+
+    // 초기 복사 텍스트는 "현재까지 합계" 기준
     lastCopyText = blueprint.getSummary().copy;
   }
 
-  // ============ 렌더 헬퍼들 ============
-  function stageBlueprintTable(order, counts){
-    const wrap = document.createElement('div');
-    wrap.className = 'card';
-    wrap.style.background='transparent';
-    wrap.style.border='1px dashed #20324d';
-    wrap.style.marginBottom='10px';
-    wrap.innerHTML = `
-      <div style="font-weight:800;margin-bottom:6px">획득한 제작도</div>
-      <div id="bpRows"></div>
-    `;
-    const rows = wrap.querySelector('#bpRows');
-    order.forEach(tier=>{
-      const row = document.createElement('div');
-      row.className = 'gacha-row';
-      row.dataset.tier = tier;
-      row.innerHTML = `
-        <div class="gacha-item"><span>${tier}</span></div>
-        <div><b id="bp-${tier}">${counts[tier]||0}</b>개</div>
-      `;
-      rows.append(row);
-    });
-    return wrap;
-  }
-  function updateBlueprintTable(tier, left){
-    const el = appRoot.querySelector(`#bp-${CSS.escape(tier)}`);
-    if(el) el.textContent = left;
-  }
-  function stageInstantArea(){
-    const wrap = document.createElement('div');
-    wrap.innerHTML = `
-      <div style="font-weight:800;margin:6px 0 4px">이번 뽑기 결과</div>
-      <div id="instantArea" class="gacha-list" style="max-height:260px; border-style:solid"></div>
-    `;
-    return wrap;
-  }
-  function renderInstant(batch, tier){
-    const host = appRoot.querySelector('#instantArea');
-    host.innerHTML = '';
-    const title = document.createElement('div');
-    title.style.margin='4px 0 8px';
-    title.textContent = `(${tier}) ${batch.count}회`;
-    host.append(title);
-    batch.items.forEach(it=> host.append(rowWithImage(it.name, it.qty, it.img)));
-    // 복사 텍스트도 “현재까지 합계” 기준으로 갱신
-    if(stagedCtrl) lastCopyText = stagedCtrl.blueprint.getSummary().copy;
-  }
-  function renderInstantMerge(batches){
-    const host = appRoot.querySelector('#instantArea');
-    host.innerHTML = '';
-    const title = document.createElement('div');
-    const total = batches.reduce((s,b)=>s+(b.count||0),0);
-    title.style.margin='4px 0 8px';
-    title.textContent = `전체 뽑기 (${total}회)`;
-    host.append(title);
-    // 합쳐서 보여주기
-    const merged = new Map();
-    batches.forEach(b=>{
-      b.items.forEach(it=>{
-        merged.set(it.name, (merged.get(it.name)||0) + it.qty);
-      });
-    });
-    Array.from(merged.entries()).forEach(([name,qty])=>{
-      host.append(rowWithTextOnly(name, qty));
-    });
-    if(stagedCtrl) lastCopyText = stagedCtrl.blueprint.getSummary().copy;
-  }
   function renderSummary(sum){
     resultTitleEl.textContent = `${stagedCtrl.title} – 2단계: 총 결과`;
-    resultSubEl.textContent = '“복사”를 눌러 카톡에 붙여넣기 하세요.';
+    resultSubEl.textContent = '아래 결과를 복사/닫기 할 수 있습니다.';
     summaryPills.innerHTML = '';
     stageActions.style.display = 'flex';
     sum.pills.forEach(t => summaryPills.append(pill(t)));
+
+    // 본문 하단에 결과와 버튼 인라인 출력
     resultList.innerHTML = '';
-    sum.items.forEach(it => resultList.append(rowWithImage(it.name, it.qty, it.img)));
+    const box = document.createElement('div');
+    box.className = 'card';
+    box.style.background='transparent';
+    box.style.border='1px dashed #20324d';
+    const list = document.createElement('div');
+    list.className = 'gacha-list';
+    sum.items.forEach(it => list.append(rowWithImage(it.name, it.qty, it.img)));
+
+    const actions = document.createElement('div');
+    actions.className = 'gacha-footer';
+    const copyBtn = button('복사');
+    const closeBtn = button('닫기');
+    copyBtn.addEventListener('click', ()=>{
+      navigator.clipboard.writeText(sum.copy).then(()=> alert('복사 완료!'));
+    });
+    closeBtn.addEventListener('click', ()=> hide(resultBackdrop));
+
+    actions.append(closeBtn, copyBtn);
+    box.append(list, actions);
+    resultList.append(box);
+
     lastCopyText = sum.copy;
   }
 
-  function copy(){
-    navigator.clipboard.writeText(lastCopyText).then(()=>{
-      alert('복사 완료! 카톡에 붙여넣기 하세요.');
-    }).catch(()=>{
-      const ta=document.createElement('textarea');
-      ta.value=lastCopyText; document.body.appendChild(ta);
-      ta.select(); document.execCommand('copy');
-      document.body.removeChild(ta);
-      alert('복사 완료!');
-    });
+  // ── 작은 팝업
+  function openMini(title, items){
+    miniTitleEl.textContent = title;
+    miniList.innerHTML = '';
+    items.forEach(it=> miniList.append(rowWithImage(it.name, it.qty, it.img)));
+    show(miniBackdrop);
   }
 
-  // 이벤트
+  // ── UI helpers
+  q('#miniClose').addEventListener('click', ()=> hide(miniBackdrop));
   q('#cancelInput').addEventListener('click', ()=> hide(inputBackdrop));
   q('#confirmInput').addEventListener('click', run);
   q('#closeResult').addEventListener('click', ()=> hide(resultBackdrop));
-  q('#copyResult').addEventListener('click', copy);
-  [inputBackdrop, resultBackdrop].forEach(bd=>{
+  q('#copyResult').addEventListener('click', ()=>{
+    navigator.clipboard.writeText(lastCopyText).then(()=> alert('복사 완료! 카톡에 붙여넣기 하세요.'));
+  });
+  [inputBackdrop, resultBackdrop, miniBackdrop].forEach(bd=>{
     bd.addEventListener('click', e => { if (e.target === bd) hide(bd); });
   });
   drawCountEl.addEventListener('keydown', e=>{ if(e.key==='Enter') run(); });
 
-  // helpers
   function show(el){ el.style.display='flex'; el.classList.remove('gacha-hidden'); }
   function hide(el){ el.style.display='none'; el.classList.add('gacha-hidden'); }
 
@@ -308,13 +271,30 @@ export function mountGacha(appRoot){
     el.append(left,right);
     return el;
   }
-  function rowWithTextOnly(label, qty){
-    const el=document.createElement('div'); el.className='gacha-row';
-    const left=document.createElement('div'); left.className='gacha-item';
-    const span=document.createElement('span'); span.textContent=label;
-    left.append(span);
-    const right=document.createElement('div'); right.textContent=`${Number(qty).toLocaleString()}개`;
-    el.append(left,right);
-    return el;
+  function stageBlueprintTable(order, counts){
+    const wrap = document.createElement('div');
+    wrap.className = 'card';
+    wrap.style.background='transparent';
+    wrap.style.border='1px dashed #20324d';
+    wrap.style.marginBottom='10px';
+    wrap.innerHTML = `<div style="font-weight:800;margin-bottom:6px">획득한 제작도</div>`;
+    order.forEach(tier=>{
+      const row = document.createElement('div');
+      row.className = 'gacha-row';
+      row.dataset.tier = tier;
+      row.innerHTML = `
+        <div class="gacha-item"><span>${tier}</span></div>
+        <div><b id="bp-${tier}">${counts[tier]||0}</b>개</div>
+      `;
+      wrap.append(row);
+    });
+    return wrap;
+  }
+  function updateBlueprintRow(tier, left){
+    const el = appRoot.querySelector(`#bp-${CSS.escape(tier)}`);
+    if(el) el.textContent = left;
+  }
+  function mapToItemArray(m){
+    return Array.from(m.entries()).map(([name,qty])=>({name,qty,img:''}));
   }
 }
