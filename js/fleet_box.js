@@ -1,5 +1,5 @@
-// js/gachas/fleet_box.js  (v=20251005-3)
-import { buildCDF, drawOnce, buildCopyText } from '../gacha_core.js?v=20251005-3';
+// js/fleet_box.js  (v=20251005-4)
+import { buildCDF, drawOnce, buildCopyText } from './gacha_core.js?v=20251005-4';
 
 const SHIP_LABEL = {
   vigilantia: '비질란티아',
@@ -54,7 +54,7 @@ const FLEET_POOL_C = [
 export const FleetRandomBox = {
   id: 'fleet_random_box',
   title: '부유선 랜덤상자',
-  thumb: './assets/img/fleet_random_box.jpg', // 없으면 onerror로 흐릿 처리, 동작엔 영향 없음
+  thumb: './assets/img/fleet_random_box.jpg',
   description: '제작도 확률(일반/고급/희귀/전설) → 부유선 풀(A/B/C) 2단계 추첨',
   run(n) {
     const tierCDF = buildCDF(BLUEPRINT_TIER);
@@ -62,15 +62,14 @@ export const FleetRandomBox = {
     const cdfB = buildCDF(FLEET_POOL_B);
     const cdfC = buildCDF(FLEET_POOL_C);
 
-    const counts = new Map(); // shipKey -> count
+    const counts = new Map();
     for (let i = 0; i < n; i++) {
       const tier = drawOnce(tierCDF);
-      const pool = (tier === '일반') ? cdfC : (tier === '고급') ? cdfB : cdfA; // 희귀/전설 → A
+      const pool = (tier === '일반') ? cdfC : (tier === '고급') ? cdfB : cdfA;
       const key = drawOnce(pool);
       counts.set(key, (counts.get(key) || 0) + 1);
     }
 
-    // 출력 순서: A → B → C
     const orderKeys = [
       ...FLEET_POOL_A.map(([k]) => k),
       ...FLEET_POOL_B.map(([k]) => k),
