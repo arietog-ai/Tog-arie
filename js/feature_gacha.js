@@ -1,15 +1,12 @@
 // js/feature_gacha.js  (exports mountGacha)
-// 가챠 허브: 타일 2개(부유선 랜덤상자, 2025 보름달 상자) + 입력 모달 + 결과 모달
 
-import { FleetRandomBox } from './fleet_box.js?v=20251005-8';
+import { FleetRandomBox } from './fleet_box.js?v=20251005-9';
 import { FullMoonBox }   from './full_moon_box.js?v=20251005-8';
 
 function el(html){ const t=document.createElement('template'); t.innerHTML=html.trim(); return t.content.firstElementChild; }
 function pillsHTML(list){ return list.map(x=>`<span class="gacha-pill">${x}</span>`).join(''); }
 function itemRowHTML(it){
-  if(it.type==='section'){
-    return `<div class="gacha-section">${it.text}</div>`;
-  }
+  if(it.type==='section'){ return `<div class="gacha-section">${it.text}</div>`; }
   return `
   <div class="gacha-row">
     <div class="gacha-item">
@@ -91,9 +88,7 @@ function openResultModal({title, pills=[], items=[], copyText=''}) {
       await navigator.clipboard.writeText(copyText);
       $modal.querySelector('#btnCopy').textContent = '복사됨';
       setTimeout(()=>{ $modal.querySelector('#btnCopy').textContent='복사'; }, 1200);
-    }catch(_){
-      alert('클립보드 복사에 실패했습니다.');
-    }
+    }catch(_){ alert('클립보드 복사에 실패했습니다.'); }
   });
 }
 
@@ -105,6 +100,18 @@ export function mountGacha(root){
     <p class="gacha-muted">원하는 상자를 눌러 뽑기 개수를 입력하세요. (최대 100개)</p>
 
     <div class="gacha-tiles">
+
+      <!-- ✅ 2025 보름달 상자 (맨 위) -->
+      <div class="gacha-tile">
+        <img src="./assets/img/full_moon_box.jpg" alt="2025 보름달 상자"/>
+        <div>
+          <h3 style="margin:0 0 6px 0">2025 보름달 상자</h3>
+          <p class="gacha-muted" style="margin:0 0 10px">확률형 보상 시뮬레이터</p>
+          <div class="gacha-actions">
+            <button class="gacha-btn gacha-btn-primary" id="btnMoon">뽑기 시작</button>
+          </div>
+        </div>
+      </div>
 
       <!-- 부유선 랜덤상자 -->
       <div class="gacha-tile">
@@ -118,34 +125,9 @@ export function mountGacha(root){
         </div>
       </div>
 
-      <!-- 2025 보름달 상자 -->
-      <div class="gacha-tile">
-        <img src="./assets/img/full_moon_box.jpg" alt="2025 보름달 상자"/>
-        <div>
-          <h3 style="margin:0 0 6px 0">2025 보름달 상자</h3>
-          <p class="gacha-muted" style="margin:0 0 10px">확률형 보상 시뮬레이터</p>
-          <div class="gacha-actions">
-            <button class="gacha-btn gacha-btn-primary" id="btnMoon">뽑기 시작</button>
-          </div>
-        </div>
-      </div>
-
     </div>
   </section>
   `;
-
-  // 부유선 랜덤상자
-  root.querySelector('#btnFleet').addEventListener('click', ()=>{
-    openInputModal({
-      title: '뽑기 개수 입력',
-      subtitle: '한 번에 최대 100개까지 가능합니다.',
-      max: 100,
-      onSubmit(n){
-        const { items, pills, copy } = FleetRandomBox.run(n);
-        openResultModal({ title: '부유선 랜덤상자', pills, items, copyText: copy });
-      }
-    });
-  });
 
   // 보름달 상자
   root.querySelector('#btnMoon').addEventListener('click', ()=>{
@@ -156,6 +138,19 @@ export function mountGacha(root){
       onSubmit(n){
         const { items, pills, copy } = FullMoonBox.run(n);
         openResultModal({ title: '2025 보름달 상자', pills, items, copyText: copy });
+      }
+    });
+  });
+
+  // 부유선 랜덤상자
+  root.querySelector('#btnFleet').addEventListener('click', ()=>{
+    openInputModal({
+      title: '뽑기 개수 입력',
+      subtitle: '한 번에 최대 100개까지 가능합니다.',
+      max: 100,
+      onSubmit(n){
+        const { items, pills, copy } = FleetRandomBox.run(n);
+        openResultModal({ title: '부유선 랜덤상자', pills, items, copyText: copy });
       }
     });
   });
