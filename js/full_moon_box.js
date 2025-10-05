@@ -1,6 +1,5 @@
-// js/full_moon_box.js  (v=20251005-4)
-// core는 같은 폴더(/js) 안에 있으므로 './gacha_core.js'
-import { simulate, sumByBaseQuantity, buildCopyText } from './gacha_core.js?v=20251005-4';
+// js/full_moon_box.js  (v=20251005-8)
+import { simulate, sumByBaseQuantity, buildCopyText } from './gacha_core.js';
 
 const IMG = {
   "SSR+ 동료 선택 상자": "./assets/img/ssr_plus_box_sel.jpg",
@@ -52,16 +51,22 @@ export const FullMoonBox = {
 
     const { merged, order } = sumByBaseQuantity(ordered);
 
+    // “희귀” 표시는 유지하되, “종류 N개”는 pills에서 제외
     const rareSet = new Set(["SSR+ 동료 선택 상자","암시장 티켓","일반 소환 티켓","빛나는 레볼루션 조각","SSR+ 영혼석"]);
     let rareKinds = 0; for (const base of order) if (rareSet.has(base)) rareKinds++;
 
-    const items = order.map(base => ({ name: base, qty: merged.get(base), img: IMG[base] || '' }));
+    const items = order.map(base => ({
+      name: base,
+      qty: merged.get(base),
+      img: IMG[base] || ''
+    }));
 
-    const pills = [`총 ${n}회`, `종류 ${order.length}개`];
+    const pills = [`총 ${n}회`];
     if (rareKinds > 0) pills.push(`희귀 ${rareKinds}종`);
 
     const copyLines = order.map(b => `${b} ${merged.get(b).toLocaleString()}개`);
-    const copy = buildCopyText(this.title, n, copyLines, `종류 ${order.length}개${rareKinds>0?` | 희귀 ${rareKinds}종`:''}`);
+    const extra = rareKinds>0 ? `희귀 ${rareKinds}종` : '';
+    const copy = buildCopyText(this.title, n, copyLines, extra);
 
     return { items, pills, copy };
   }
