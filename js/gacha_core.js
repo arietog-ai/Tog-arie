@@ -1,4 +1,4 @@
-// js/gacha_core.js
+// js/gacha_core.js  (v=20251005-3)
 // 공통 유틸: 누적분포, 추첨, 리스트 렌더 도우미, 복사 텍스트
 
 export function buildCDF(pool) {
