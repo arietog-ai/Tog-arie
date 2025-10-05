@@ -1,10 +1,10 @@
 // js/fleet_box.js
 // 부유선 랜덤상자 — 제작도(일반/고급/희귀/전설) 추첨 → 해당 풀에서 부유선 추첨
-// 결과에는 "제작도 요약(아이콘+개수)" + "부유선 횟수 합계(아이콘+개수)"가 함께 표시됨.
+// 결과는 "제작도 요약" 섹션과 "부유선 합계" 섹션으로 분리하여 출력.
 
 import { buildCDF, drawOnce, buildCopyText } from './gacha_core.js';
 
-/* ===================== 레이블/이미지 ===================== */
+/* ===== 한글 라벨 & 아이콘 ===== */
 const SHIP_LABEL = {
   vigilantia: '비질란티아',
   aquila_nova: '아퀼라 노바',
@@ -15,7 +15,6 @@ const SHIP_LABEL = {
   glider: '글라이더',
   oculus: '오큘루스',
 };
-
 const SHIP_IMG = {
   vigilantia: './assets/img/fleet/vigilantia.jpg',
   aquila_nova: './assets/img/fleet/aquila_nova.jpg',
@@ -26,8 +25,7 @@ const SHIP_IMG = {
   glider: './assets/img/fleet/glider.jpg',
   oculus: './assets/img/fleet/oculus.jpg',
 };
-
-// 제작도 아이콘 (네가 올린 파일명과 1:1 매칭)
+// 제작도 아이콘(파일명은 네가 올려둔 그대로 사용)
 const BLUEPRINT_IMG = {
   '일반': './assets/img/fleet_blueprint_common.jpg',
   '고급': './assets/img/fleet_blueprint_advanced.jpg',
@@ -35,7 +33,7 @@ const BLUEPRINT_IMG = {
   '전설': './assets/img/fleet_blueprint_legendary.jpg',
 };
 
-/* ===================== 확률 설정 ===================== */
+/* ===== 확률 ===== */
 // 제작도 등급 확률
 const BLUEPRINT_TIER = [
   ['일반', 30.000],
@@ -43,7 +41,6 @@ const BLUEPRINT_TIER = [
   ['희귀', 20.000],
   ['전설', 10.000],
 ];
-
 // A=희귀~전설 / B=고급 / C=일반
 const FLEET_POOL_A = [
   ['vigilantia', 5.000], ['aquila_nova', 5.000],
@@ -64,7 +61,6 @@ const FLEET_POOL_C = [
   ['glider', 34.950], ['oculus', 34.950],
 ];
 
-/* ===================== 본체 ===================== */
 export const FleetRandomBox = {
   id: 'fleet_random_box',
   title: '부유선 랜덤상자',
@@ -72,47 +68,36 @@ export const FleetRandomBox = {
   description: '제작도 → 부유선 2단계 추첨',
 
   run(n) {
-    // CDF 준비
     const tierCDF = buildCDF(BLUEPRINT_TIER);
     const cdfA = buildCDF(FLEET_POOL_A);
     const cdfB = buildCDF(FLEET_POOL_B);
     const cdfC = buildCDF(FLEET_POOL_C);
 
-    // 집계 맵
     const byTier = new Map([['전설',0],['희귀',0],['고급',0],['일반',0]]);
-    const byShip = new Map(); // key -> count
+    const byShip = new Map();
 
     for (let i = 0; i < n; i++) {
       const tier = drawOnce(tierCDF);
       byTier.set(tier, byTier.get(tier) + 1);
 
-      const pool =
-        tier === '일반' ? cdfC :
-        tier === '고급' ? cdfB : cdfA;
-
+      const pool = (tier === '일반') ? cdfC : (tier === '고급') ? cdfB : cdfA;
       const shipKey = drawOnce(pool);
       byShip.set(shipKey, (byShip.get(shipKey) || 0) + 1);
     }
 
-    // ===== 출력용 리스트 =====
+    // ===== 표시용 아이템 구성 (섹션 분리) =====
     const items = [];
 
-    // 1) 제작도 요약(아이콘 포함)
-    //    모달 상단에 보여줄 순서: 전설 → 희귀 → 고급 → 일반
+    // 섹션 1: 제작도 요약
+    items.push({ type:'section', text:'획득한 제작도' });
     const TIER_ORDER = ['전설','희귀','고급','일반'];
     for (const t of TIER_ORDER) {
       const c = byTier.get(t) || 0;
-      if (c > 0) {
-        items.push({
-          name: `${t} 제작도`,
-          qty: `${c}개`,
-          img: BLUEPRINT_IMG[t]
-        });
-      }
+      if (c > 0) items.push({ name:`${t} 제작도`, qty:c, img:BLUEPRINT_IMG[t] });
     }
 
-    // 2) 부유선 합계
-    //    보여줄 순서: A → B → C 풀 정의 순으로
+    // 섹션 2: 부유선 합계
+    items.push({ type:'section', text:'부유선 합계' });
     const orderKeys = [
       ...FLEET_POOL_A.map(([k]) => k),
       ...FLEET_POOL_B.map(([k]) => k),
@@ -123,15 +108,11 @@ export const FleetRandomBox = {
       const c = byShip.get(k) || 0;
       if (c > 0 && !seen.has(k)) {
         seen.add(k);
-        items.push({
-          name: SHIP_LABEL[k],
-          qty: `${c}개`,
-          img: SHIP_IMG[k],
-        });
+        items.push({ name: SHIP_LABEL[k], qty:c, img: SHIP_IMG[k] });
       }
     }
 
-    // pills (상단 뱃지)
+    // 상단 뱃지
     const pills = [
       `총 ${n}회`,
       `전설 ${byTier.get('전설')}개`,
@@ -140,11 +121,11 @@ export const FleetRandomBox = {
       `일반 ${byTier.get('일반')}개`,
     ];
 
-    // 카톡 복사용 텍스트
+    // 복사용 텍스트
     const lines = [];
-    lines.push('— 제작도 합계 —');
+    lines.push('— 제작도 —');
     for (const t of TIER_ORDER) lines.push(`${t} ${byTier.get(t)}개`);
-    lines.push('— 부유선 합계 —');
+    lines.push('— 부유선 —');
     for (const k of orderKeys) {
       const c = byShip.get(k) || 0;
       if (c > 0) lines.push(`${SHIP_LABEL[k]} ${c}개`);
