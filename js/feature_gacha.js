@@ -1,6 +1,6 @@
 // js/feature_gacha.js
-// 2025 보름달 상자 가챠 (최대 100회) – 결과 카톡 복사 지원
-// - 결과 표시: 같은 계열(예: '암시장 티켓 N개')은 숫자 합산해서 최종값만 표기
+// 2025 보름달 상자 가챠 (이미지 결과 표시, 최종 합산 결과)
+// assets/img/*.jpg 사용
 
 export function mountGacha(appRoot){
   appRoot.innerHTML = `
@@ -57,182 +57,149 @@ export function mountGacha(appRoot){
     </section>
   `;
 
-  // ===== 확률 테이블 (합계 100%) =====
+  // === 이미지 매핑 ===
+  const IMG_SRC = {
+    "SSR+ 동료 선택 상자": "./assets/img/ssr_plus_box_sel.jpg",
+    "특별 시동무기 세트 선택 상자": "./assets/img/special_weapon_set_box_sel.jpg",
+    "암시장 티켓": "./assets/img/black_market_ticket.jpg",
+    "일반 소환 티켓": "./assets/img/normal_ticket.jpg",
+    "빛나는 레볼루션 조각": "./assets/img/revol_red.jpg",
+    "레볼루션 조각": "./assets/img/revol_green.jpg",
+    "레볼루션 원석": "./assets/img/revol_core.jpg",
+    "SSR+ 영혼석": "./assets/img/ssr_plus_stone.jpg",
+    "SSR 영혼석": "./assets/img/ssr_stone.jpg",
+    "시동 주사위": "./assets/img/dice_red.jpg",
+    "영혼 주사위": "./assets/img/dice_blue.jpg",
+    "고급 신해의 숫돌": "./assets/img/whetstone.jpg",
+    "마스터키": "./assets/img/key.jpg",
+    "성장 재화 선택 상자(24h)": "./assets/img/potion_sel.jpg",
+    "A등급 시동무기 선택상자": "./assets/img/weapon_box_sel.jpg",
+  };
+
+  // === 확률 테이블 ===
   const POOL = [
     ["SSR+ 동료 선택 상자 1개", 0.25],
     ["특별 시동무기 세트 선택 상자 1개", 3.00],
-    ["암시장 티켓 30개", 0.25],
-    ["암시장 티켓 20개", 0.50],
-    ["암시장 티켓 15개", 3.00],
-    ["암시장 티켓 10개", 5.00],
-    ["일반 소환 티켓 100개", 0.25],
-    ["일반 소환 티켓 50개", 0.50],
-    ["일반 소환 티켓 30개", 3.00],
-    ["일반 소환 티켓 20개", 5.00],
-    ["빛나는 레볼루션 조각 10,000개", 0.25],
-    ["빛나는 레볼루션 조각 5,000개", 0.50],
-    ["빛나는 레볼루션 조각 3,000개", 3.00],
-    ["빛나는 레볼루션 조각 1,000개", 5.00],
-    ["레볼루션 조각 1,200개", 0.75],
-    ["레볼루션 조각 500개", 5.00],
-    ["레볼루션 원석 100개", 0.50],
-    ["레볼루션 원석 20개", 3.00],
-    ["SSR+ 영혼석 60개", 1.00],
-    ["SSR+ 영혼석 30개", 5.00],
+    ["암시장 티켓 30개", 0.25], ["암시장 티켓 20개", 0.50],
+    ["암시장 티켓 15개", 3.00], ["암시장 티켓 10개", 5.00],
+    ["일반 소환 티켓 100개", 0.25], ["일반 소환 티켓 50개", 0.50],
+    ["일반 소환 티켓 30개", 3.00], ["일반 소환 티켓 20개", 5.00],
+    ["빛나는 레볼루션 조각 10,000개", 0.25], ["빛나는 레볼루션 조각 5,000개", 0.50],
+    ["빛나는 레볼루션 조각 3,000개", 3.00], ["빛나는 레볼루션 조각 1,000개", 5.00],
+    ["레볼루션 조각 1,200개", 0.75], ["레볼루션 조각 500개", 5.00],
+    ["레볼루션 원석 100개", 0.50], ["레볼루션 원석 20개", 3.00],
+    ["SSR+ 영혼석 60개", 1.00], ["SSR+ 영혼석 30개", 5.00],
     ["SSR 영혼석 60개", 5.00],
-    ["시동 주사위 10개", 0.75],
-    ["시동 주사위 3개", 5.00],
-    ["영혼 주사위 10개", 3.00],
-    ["영혼 주사위 5개", 5.00],
-    ["고급 신해의 숫돌 30개", 6.00],
-    ["고급 신해의 숫돌 20개", 6.00],
+    ["시동 주사위 10개", 0.75], ["시동 주사위 3개", 5.00],
+    ["영혼 주사위 10개", 3.00], ["영혼 주사위 5개", 5.00],
+    ["고급 신해의 숫돌 30개", 6.00], ["고급 신해의 숫돌 20개", 6.00],
     ["고급 신해의 숫돌 10개", 6.00],
-    ["마스터키 250개", 6.00],
-    ["마스터키 200개", 6.00],
-    ["성장 재화 선택 상자(24h) 20개", 0.50],
-    ["성장 재화 선택 상자(24h) 10개", 3.00],
+    ["마스터키 250개", 6.00], ["마스터키 200개", 6.00],
+    ["성장 재화 선택 상자(24h) 20개", 0.50], ["성장 재화 선택 상자(24h) 10개", 3.00],
     ["A등급 시동무기 선택상자 10개", 3.00],
   ];
-  const CDF = buildCDF(POOL);
 
-  // ===== 엘리먼트 =====
   const q = sel => appRoot.querySelector(sel);
-  const inputBackdrop  = q('#inputBackdrop');
+  const inputBackdrop = q('#inputBackdrop');
   const resultBackdrop = q('#resultBackdrop');
-  const drawCountEl    = q('#drawCount');
-  const resultList     = q('#resultList');
-  const summaryPills   = q('#summaryPills');
+  const drawCountEl = q('#drawCount');
+  const resultList = q('#resultList');
+  const summaryPills = q('#summaryPills');
 
-  // ===== 이벤트 바인딩 =====
   q('#imgFullMoon').addEventListener('click', openInput);
   q('#btnFullMoonOpen').addEventListener('click', openInput);
   q('#btnHome').addEventListener('click', ()=> location.hash='');
-
   q('#cancelInput').addEventListener('click', ()=> hide(inputBackdrop));
   q('#confirmInput').addEventListener('click', runGacha);
   q('#closeResult').addEventListener('click', ()=> hide(resultBackdrop));
   q('#copyResult').addEventListener('click', copyResult);
-
-  // 배경 클릭으로 닫기
   [inputBackdrop, resultBackdrop].forEach(bd=>{
-    bd.addEventListener('click', (e)=>{ if(e.target===bd) hide(bd); });
+    bd.addEventListener('click', e=>{ if(e.target===bd) hide(bd); });
   });
-  // Enter로 실행
-  drawCountEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter') runGacha(); });
+  drawCountEl.addEventListener('keydown', e=>{ if(e.key==='Enter') runGacha(); });
 
   function openInput(){
     drawCountEl.value = '';
     show(inputBackdrop);
-    setTimeout(()=>drawCountEl.focus(), 20);
+    setTimeout(()=>drawCountEl.focus(),20);
   }
-  function show(el){ el.classList.remove('gacha-hidden'); el.style.display='flex'; }
+  function show(el){ el.style.display='flex'; el.classList.remove('gacha-hidden'); }
   function hide(el){ el.style.display='none'; el.classList.add('gacha-hidden'); }
 
   function buildCDF(pool){
     const out=[]; let acc=0;
     for(const [name,p] of pool){ acc+=p; out.push([name,acc]); }
-    out[out.length-1][1]=100; // 오차 방지
+    out[out.length-1][1]=100;
     return out;
   }
+  const CDF=buildCDF(POOL);
+
   function drawOnce(){
     const r=Math.random()*100;
     for(const [name,acc] of CDF) if(r<acc) return name;
     return CDF[CDF.length-1][0];
   }
+
   function simulate(n){
     const m=new Map();
-    for(let i=0;i<n;i++){
-      const it=drawOnce();
-      m.set(it,(m.get(it)||0)+1);
-    }
-    return m; // Map<"항목명(숫자 포함)", 횟수>
+    for(let i=0;i<n;i++){ const it=drawOnce(); m.set(it,(m.get(it)||0)+1); }
+    return m;
   }
 
-  let lastCopyText = '';
-
+  let lastCopyText='';
   function runGacha(){
-    const n = parseInt(drawCountEl.value,10);
-    if(!(n>=1 && n<=100)){
-      alert('뽑기 개수는 1~100 사이의 정수만 가능합니다.');
-      drawCountEl.focus(); return;
+    const n=parseInt(drawCountEl.value,10);
+    if(!(n>=1&&n<=100)){
+      alert('뽑기 개수는 1~100 사이 정수만 가능합니다.'); return;
     }
     hide(inputBackdrop);
-
-    const counts = simulate(n);
-    renderResult(n, counts);
+    renderResult(n, simulate(n));
     show(resultBackdrop);
   }
 
-  // === 결과 출력: 같은 계열은 숫자 합산해서 최종만 표시 ===
-  function renderResult(total, map){
-    resultList.innerHTML = '';
-    summaryPills.innerHTML = '';
+  function renderResult(total,map){
+    resultList.innerHTML=''; summaryPills.innerHTML='';
 
-    // 1) 정의 순서 기반으로 이번 실행에 등장한 항목만 수집
     const ordered=[];
-    for(const [name] of POOL){
-      const c = map.get(name)||0;
-      if(c>0) ordered.push([name,c]); // ["암시장 티켓 15개", 1] ...
-    }
+    for(const [name] of POOL){ const c=map.get(name)||0; if(c>0) ordered.push([name,c]); }
 
-    // 2) 같은 "계열"로 합치기
-    //   - 규칙: 항목명 마지막의 "숫자+개"를 추출하여 base와 수량을 분리
-    //     예) "암시장 티켓 15개" -> base="암시장 티켓", unit=15
-    //         최종 합계 = unit * count
-    const merged = new Map(); // Map<base, totalQuantity>
-    const orderOfBase = [];   // 출력 순서 유지를 위한 base 등장 순서
+    // 합산
+    const merged=new Map(), orderOfBase=[];
     for(const [name,count] of ordered){
-      const m = name.match(/^(.*?)(\d[\d,]*)개$/); // 끝이 "123개"
+      const m=name.match(/^(.*?)(\d[\d,]*)개$/);
       if(!m){
-        // 숫자 없는 고정형 항목은 "개수" 그대로(횟수 단위) 표시를 위해 1개=개수 취급
-        const base = name.trim();
+        const base=name.trim();
         if(!merged.has(base)) orderOfBase.push(base);
-        merged.set(base, (merged.get(base)||0) + count); // ex) "SSR+ 동료 선택 상자 1개" 같은 것도 1*count 형태지만 숫자 없음 → 횟수 누적
+        merged.set(base,(merged.get(base)||0)+count);
         continue;
       }
-      const base = m[1].trim();
-      const unit = parseInt(m[2].replace(/,/g,''),10) || 0;
-      const add  = unit * count;
+      const base=m[1].trim();
+      const unit=parseInt(m[2].replace(/,/g,''),10)||0;
+      const add=unit*count;
       if(!merged.has(base)) orderOfBase.push(base);
-      merged.set(base, (merged.get(base)||0) + add);
+      merged.set(base,(merged.get(base)||0)+add);
     }
 
-    // 3) 요약 정보
-    //    희귀 기준: base 이름 기준으로 카운트(원하면 조정 가능)
-    const rareSet = new Set([
-      "SSR+ 동료 선택 상자",
-      "암시장 티켓",
-      "일반 소환 티켓",
-      "빛나는 레볼루션 조각",
-      "SSR+ 영혼석"
-    ]);
-    let rareKinds = 0;
-    for(const base of orderOfBase){
-      if(rareSet.has(base)) rareKinds++;
-    }
+    const rareSet=new Set(["SSR+ 동료 선택 상자","암시장 티켓","일반 소환 티켓","빛나는 레볼루션 조각","SSR+ 영혼석"]);
+    let rareKinds=0;
+    for(const base of orderOfBase) if(rareSet.has(base)) rareKinds++;
 
     summaryPills.append(pill(`총 ${total}회`));
     summaryPills.append(pill(`종류 ${orderOfBase.length}개`));
     if(rareKinds>0) summaryPills.append(pill(`희귀 ${rareKinds}종`));
 
-    // 4) 결과 리스트 (정의 순서 기반 base 등장 순서로 출력)
     for(const base of orderOfBase){
-      const qty = merged.get(base);
-      // 숫자 없는 항목은 "개" 대신 "개" 그대로(=횟수) 표기
-      // 예) "SSR+ 동료 선택 상자"는 개수 자체가 의미(선택 상자 1개 단위) → "SSR+ 동료 선택 상자 1개"
-      resultList.append(row(`${base} ${Number(qty).toLocaleString()}개`, ''));
+      const qty=merged.get(base);
+      resultList.append(rowWithImage(base,qty));
     }
 
-    // 5) 복사용 텍스트
-    const now = new Date().toLocaleString('ko-KR',{hour12:false});
-    const lines = [];
+    const now=new Date().toLocaleString('ko-KR',{hour12:false});
+    const lines=[];
     lines.push(`[2025 보름달 상자] 뽑기 결과`);
     lines.push(`총 ${total}회 | 종류 ${orderOfBase.length}개${rareKinds>0?` | 희귀 ${rareKinds}종`:''}`);
-    for(const base of orderOfBase){
-      lines.push(`- ${base} ${Number(merged.get(base)).toLocaleString()}개`);
-    }
+    for(const base of orderOfBase) lines.push(`- ${base} ${merged.get(base).toLocaleString()}개`);
     lines.push(`(생성: ${now})`);
-    lastCopyText = lines.join('\n');
+    lastCopyText=lines.join('\n');
   }
 
   function copyResult(){
@@ -241,18 +208,29 @@ export function mountGacha(appRoot){
     }).catch(()=>{
       const ta=document.createElement('textarea');
       ta.value=lastCopyText; document.body.appendChild(ta);
-      ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-      alert('복사 완료! 카톡에 붙여넣기 하세요.');
+      ta.select(); document.execCommand('copy');
+      document.body.removeChild(ta);
+      alert('복사 완료!');
     });
   }
 
-  function pill(text){
-    const el=document.createElement('div'); el.className='gacha-pill'; el.textContent=text; return el;
-  }
-  function row(left,right){
-    const el=document.createElement('div'); el.className='gacha-row';
-    const l=document.createElement('div'); l.textContent=left;
-    const r=document.createElement('div'); r.textContent=right;
-    el.append(l,r); return el;
+  function pill(t){ const el=document.createElement('div'); el.className='gacha-pill'; el.textContent=t; return el; }
+
+  function rowWithImage(base,qty){
+    const el=document.createElement('div');
+    el.className='gacha-row';
+    const left=document.createElement('div'); left.className='gacha-item';
+    const img=document.createElement('img');
+    img.className='gacha-icon';
+    img.src=IMG_SRC[base]||'';
+    img.alt=base;
+    const span=document.createElement('span');
+    span.textContent=`${base}`;
+    left.append(img,span);
+
+    const right=document.createElement('div');
+    right.textContent=`${Number(qty).toLocaleString()}개`;
+    el.append(left,right);
+    return el;
   }
 }
