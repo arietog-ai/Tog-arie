@@ -1,13 +1,21 @@
-// js/app.js  (v=20251005-6)  — estimator 스텁 포함, 모든 import 존재 보장
+// js/app.js  (v=20251005-7)
+// — 기존 기능: 개척상점, 시동무기(뽑기/강화/세공), 홈 허브
+// — 신규 추가: 가챠(#gacha) 라우트
+
 import { mountShop } from './hardmode_shop.js?v=20251005-3';
 import { mountStarter } from './feature_starter.js?v=20251005-6';
 import { mountStarterEstimator } from './feature_starter_estimator.js?v=20251005-6';
 import { mountStarterReforge } from './feature_starter_reforge.js?v=20251005-6';
 import { mountDraw, resetDrawSession } from './feature_draw.js?v=20251005-3';
 
+// ✅ 신규 가챠 라우트
+import { mountGacha } from './feature_gacha.js?v=20251005-1';
+
 const app = document.getElementById('app');
 
-function scrollTop(){ try{ window.scrollTo({top:0, behavior:'instant'}); }catch(_){} }
+function scrollTop(){
+  try{ window.scrollTo({top:0, behavior:'instant'}); }catch(_){}
+}
 
 function renderHome(){
   app.innerHTML = `
@@ -16,6 +24,7 @@ function renderHome(){
       <div class="btn-wrap">
         <button class="hero-btn" data-route="shop">개척상점계산기</button>
         <button class="hero-btn" data-route="gear">시동무기</button>
+        <button class="hero-btn" data-route="gacha">가챠 뽑기</button>
         <button class="hero-btn" disabled>기능생성예정1</button>
         <button class="hero-btn" disabled>기능생성예정2</button>
         <button class="hero-btn" disabled>기능생성예정3</button>
@@ -28,6 +37,7 @@ function renderHome(){
   `;
   app.querySelector('[data-route="shop"]').addEventListener('click', ()=> navigate('shop'));
   app.querySelector('[data-route="gear"]').addEventListener('click', ()=> navigate('gear'));
+  app.querySelector('[data-route="gacha"]').addEventListener('click', ()=> navigate('gacha'));
 }
 
 function renderGearHub(){
@@ -59,22 +69,25 @@ export function navigate(route){
   else if(route==='starter')          location.hash = '#starter';
   else if(route==='starter/estimator')location.hash = '#starter/estimator';
   else if(route==='starter/reforge')  location.hash = '#starter/reforge';
+  else if(route==='gacha')            location.hash = '#gacha';          // ✅ 추가
   else                                location.hash = ''; // home
 }
 
 function renderFromHash(){
   switch(location.hash){
-    case '#shop':             app.innerHTML=''; mountShop(app); break;
-    case '#gear':             renderGearHub(); break;
-    case '#draw':             app.innerHTML=''; mountDraw(app); break;
-    case '#starter':          app.innerHTML=''; mountStarter(app); break;
-    case '#starter/estimator':app.innerHTML=''; mountStarterEstimator(app); break;
-    case '#starter/reforge':  app.innerHTML=''; mountStarterReforge(app); break;
+    case '#shop':              app.innerHTML=''; mountShop(app); break;
+    case '#gear':              renderGearHub(); break;
+    case '#draw':              app.innerHTML=''; mountDraw(app); break;
+    case '#starter':           app.innerHTML=''; mountStarter(app); break;
+    case '#starter/estimator': app.innerHTML=''; mountStarterEstimator(app); break;
+    case '#starter/reforge':   app.innerHTML=''; mountStarterReforge(app); break;
+    case '#gacha':             app.innerHTML=''; mountGacha(app); break; // ✅ 추가
     case '':
-    case '#':                 renderHome(); break;
-    default:                  location.hash=''; return;
+    case '#':                  renderHome(); break;
+    default:                   location.hash=''; return;
   }
   scrollTop();
 }
+
 window.addEventListener('hashchange', renderFromHash, { passive:true });
 document.addEventListener('DOMContentLoaded', renderFromHash, { passive:true });
