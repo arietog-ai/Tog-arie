@@ -1,6 +1,4 @@
-// js/app.js  (v=20251005-7)
-// — 기존 기능: 개척상점, 시동무기(뽑기/강화/세공), 홈 허브
-// — 신규 추가: 가챠(#gacha) 라우트
+// js/app.js  (v=20251005-8)  — gacha 동적 import 적용
 
 import { mountShop } from './hardmode_shop.js?v=20251005-3';
 import { mountStarter } from './feature_starter.js?v=20251005-6';
@@ -8,8 +6,14 @@ import { mountStarterEstimator } from './feature_starter_estimator.js?v=20251005
 import { mountStarterReforge } from './feature_starter_reforge.js?v=20251005-6';
 import { mountDraw, resetDrawSession } from './feature_draw.js?v=20251005-3';
 
-// ✅ 신규 가챠 라우트
-import { mountGacha } from './feature_gacha.js?v=20251005-1';
+// ✅ 가챠는 동적 import (파일 누락/경로 오류여도 홈은 정상 동작)
+let _mountGacha = null;
+async function ensureGacha(){
+  if(_mountGacha) return _mountGacha;
+  const mod = await import('./feature_gacha.js?v=20251005-2');
+  _mountGacha = mod.mountGacha;
+  return _mountGacha;
+}
 
 const app = document.getElementById('app');
 
@@ -69,7 +73,7 @@ export function navigate(route){
   else if(route==='starter')          location.hash = '#starter';
   else if(route==='starter/estimator')location.hash = '#starter/estimator';
   else if(route==='starter/reforge')  location.hash = '#starter/reforge';
-  else if(route==='gacha')            location.hash = '#gacha';          // ✅ 추가
+  else if(route==='gacha')            location.hash = '#gacha';
   else                                location.hash = ''; // home
 }
 
@@ -81,13 +85,24 @@ function renderFromHash(){
     case '#starter':           app.innerHTML=''; mountStarter(app); break;
     case '#starter/estimator': app.innerHTML=''; mountStarterEstimator(app); break;
     case '#starter/reforge':   app.innerHTML=''; mountStarterReforge(app); break;
-    case '#gacha':             app.innerHTML=''; mountGacha(app); break; // ✅ 추가
+    case '#gacha':
+      app.innerHTML='';
+      ensureGacha()
+        .then(fn => fn(app))
+        .catch(err => {
+          app.innerHTML = `<section class="container"><div class="card">
+            <h3 style="margin-top:0">가챠 모듈 로드 실패</h3>
+            <p class="muted">feature_gacha.js 또는 하위 파일 경로/이름을 확인하세요.</p>
+            <pre style="white-space:pre-wrap;font-size:12px;color:#9fb0c6">${String(err)}</pre>
+            <button class="hero-btn" onclick="location.hash=''">← 홈으로</button>
+          </div></section>`;
+        });
+      break;
     case '':
     case '#':                  renderHome(); break;
     default:                   location.hash=''; return;
   }
   scrollTop();
 }
-
 window.addEventListener('hashchange', renderFromHash, { passive:true });
 document.addEventListener('DOMContentLoaded', renderFromHash, { passive:true });
