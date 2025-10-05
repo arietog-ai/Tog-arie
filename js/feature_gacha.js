@@ -1,160 +1,174 @@
-// js/feature_gacha.js
-// 가챠 UI – 등록된 가챠 모듈을 자동으로 나열/실행
+/* js/feature_gacha.js
+   부유선 랜덤상자 → (1단계) 제작도 뽑기 → (2단계) 제작도별 확률로 부유선 뽑기
+   - 제작도 개수와 부유선 결과가 1:1로 항상 일치하도록 고정
+   - 확률표는 너가 제공한 스샷 기준(전설/희귀/고급/일반)으로 반영
+*/
 
-import { FullMoonBox } from './full_moon_box.js';
-import { FleetRandomBox } from './fleet_box.js';
+(function () {
+  // -------------------- 메타/리소스 --------------------
+  const BLUEPRINT_META = {
+    legendary: { name: "전설 제작도", icon: "assets/img/fleet_blueprint_legendary.jpg" },
+    rare:      { name: "희귀 제작도", icon: "assets/img/fleet_blueprint_rare.jpg" },
+    advanced:  { name: "고급 제작도", icon: "assets/img/fleet_blueprint_advanced.jpg" },
+    common:    { name: "일반 제작도", icon: "assets/img/fleet_blueprint_common.jpg" },
+  };
 
-export function mountGacha(appRoot){
-  // 원하는 가챠를 이 배열에 등록만 하면 UI 자동 생성
-  const GACHAS = [ FullMoonBox, FleetRandomBox ];
+  // 표시명 & 아이콘(아이콘 경로는 네가 쓰던 경로 유지해도 됨)
+  const FLEET_META = {
+    vigilantia:  { name: "비질란티아", icon: "assets/fleet/vigilantia.jpg" },
+    aquila_nova: { name: "아퀼라 노바", icon: "assets/fleet/aquila_nova.jpg" },
+    albatross:   { name: "알바트로스", icon: "assets/fleet/albatross.jpg" },
+    epervier:    { name: "에페르비에", icon: "assets/fleet/epervier.jpg" },
+    libellula:   { name: "리벨룰라", icon: "assets/fleet/libellula.jpg" },
+    pathfinder:  { name: "패스파인더", icon: "assets/fleet/pathfinder.jpg" },
+    glider:      { name: "글라이더", icon: "assets/fleet/glider.jpg" },
+    oculus:      { name: "오큘루스", icon: "assets/fleet/oculus.jpg" },
+  };
 
-  appRoot.innerHTML = `
-    <section class="gacha-card">
-      <h1>가챠 뽑기</h1>
-      <p class="gacha-muted">원하는 상자를 눌러 뽑기 개수를 입력하세요. (최대 100개)</p>
-      <div id="gachaListTiles" class="gacha-tiles"></div>
+  // -------------------- 확률표 --------------------
+  // 1) 박스에서 제작도 희귀도 나올 확률(필요 시 네가 쓰는 값 유지 가능)
+  const BP_RATE = { legendary: 5, rare: 20, advanced: 50, common: 25 }; // (%)
 
-      <!-- 입력 팝업 -->
-      <div class="gacha-backdrop gacha-hidden" id="inputBackdrop">
-        <div class="gacha-modal" role="dialog" aria-modal="true" aria-labelledby="inputTitle">
-          <header>
-            <h2 id="inputTitle">뽑기 개수 입력</h2>
-            <div class="gacha-muted">한 번에 최대 <b>100개</b>까지 가능합니다.</div>
-          </header>
-          <div class="gacha-field">
-            <label for="drawCount" class="gacha-muted">개수</label>
-            <input id="drawCount" class="gacha-input" type="number" min="1" max="100" step="1" inputmode="numeric" placeholder="예: 10" />
-            <span class="gacha-pill" id="boxBadge">상자 선택</span>
-          </div>
-          <div class="gacha-footer">
-            <button class="gacha-btn" id="cancelInput">취소</button>
-            <button class="gacha-btn gacha-btn-primary" id="confirmInput">뽑기 실행</button>
-          </div>
-        </div>
-      </div>
+  // 2) 제작도별 부유선 확률 — 스샷 기준 최종 정정본
+  const FLEET_POOL_BY_BLUEPRINT = {
+    legendary: { // 전설 제작도
+      vigilantia: 50.0,
+      aquila_nova: 50.0,
+    },
+    rare: { // 희귀(레어)
+      vigilantia: 5.0,
+      aquila_nova: 5.0,
+      albatross: 10.0,
+      epervier: 10.0,
+      libellula: 15.0,
+      pathfinder: 15.0,
+      glider: 20.0,
+      oculus: 20.0,
+    },
+    advanced: { // 고급(어드밴스드)
+      vigilantia: 1.0,
+      aquila_nova: 1.0,
+      albatross: 9.0,
+      epervier: 9.0,
+      libellula: 15.0,
+      pathfinder: 15.0,
+      glider: 25.0,
+      oculus: 25.0,
+    },
+    common: { // 일반
+      vigilantia: 0.05,
+      aquila_nova: 0.05,
+      albatross: 5.0,
+      epervier: 5.0,
+      libellula: 10.0,
+      pathfinder: 10.0,
+      glider: 34.95,
+      oculus: 34.95,
+    },
+  };
 
-      <!-- 결과 팝업 -->
-      <div class="gacha-backdrop gacha-hidden" id="resultBackdrop">
-        <div class="gacha-modal" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
-          <header>
-            <h2 id="resultTitle">결과</h2>
-            <div class="gacha-muted">“복사”를 눌러 카톡에 붙여넣기 하세요.</div>
-          </header>
-          <div class="gacha-pills" id="summaryPills"></div>
-          <div class="gacha-list" id="resultList" aria-live="polite"></div>
-          <div class="gacha-footer">
-            <button class="gacha-btn" id="closeResult">닫기</button>
-            <button class="gacha-btn gacha-btn-primary" id="copyResult">복사</button>
-          </div>
-        </div>
-      </div>
-    </section>
-  `;
-
-  // 타일 생성
-  const tiles = appRoot.querySelector('#gachaListTiles');
-  GACHAS.forEach((g, idx) => tiles.append(makeTile(g, idx)));
-
-  // 팝업 & 결과 제어
-  const q = s => appRoot.querySelector(s);
-  const inputBackdrop  = q('#inputBackdrop');
-  const resultBackdrop = q('#resultBackdrop');
-  const drawCountEl    = q('#drawCount');
-  const resultList     = q('#resultList');
-  const summaryPills   = q('#summaryPills');
-  const boxBadge       = q('#boxBadge');
-  const resultTitleEl  = q('#resultTitle');
-
-  let current = null;     // 현재 선택한 가챠 모듈
-  let lastCopyText = '';
-
-  function openInput(mod){
-    current = mod;
-    boxBadge.textContent = mod.title;
-    drawCountEl.value = '';
-    show(inputBackdrop);
-    setTimeout(()=> drawCountEl.focus(), 20);
+  // -------------------- 유틸 --------------------
+  function weightedPick(table) {
+    // table: {key: weight, ...}  (weight 합이 100이 아니어도 됨)
+    const entries = Object.entries(table);
+    const total = entries.reduce((s, [, w]) => s + Number(w || 0), 0);
+    let r = Math.random() * total;
+    for (const [k, w] of entries) {
+      r -= Number(w || 0);
+      if (r < 0) return k;
+    }
+    return entries[entries.length - 1][0]; // 안전장치
   }
 
-  function run(){
-    const n = parseInt(drawCountEl.value, 10);
-    if (!(n >= 1 && n <= 100)) { alert('뽑기 개수는 1~100 사이 정수만 가능합니다.'); return; }
-    hide(inputBackdrop);
+  function plus(map, key, n = 1) {
+    map[key] = (map[key] || 0) + n;
+  }
 
-    const { items, pills, copy } = current.run(n);
+  // -------------------- 핵심 로직 --------------------
+  // 1단계: 박스 → 제작도 희귀도 카운트
+  function rollBlueprintBuckets(times) {
+    const buckets = { legendary: 0, rare: 0, advanced: 0, common: 0 };
+    for (let i = 0; i < times; i++) {
+      const bp = weightedPick(BP_RATE);
+      buckets[bp] += 1;
+    }
+    return buckets;
+  }
 
-    // 결과 렌더
-    resultTitleEl.textContent = `${current.title} 결과`;
-    summaryPills.innerHTML = '';
-    resultList.innerHTML = '';
+  // 2단계: 제작도별로, 해당 확률표로 부유선 뽑기 (제작도 개수만큼 정확히 뽑음)
+  function rollFleetsFromBlueprints(bpCounts) {
+    const fleetTotal = {};                       // 전체 합계 (아이콘 리스트용)
+    const fleetByBP = {                          // 제작도별 상세
+      legendary: {}, rare: {}, advanced: {}, common: {},
+    };
 
-    pills.forEach(t => summaryPills.append(pill(t)));
+    for (const bp of ["legendary", "rare", "advanced", "common"]) {
+      const count = Number(bpCounts[bp] || 0);
+      if (!count) continue;
 
-    items.forEach(it => {
-      if (it.type === 'section') resultList.append(section(it.text));
-      else resultList.append(rowWithImage(it.name, it.qty, it.img));
+      const table = FLEET_POOL_BY_BLUEPRINT[bp];
+      for (let i = 0; i < count; i++) {
+        const key = weightedPick(table);         // ← 제작도 1장당 1회!
+        plus(fleetTotal, key, 1);
+        plus(fleetByBP[bp], key, 1);
+      }
+    }
+    return { fleetTotal, fleetByBP };
+  }
+
+  // -------------------- 결과 구성(텍스트/아이템 리스트) --------------------
+  function buildCopyText(total, bpCounts, fleetTotal) {
+    const lines = [];
+    lines.push("부유선 랜덤상자 결과");
+    lines.push("“복사”를 눌러 카톡에 붙여넣기 하세요.\n");
+
+    const bpLine = (k, label) => `${label} ${Number(bpCounts[k] || 0)}개`;
+    lines.push(`총 ${total}회`);
+    lines.push(bpLine("legendary", "전설"));
+    lines.push(bpLine("rare", "희귀"));
+    lines.push(bpLine("advanced", "고급"));
+    lines.push(bpLine("common", "일반"));
+    lines.push("");
+
+    // 부유선 합계(이름 가나다 유지)
+    const order = [
+      "vigilantia","aquila_nova","albatross","epervier",
+      "libellula","pathfinder","glider","oculus"
+    ];
+    order.forEach(k => {
+      const cnt = fleetTotal[k] || 0;
+      if (cnt > 0) lines.push(`${FLEET_META[k].name} ${cnt}개`);
     });
 
-    lastCopyText = copy;
-    show(resultBackdrop);
+    return lines.join("\n");
   }
 
-  function copy(){
-    navigator.clipboard.writeText(lastCopyText).then(()=>{
-      alert('복사 완료! 카톡에 붙여넣기 하세요.');
-    }).catch(()=>{
-      const ta=document.createElement('textarea');
-      ta.value=lastCopyText; document.body.appendChild(ta);
-      ta.select(); document.execCommand('copy');
-      document.body.removeChild(ta);
-      alert('복사 완료!');
-    });
+  // -------------------- 외부에서 호출하는 메인 함수 --------------------
+  // (A) times만 주면 1→2단계 모두 수행
+  // (B) 이미 만들어둔 제작도 카운트를 넘기면 2단계만 수행
+  function runFleetRandomBox({ times = 0, blueprintCounts = null } = {}) {
+    const total = Number(times || 0);
+    const bpCounts = blueprintCounts || rollBlueprintBuckets(total);
+    const { fleetTotal, fleetByBP } = rollFleetsFromBlueprints(bpCounts);
+
+    // 검증: 제작도 합계 == 부유선 총합
+    const bpSum = Object.values(bpCounts).reduce((s, n) => s + Number(n || 0), 0);
+    const fleetSum = Object.values(fleetTotal).reduce((s, n) => s + Number(n || 0), 0);
+
+    return {
+      total: total || bpSum,
+      blueprintCounts: bpCounts,
+      fleetTotal,
+      fleetByBP,
+      copyText: buildCopyText(total || bpSum, bpCounts, fleetTotal),
+      sanityCheck: { blueprintSum: bpSum, fleetSum }, // 둘이 항상 같아야 함
+    };
   }
 
-  // 이벤트
-  q('#cancelInput').addEventListener('click', ()=> hide(inputBackdrop));
-  q('#confirmInput').addEventListener('click', run);
-  q('#closeResult').addEventListener('click', ()=> hide(resultBackdrop));
-  q('#copyResult').addEventListener('click', copy);
-  [inputBackdrop, resultBackdrop].forEach(bd=>{
-    bd.addEventListener('click', e => { if (e.target === bd) hide(bd); });
-  });
-  drawCountEl.addEventListener('keydown', e=>{ if(e.key==='Enter') run(); });
-
-  // helpers
-  function show(el){ el.style.display='flex'; el.classList.remove('gacha-hidden'); }
-  function hide(el){ el.style.display='none'; el.classList.add('gacha-hidden'); }
-
-  function makeTile(mod, idx){
-    const wrap = document.createElement('div');
-    wrap.className = 'gacha-tile';
-    wrap.innerHTML = `
-      <img src="${mod.thumb}" alt="${mod.title}" onerror="this.style.opacity=.2" />
-      <div>
-        <div style="font-weight:800;font-size:18px;margin-bottom:6px">${mod.title}</div>
-        <p class="gacha-muted" style="margin-bottom:10px">${mod.description||''}</p>
-        <div class="gacha-actions">
-          <button class="gacha-btn" data-open="${idx}">뽑기 시작</button>
-        </div>
-      </div>
-    `;
-    wrap.querySelector('[data-open]').addEventListener('click', ()=> openInput(mod));
-    wrap.querySelector('img').addEventListener('click', ()=> openInput(mod));
-    return wrap;
-  }
-
-  function pill(text){ const el=document.createElement('div'); el.className='gacha-pill'; el.textContent=text; return el; }
-
-  function section(text){ const el=document.createElement('div'); el.className='gacha-section'; el.textContent=text; return el; }
-
-  function rowWithImage(label, qty, src){
-    const el=document.createElement('div'); el.className='gacha-row';
-    const left=document.createElement('div'); left.className='gacha-item';
-    const img=document.createElement('img'); img.className='gacha-icon'; img.src=src||''; img.alt=label;
-    const span=document.createElement('span'); span.textContent=label;
-    left.append(img,span);
-    const right=document.createElement('div'); right.textContent=`${Number(qty).toLocaleString()}개`;
-    el.append(left,right);
-    return el;
-  }
-}
+  // -------------------- UI 바인딩 예시 --------------------
+  // 기존 앱에서 사용 중인 전역 훅에 연결(필요한 곳에서 FeatureGacha.runFleetRandomBox 호출)
+  window.FeatureGacha = {
+    runFleetRandomBox,
+    META: { BLUEPRINT_META, FLEET_META },
+  };
+})();
