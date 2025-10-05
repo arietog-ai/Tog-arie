@@ -1,4 +1,4 @@
-// js/app.js  (v=20251005-4)
+// js/app.js  (v=20251005-8)
 
 import { mountShop } from './hardmode_shop.js?v=20251005-3';
 import { mountStarter } from './feature_starter.js?v=20251005-6';
@@ -6,28 +6,8 @@ import { mountStarterEstimator } from './feature_starter_estimator.js?v=20251005
 import { mountStarterReforge } from './feature_starter_reforge.js?v=20251005-6';
 import { mountDraw, resetDrawSession } from './feature_draw.js?v=20251005-3';
 
-// 가챠는 동적 import (파일 누락/경로 오류여도 홈은 정상)
-let _mountGacha = null;
-async function ensureGacha(){
-  if(_mountGacha) return _mountGacha;
-  const candidates = [
-    './feature_gacha.js?v=20251005-4',
-    './feature_gacha.js',
-  ];
-  let lastErr=null, tried=[];
-  for(const url of candidates){
-    try{
-      const mod = await import(url);
-      _mountGacha = mod.mountGacha;
-      return _mountGacha;
-    }catch(e){ lastErr=e; tried.push(url); }
-  }
-  const detail = new Error(
-    `Tried:\n${tried.map(u=>'- '+new URL(u, import.meta.url).href).join('\n')}\n\nLast error: ${lastErr}`
-  );
-  detail.name='GachaDynamicImportError';
-  throw detail;
-}
+// ✅ 가챠 라우트 (경로 고정)
+import { mountGacha } from './feature_gacha.js?v=20251005-8';
 
 const app = document.getElementById('app');
 
@@ -97,20 +77,7 @@ function renderFromHash(){
     case '#starter':           app.innerHTML=''; mountStarter(app); break;
     case '#starter/estimator': app.innerHTML=''; mountStarterEstimator(app); break;
     case '#starter/reforge':   app.innerHTML=''; mountStarterReforge(app); break;
-    case '#gacha':
-      app.innerHTML='';
-      ensureGacha()
-        .then(fn => fn(app))
-        .catch(err => {
-          app.innerHTML = `<section class="container"><div class="card">
-            <div class="big">블러연합용 도우미 v2.6.0</div>
-            <h3 style="margin:8px 0 6px">가챠 모듈 로드 실패</h3>
-            <p class="muted">feature_gacha.js 또는 하위 파일 경로/이름을 확인하세요.</p>
-            <pre style="white-space:pre-wrap;font-size:12px;color:#9fb0c6;max-width:100%;overflow:auto">${String(err)}</pre>
-            <button class="hero-btn" onclick="location.hash=''">← 홈으로</button>
-          </div></section>`;
-        });
-      break;
+    case '#gacha':             app.innerHTML=''; mountGacha(app); break;
     case '':
     case '#':                  renderHome(); break;
     default:                   location.hash=''; return;
