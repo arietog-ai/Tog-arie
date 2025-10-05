@@ -1,5 +1,4 @@
-// js/gacha_core.js  (v=20251005-3)
-// 공통 유틸: 누적분포, 추첨, 리스트 렌더 도우미, 복사 텍스트
+// js/gacha_core.js  (v=20251005-4)
 
 export function buildCDF(pool) {
   const out = []; let acc = 0;
@@ -21,12 +20,11 @@ export function simulate(pool, n) {
     const it = drawOnce(cdf);
     m.set(it, (m.get(it) || 0) + 1);
   }
-  return m; // Map<아이템명, 횟수>
+  return m;
 }
 
-/** "암시장 티켓 10개"처럼 끝에 수량이 붙은 항목을 베이스로 합산 */
 export function sumByBaseQuantity(orderedPairs) {
-  const merged = new Map(); // Map<base, totalQty>
+  const merged = new Map();
   const order = [];
   for (const [name, count] of orderedPairs) {
     const m = name.match(/^(.*?)(\d[\d,]*)개$/);
@@ -45,7 +43,6 @@ export function sumByBaseQuantity(orderedPairs) {
   return { merged, order };
 }
 
-/** 복사 텍스트 생성 */
 export function buildCopyText(title, total, lines, extra = '') {
   const now = new Date().toLocaleString('ko-KR', { hour12: false });
   const out = [];
