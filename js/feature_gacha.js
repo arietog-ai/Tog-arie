@@ -1,4 +1,6 @@
-// 가챠 UI – 등록된 가챠 모듈을 자동으로 나열/실행
+// /js/feature_gacha.js
+// 가챠 UI – 등록된 가챠 모듈을 자동으로 나열/실행 (표준 인터페이스 run(n)->{items,pills,copy})
+
 import { FullMoonBox } from './full_moon_box.js';
 import { FleetRandomBox } from './fleet_box.js';
 
@@ -11,7 +13,7 @@ export function mountGacha(appRoot){
       <p class="gacha-muted">원하는 상자를 눌러 뽑기 개수를 입력하세요. (최대 100개)</p>
       <div id="gachaListTiles" class="gacha-tiles"></div>
 
-      <!-- 입력 팝업 -->
+      <!-- 입력 -->
       <div class="gacha-backdrop gacha-hidden" id="inputBackdrop">
         <div class="gacha-modal" role="dialog" aria-modal="true" aria-labelledby="inputTitle">
           <header>
@@ -30,7 +32,7 @@ export function mountGacha(appRoot){
         </div>
       </div>
 
-      <!-- 결과 팝업(단건/배치) -->
+      <!-- 결과 -->
       <div class="gacha-backdrop gacha-hidden" id="resultBackdrop">
         <div class="gacha-modal" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
           <header>
@@ -48,9 +50,11 @@ export function mountGacha(appRoot){
     </section>
   `;
 
+  // 타일
   const tiles = appRoot.querySelector('#gachaListTiles');
-  GACHAS.forEach((g, idx) => { tiles.append(makeTile(g, idx)); });
+  GACHAS.forEach((g, idx) => tiles.append(makeTile(g, idx)));
 
+  // 엘리먼트 캐시
   const q = s => appRoot.querySelector(s);
   const inputBackdrop  = q('#inputBackdrop');
   const resultBackdrop = q('#resultBackdrop');
@@ -76,28 +80,28 @@ export function mountGacha(appRoot){
     if (!(n >= 1 && n <= 100)) { alert('뽑기 개수는 1~100 사이 정수만 가능합니다.'); return; }
     hide(inputBackdrop);
 
-    // 각 모듈이 모달/인라인을 스스로 렌더할 수 있도록 콜백 제공
-    const ctx = {
-      showModalList(title, pills, rows, copyText){
-        resultTitleEl.textContent = title;
-        summaryPills.innerHTML = ''; resultList.innerHTML = '';
-        pills.forEach(t => summaryPills.append(pill(t)));
-        rows.forEach(r => resultList.append(rowWithImage(r.name, r.qty, r.img)));
-        lastCopyText = copyText || '';
-        show(resultBackdrop);
-      }
-    };
-    current.run(n, ctx);
+    // 표준 인터페이스: {items,pills,copy}
+    const res = current.run(n);
+    if (!res || !Array.isArray(res.items)) return; // 모듈이 자체 렌더하는 타입이면 무시
+
+    resultTitleEl.textContent = `${current.title} 결과`;
+    summaryPills.innerHTML = '';
+    resultList.innerHTML = '';
+    res.pills.forEach(t => summaryPills.append(pill(t)));
+    res.items.forEach(it => resultList.append(rowWithImage(it.name, it.qty, it.img)));
+    lastCopyText = res.copy || '';
+    show(resultBackdrop);
   }
 
   function copy(){
-    if(!lastCopyText){ return; }
+    if(!lastCopyText) return;
     navigator.clipboard.writeText(lastCopyText).then(()=>{
       alert('복사 완료! 카톡에 붙여넣기 하세요.');
     }).catch(()=>{
       const ta=document.createElement('textarea');
       ta.value=lastCopyText; document.body.appendChild(ta);
-      ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+      ta.select(); document.execCommand('copy');
+      document.body.removeChild(ta);
       alert('복사 완료!');
     });
   }
