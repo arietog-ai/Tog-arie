@@ -1,8 +1,8 @@
-// js/feature_starter_reforge.js  (v=20251005-8)
-// - util.js 의존 제거
-// - 글로벌 onclick 미사용
-// - k≥4 옵션이 "나왔을 때만" 반짝 + 1.5초 버튼 잠금
-// - 표: [강화 점] | [옵션] | [현재] | [범위] (0강 표시는 없음)
+// js/feature_starter_reforge.js  (v=20251005-9)
+// - util.js 의존 제거, 전역 onclick 미사용
+// - 표 구성: [강화 점] | [옵션] | [현재] | [범위]
+// - 파랑(영혼) 주사위: k·수치 재분배 → k≥4 존재 시 반짝 + 버튼 1.5초 잠금
+// - 빨강(시동) 주사위: k 유지, 수치만 재분배 → 지연/비활성화 없이 즉시 반영
 
 const GROUP_A = ["물리관통력","마법관통력","물리저항력","마법저항력","치명타확률","치명타데미지증가"]; // %
 const GROUP_B = ["회피","명중","효과적중","효과저항"]; // 수치
@@ -21,6 +21,7 @@ const STEPS = 5;
 /* ===== 유틸 ===== */
 const byId = (id)=>document.getElementById(id);
 const fmt  = (opt,v)=> PERCENT_SET.has(opt) ? `${v}%` : `${v}`;
+
 function roundP(opt,v){ return PERCENT_SET.has(opt) ? Math.round(v*2)/2 : Math.round(v); }
 function rollBase(opt){ const a=INIT_VALUES[opt]; return a[(Math.random()*a.length)|0]; }
 function applyIncrements(opt, base, k){
@@ -34,6 +35,8 @@ function rangeFor(opt,k){
   const max = roundP(opt, Math.max(...b) + k*Math.max(...inc));
   return {min, max};
 }
+
+/* ===== 주사위 롤 ===== */
 function rerollBlue(names){
   // 5회를 4옵션에 분배(k) + 각 옵션 base 랜덤 + 증가치 재적용
   const ks=[0,0,0,0]; for(let i=0;i<STEPS;i++) ks[(Math.random()*4)|0]++;
@@ -47,6 +50,8 @@ function rerollRed(names, countsFixed){
   names.forEach(opt=>{ const k=countsFixed[opt]||0; base[opt]=rollBase(opt); final[opt]=applyIncrements(opt,base[opt],k); });
   return {base,final};
 }
+
+/* ===== 표시 ===== */
 function kDotsCell(k){
   let s='<div class="kdots" aria-label="강화 단계">';
   for(let i=0;i<5;i++) s+=`<span class="${i<k?'on':''}"></span>`;
@@ -121,24 +126,25 @@ export function mountStarterReforge(app){
 
     byId('back').addEventListener('click', ()=>{ location.hash='#starter'; });
 
+    // 🔹 파랑: k/수치 재분배 → k≥4가 있으면 반짝 + 버튼 1.5초 잠금
     byId('roll-blue').addEventListener('click', ()=>{
       const r = rerollBlue(names);
       base = r.base; final = r.final; counts = r.counts; blueUsed++;
       sessionStorage.setItem('starter_item', JSON.stringify({names, start:base, final, counts}));
-      render();                    // DOM 갱신 후
-      triggerFlashIfNeeded();      // k≥4 있을 때만 반짝 + 버튼잠금
+      render();                    // DOM 갱신
+      triggerFlashIfHighK();       // k≥4 있을 때만 연출 + 잠금
     });
 
+    // 🔸 빨강: k 유지, 수치만 재분배 → 지연/비활성화 없이 즉시 반영
     byId('roll-red').addEventListener('click', ()=>{
       const r = rerollRed(names, counts);
       base = r.base; final = r.final; redUsed++;
       sessionStorage.setItem('starter_item', JSON.stringify({names, start:base, final, counts}));
-      render();
-      triggerFlashIfNeeded();      // k≥4 있을 때만 반짝 + 버튼잠금
+      render();                    // 끝. (반짝/잠금 없음)
     });
   }
 
-  function triggerFlashIfNeeded(){
+  function triggerFlashIfHighK(){
     const rows = Array.from(app.querySelectorAll('.reforge .gear-compact tbody tr'));
     let hasHigh = false;
 
@@ -156,7 +162,6 @@ export function mountStarterReforge(app){
       }
     });
 
-    // k≥4인 옵션이 존재할 때만 잠깐 버튼 잠금
     if (hasHigh) {
       const blueBtn = byId('roll-blue');
       const redBtn  = byId('roll-red');
