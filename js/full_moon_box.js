@@ -1,5 +1,5 @@
-// js/gachas/full_moon_box.js
-import { simulate, sumByBaseQuantity, buildCopyText } from '../gacha_core.js';
+// js/gachas/full_moon_box.js  (v=20251005-2)
+import { simulate, sumByBaseQuantity, buildCopyText } from '../gacha_core.js?v=20251005-2';
 
 const IMG = {
   "SSR+ 동료 선택 상자": "./assets/img/ssr_plus_box_sel.jpg",
@@ -41,27 +41,20 @@ export const FullMoonBox = {
   thumb: './assets/img/full_moon_box.jpg',
   description: '이미지 설명: 2025 보름달상자 뽑기',
   run(n) {
-    // 1) 시뮬
     const raw = simulate(POOL, n);
-    // 2) 정의 순서대로 추출
+
     const ordered = [];
     for (const [name] of POOL) {
       const c = raw.get(name) || 0;
       if (c > 0) ordered.push([name, c]);
     }
-    // 3) 베이스 합산
+
     const { merged, order } = sumByBaseQuantity(ordered);
 
-    // 4) 요약
     const rareSet = new Set(["SSR+ 동료 선택 상자","암시장 티켓","일반 소환 티켓","빛나는 레볼루션 조각","SSR+ 영혼석"]);
     let rareKinds = 0; for (const base of order) if (rareSet.has(base)) rareKinds++;
 
-    // 5) 렌더 데이터
-    const items = order.map(base => ({
-      name: base,
-      qty: merged.get(base),
-      img: IMG[base] || ''
-    }));
+    const items = order.map(base => ({ name: base, qty: merged.get(base), img: IMG[base] || '' }));
 
     const pills = [`총 ${n}회`, `종류 ${order.length}개`];
     if (rareKinds > 0) pills.push(`희귀 ${rareKinds}종`);
