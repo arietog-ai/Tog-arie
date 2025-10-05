@@ -1,11 +1,10 @@
-// js/feature_gacha.js
+// js/feature_gacha.js  (v=20251005-2)
 // 가챠 UI – 등록된 가챠 모듈을 자동으로 나열/실행
 
-import { FullMoonBox } from './gachas/full_moon_box.js';
-import { FleetRandomBox } from './gachas/fleet_box.js';
+import { FullMoonBox } from './gachas/full_moon_box.js?v=20251005-2';
+import { FleetRandomBox } from './gachas/fleet_box.js?v=20251005-2';
 
 export function mountGacha(appRoot){
-  // 여기에 원하는 가챠를 등록만 하면 UI가 자동 생성됨
   const GACHAS = [ FullMoonBox, FleetRandomBox ];
 
   appRoot.innerHTML = `
@@ -51,13 +50,9 @@ export function mountGacha(appRoot){
     </section>
   `;
 
-  // 타일 생성
   const tiles = appRoot.querySelector('#gachaListTiles');
-  GACHAS.forEach((g, idx) => {
-    tiles.append(makeTile(g, idx));
-  });
+  GACHAS.forEach((g, idx) => tiles.append(makeTile(g, idx)));
 
-  // 팝업 & 결과 제어
   const q = s => appRoot.querySelector(s);
   const inputBackdrop  = q('#inputBackdrop');
   const resultBackdrop = q('#resultBackdrop');
@@ -67,7 +62,7 @@ export function mountGacha(appRoot){
   const boxBadge       = q('#boxBadge');
   const resultTitleEl  = q('#resultTitle');
 
-  let current = null;     // 현재 선택한 가챠 모듈
+  let current = null;
   let lastCopyText = '';
 
   function openInput(mod){
@@ -80,13 +75,10 @@ export function mountGacha(appRoot){
 
   function run(){
     const n = parseInt(drawCountEl.value, 10);
-    if (!(n >= 1 && n <= 100)) {
-      alert('뽑기 개수는 1~100 사이 정수만 가능합니다.'); return;
-    }
+    if (!(n >= 1 && n <= 100)) { alert('뽑기 개수는 1~100 사이 정수만 가능합니다.'); return; }
     hide(inputBackdrop);
     const { items, pills, copy } = current.run(n);
 
-    // 결과 렌더
     resultTitleEl.textContent = `${current.title} 결과`;
     summaryPills.innerHTML = '';
     resultList.innerHTML = '';
@@ -109,7 +101,6 @@ export function mountGacha(appRoot){
     });
   }
 
-  // 이벤트
   q('#cancelInput').addEventListener('click', ()=> hide(inputBackdrop));
   q('#confirmInput').addEventListener('click', run);
   q('#closeResult').addEventListener('click', ()=> hide(resultBackdrop));
@@ -119,7 +110,6 @@ export function mountGacha(appRoot){
   });
   drawCountEl.addEventListener('keydown', e=>{ if(e.key==='Enter') run(); });
 
-  // helpers
   function show(el){ el.style.display='flex'; el.classList.remove('gacha-hidden'); }
   function hide(el){ el.style.display='none'; el.classList.add('gacha-hidden'); }
 
