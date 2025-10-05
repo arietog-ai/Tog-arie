@@ -1,6 +1,4 @@
-// js/app.js  (v=20251005-9)
-// — 기존 기능: 개척상점, 시동무기(뽑기/강화/세공), 홈 허브
-// — 신규: 가챠(#gacha) 라우트 — 동적 import로 안전 로드
+// js/app.js  (v=20251005-4)
 
 import { mountShop } from './hardmode_shop.js?v=20251005-3';
 import { mountStarter } from './feature_starter.js?v=20251005-6';
@@ -8,42 +6,32 @@ import { mountStarterEstimator } from './feature_starter_estimator.js?v=20251005
 import { mountStarterReforge } from './feature_starter_reforge.js?v=20251005-6';
 import { mountDraw, resetDrawSession } from './feature_draw.js?v=20251005-3';
 
-// ✅ 가챠는 동적 import (파일 누락/경로 오류여도 홈은 정상 작동)
+// 가챠는 동적 import (파일 누락/경로 오류여도 홈은 정상)
 let _mountGacha = null;
 async function ensureGacha(){
   if(_mountGacha) return _mountGacha;
-
-  // 현재 파일(js/app.js)을 기준으로 한 상대경로 후보들
   const candidates = [
-    './feature_gacha.js?v=20251005-3',
-    './feature_gacha.js',                  // 쿼리 제거
-    './Feature_gacha.js',                  // 대소문자 업로드 실수 대비
-    '../js/feature_gacha.js?v=20251005-3', // 상대경로 꼬임 대비
-    '../js/feature_gacha.js'
+    './feature_gacha.js?v=20251005-4',
+    './feature_gacha.js',
   ];
-
-  let lastErr = null, tried = [];
+  let lastErr=null, tried=[];
   for(const url of candidates){
     try{
       const mod = await import(url);
       _mountGacha = mod.mountGacha;
       return _mountGacha;
-    }catch(e){
-      lastErr = e; tried.push(url);
-    }
+    }catch(e){ lastErr=e; tried.push(url); }
   }
   const detail = new Error(
     `Tried:\n${tried.map(u=>'- '+new URL(u, import.meta.url).href).join('\n')}\n\nLast error: ${lastErr}`
   );
-  detail.name = 'GachaDynamicImportError';
+  detail.name='GachaDynamicImportError';
   throw detail;
 }
 
 const app = document.getElementById('app');
 
-function scrollTop(){
-  try{ window.scrollTo({top:0, behavior:'instant'}); }catch(_){}
-}
+function scrollTop(){ try{ window.scrollTo({top:0, behavior:'instant'}); }catch(_){} }
 
 function renderHome(){
   app.innerHTML = `
@@ -129,6 +117,5 @@ function renderFromHash(){
   }
   scrollTop();
 }
-
 window.addEventListener('hashchange', renderFromHash, { passive:true });
 document.addEventListener('DOMContentLoaded', renderFromHash, { passive:true });
