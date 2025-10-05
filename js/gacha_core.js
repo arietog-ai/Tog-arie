@@ -1,4 +1,4 @@
-// js/gacha_core.js  (v=20251005-4)
+// js/gacha_core.js  (v=20251005-8)
 
 export function buildCDF(pool) {
   const out = []; let acc = 0;
@@ -23,6 +23,7 @@ export function simulate(pool, n) {
   return m;
 }
 
+/** "암시장 티켓 10개" → 베이스 단위 합산 */
 export function sumByBaseQuantity(orderedPairs) {
   const merged = new Map();
   const order = [];
