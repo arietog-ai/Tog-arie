@@ -1,8 +1,8 @@
-// /js/feature_gacha.js
-// 가챠 UI – 등록된 가챠 모듈을 자동으로 나열/실행 (표준 인터페이스 run(n)->{items,pills,copy})
+// js/feature_gacha.js
+// 가챠 UI – 등록된 가챠 모듈을 자동으로 나열/실행
 
-import { FullMoonBox } from './full_moon_box.js';
-import { FleetRandomBox } from './fleet_box.js';
+import { FullMoonBox } from './gachas/full_moon_box.js';
+import { FleetRandomBox } from './gachas/fleet_box.js';
 
 export function mountGacha(appRoot){
   const GACHAS = [ FullMoonBox, FleetRandomBox ];
@@ -13,7 +13,7 @@ export function mountGacha(appRoot){
       <p class="gacha-muted">원하는 상자를 눌러 뽑기 개수를 입력하세요. (최대 100개)</p>
       <div id="gachaListTiles" class="gacha-tiles"></div>
 
-      <!-- 입력 -->
+      <!-- 입력 팝업 -->
       <div class="gacha-backdrop gacha-hidden" id="inputBackdrop">
         <div class="gacha-modal" role="dialog" aria-modal="true" aria-labelledby="inputTitle">
           <header>
@@ -32,11 +32,11 @@ export function mountGacha(appRoot){
         </div>
       </div>
 
-      <!-- 결과 -->
+      <!-- 결과 팝업 -->
       <div class="gacha-backdrop gacha-hidden" id="resultBackdrop">
         <div class="gacha-modal" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
           <header>
-            <h2 id="resultTitle">결과</h2>
+            <h2 id="resultTitle">뭘 뽑았는지 결과</h2>
             <div class="gacha-muted">“복사”를 눌러 카톡에 붙여넣기 하세요.</div>
           </header>
           <div class="gacha-pills" id="summaryPills"></div>
@@ -50,11 +50,9 @@ export function mountGacha(appRoot){
     </section>
   `;
 
-  // 타일
   const tiles = appRoot.querySelector('#gachaListTiles');
-  GACHAS.forEach((g, idx) => tiles.append(makeTile(g, idx)));
+  GACHAS.forEach((g, idx) => { tiles.append(makeTile(g, idx)); });
 
-  // 엘리먼트 캐시
   const q = s => appRoot.querySelector(s);
   const inputBackdrop  = q('#inputBackdrop');
   const resultBackdrop = q('#resultBackdrop');
@@ -79,22 +77,23 @@ export function mountGacha(appRoot){
     const n = parseInt(drawCountEl.value, 10);
     if (!(n >= 1 && n <= 100)) { alert('뽑기 개수는 1~100 사이 정수만 가능합니다.'); return; }
     hide(inputBackdrop);
-
-    // 표준 인터페이스: {items,pills,copy}
-    const res = current.run(n);
-    if (!res || !Array.isArray(res.items)) return; // 모듈이 자체 렌더하는 타입이면 무시
+    const { items, pills, copy } = current.run(n);
 
     resultTitleEl.textContent = `${current.title} 결과`;
     summaryPills.innerHTML = '';
     resultList.innerHTML = '';
-    res.pills.forEach(t => summaryPills.append(pill(t)));
-    res.items.forEach(it => resultList.append(rowWithImage(it.name, it.qty, it.img)));
-    lastCopyText = res.copy || '';
+
+    pills.forEach(t => summaryPills.append(pill(t)));
+    items.forEach(it => {
+      if (it.img === '__section__') resultList.append(sectionRow(it.name));
+      else resultList.append(rowWithImage(it.name, it.qty, it.img));
+    });
+
+    lastCopyText = copy;
     show(resultBackdrop);
   }
 
   function copy(){
-    if(!lastCopyText) return;
     navigator.clipboard.writeText(lastCopyText).then(()=>{
       alert('복사 완료! 카톡에 붙여넣기 하세요.');
     }).catch(()=>{
@@ -106,7 +105,6 @@ export function mountGacha(appRoot){
     });
   }
 
-  // 이벤트
   q('#cancelInput').addEventListener('click', ()=> hide(inputBackdrop));
   q('#confirmInput').addEventListener('click', run);
   q('#closeResult').addEventListener('click', ()=> hide(resultBackdrop));
@@ -116,7 +114,6 @@ export function mountGacha(appRoot){
   });
   drawCountEl.addEventListener('keydown', e=>{ if(e.key==='Enter') run(); });
 
-  // helpers
   function show(el){ el.style.display='flex'; el.classList.remove('gacha-hidden'); }
   function hide(el){ el.style.display='none'; el.classList.add('gacha-hidden'); }
 
@@ -138,7 +135,17 @@ export function mountGacha(appRoot){
     return wrap;
   }
 
-  function pill(text){ const el=document.createElement('div'); el.className='gacha-pill'; el.textContent=text; return el; }
+  function pill(text){
+    const el=document.createElement('div'); el.className='gacha-pill'; el.textContent=text; return el;
+  }
+
+  function sectionRow(title){
+    const el=document.createElement('div');
+    el.className='gacha-section';
+    el.textContent = title;
+    return el;
+  }
+
   function rowWithImage(label, qty, src){
     const el=document.createElement('div'); el.className='gacha-row';
     const left=document.createElement('div'); left.className='gacha-item';
