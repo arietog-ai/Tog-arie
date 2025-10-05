@@ -1,5 +1,5 @@
-// js/gachas/fleet_box.js
-import { buildCDF, drawOnce, buildCopyText } from '../gacha_core.js';
+// js/gachas/fleet_box.js  (v=20251005-2)
+import { buildCDF, drawOnce, buildCopyText } from '../gacha_core.js?v=20251005-2';
 
 const SHIP_LABEL = {
   vigilantia: '비질란티아',
@@ -23,7 +23,6 @@ const SHIP_IMG = {
   oculus: './assets/img/fleet/oculus.jpg',
 };
 
-// 제작도 확률
 const BLUEPRINT_TIER = [
   ['일반', 30.000],
   ['고급', 40.000],
@@ -54,7 +53,7 @@ const FLEET_POOL_C = [
 export const FleetRandomBox = {
   id: 'fleet_random_box',
   title: '부유선 랜덤상자',
-  thumb: './assets/img/fleet_random_box.jpg', // 없으면 아무 이미지나
+  thumb: './assets/img/fleet_random_box.jpg', // 없으면 onerror로 흐릿 처리됨
   description: '제작도 확률(일반/고급/희귀/전설) → 부유선 풀(A/B/C) 2단계 추첨',
   run(n) {
     const tierCDF = buildCDF(BLUEPRINT_TIER);
@@ -70,7 +69,6 @@ export const FleetRandomBox = {
       counts.set(key, (counts.get(key) || 0) + 1);
     }
 
-    // 출력 순서: A→B→C
     const orderKeys = [
       ...FLEET_POOL_A.map(([k]) => k),
       ...FLEET_POOL_B.map(([k]) => k),
