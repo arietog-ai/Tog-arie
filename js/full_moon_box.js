@@ -1,5 +1,5 @@
-// js/gachas/full_moon_box.js  (v=20251005-2)
-import { simulate, sumByBaseQuantity, buildCopyText } from '../gacha_core.js?v=20251005-2';
+// js/gachas/full_moon_box.js  (v=20251005-3)
+import { simulate, sumByBaseQuantity, buildCopyText } from '../gacha_core.js?v=20251005-3';
 
 const IMG = {
   "SSR+ 동료 선택 상자": "./assets/img/ssr_plus_box_sel.jpg",
