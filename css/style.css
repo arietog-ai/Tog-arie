@@ -209,3 +209,24 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
   .reforge .valcell{ font-size:15px; }
   .reforge .rangecell{ font-size:11.5px; }
 }
+
+
+/* 강화 4이상 반짝 효과 */
+.reforge tr.flash {
+  animation: flashRow 1.4s ease-in-out;
+  background: rgba(124,242,154,0.08);
+}
+@keyframes flashRow {
+  0% { background: rgba(124,242,154,0.2); }
+  100% { background: transparent; }
+}
+
+/* 수치 반짝 */
+.reforge .spark {
+  animation: sparkVal 1.2s ease-in-out;
+  color: #7cf29a;
+}
+@keyframes sparkVal {
+  0%,100% { text-shadow:none; }
+  50% { text-shadow:0 0 8px #7cf29a; }
+}
