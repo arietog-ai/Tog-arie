@@ -1,5 +1,6 @@
 // js/feature_gacha.js
 // 2025 보름달 상자 가챠 (최대 100회) – 결과 카톡 복사 지원
+// - 결과 표시: 같은 계열(예: '암시장 티켓 N개')은 숫자 합산해서 최종값만 표기
 
 export function mountGacha(appRoot){
   appRoot.innerHTML = `
@@ -140,11 +141,15 @@ export function mountGacha(appRoot){
   }
   function simulate(n){
     const m=new Map();
-    for(let i=0;i<n;i++){ const it=drawOnce(); m.set(it,(m.get(it)||0)+1); }
-    return m;
+    for(let i=0;i<n;i++){
+      const it=drawOnce();
+      m.set(it,(m.get(it)||0)+1);
+    }
+    return m; // Map<"항목명(숫자 포함)", 횟수>
   }
 
   let lastCopyText = '';
+
   function runGacha(){
     const n = parseInt(drawCountEl.value,10);
     if(!(n>=1 && n<=100)){
@@ -158,41 +163,74 @@ export function mountGacha(appRoot){
     show(resultBackdrop);
   }
 
+  // === 결과 출력: 같은 계열은 숫자 합산해서 최종만 표시 ===
   function renderResult(total, map){
     resultList.innerHTML = '';
     summaryPills.innerHTML = '';
 
-    // 정의 순서대로 출력
+    // 1) 정의 순서 기반으로 이번 실행에 등장한 항목만 수집
     const ordered=[];
     for(const [name] of POOL){
       const c = map.get(name)||0;
-      if(c>0) ordered.push([name,c]);
+      if(c>0) ordered.push([name,c]); // ["암시장 티켓 15개", 1] ...
     }
 
-    // 요약
-    const kinds = ordered.length;
+    // 2) 같은 "계열"로 합치기
+    //   - 규칙: 항목명 마지막의 "숫자+개"를 추출하여 base와 수량을 분리
+    //     예) "암시장 티켓 15개" -> base="암시장 티켓", unit=15
+    //         최종 합계 = unit * count
+    const merged = new Map(); // Map<base, totalQuantity>
+    const orderOfBase = [];   // 출력 순서 유지를 위한 base 등장 순서
+    for(const [name,count] of ordered){
+      const m = name.match(/^(.*?)(\d[\d,]*)개$/); // 끝이 "123개"
+      if(!m){
+        // 숫자 없는 고정형 항목은 "개수" 그대로(횟수 단위) 표시를 위해 1개=개수 취급
+        const base = name.trim();
+        if(!merged.has(base)) orderOfBase.push(base);
+        merged.set(base, (merged.get(base)||0) + count); // ex) "SSR+ 동료 선택 상자 1개" 같은 것도 1*count 형태지만 숫자 없음 → 횟수 누적
+        continue;
+      }
+      const base = m[1].trim();
+      const unit = parseInt(m[2].replace(/,/g,''),10) || 0;
+      const add  = unit * count;
+      if(!merged.has(base)) orderOfBase.push(base);
+      merged.set(base, (merged.get(base)||0) + add);
+    }
+
+    // 3) 요약 정보
+    //    희귀 기준: base 이름 기준으로 카운트(원하면 조정 가능)
     const rareSet = new Set([
-      "SSR+ 동료 선택 상자 1개",
-      "암시장 티켓 30개",
-      "일반 소환 티켓 100개",
-      "빛나는 레볼루션 조각 10,000개",
-      "SSR+ 영혼석 60개"
+      "SSR+ 동료 선택 상자",
+      "암시장 티켓",
+      "일반 소환 티켓",
+      "빛나는 레볼루션 조각",
+      "SSR+ 영혼석"
     ]);
-    let rare=0; for(const [n,c] of ordered) if(rareSet.has(n)) rare+=c;
+    let rareKinds = 0;
+    for(const base of orderOfBase){
+      if(rareSet.has(base)) rareKinds++;
+    }
 
     summaryPills.append(pill(`총 ${total}회`));
-    summaryPills.append(pill(`종류 ${kinds}개`));
-    if(rare>0) summaryPills.append(pill(`희귀 ${rare}회`));
+    summaryPills.append(pill(`종류 ${orderOfBase.length}개`));
+    if(rareKinds>0) summaryPills.append(pill(`희귀 ${rareKinds}종`));
 
-    for(const [name,cnt] of ordered){
-      resultList.append(row(name, `${cnt}개`));
+    // 4) 결과 리스트 (정의 순서 기반 base 등장 순서로 출력)
+    for(const base of orderOfBase){
+      const qty = merged.get(base);
+      // 숫자 없는 항목은 "개" 대신 "개" 그대로(=횟수) 표기
+      // 예) "SSR+ 동료 선택 상자"는 개수 자체가 의미(선택 상자 1개 단위) → "SSR+ 동료 선택 상자 1개"
+      resultList.append(row(`${base} ${Number(qty).toLocaleString()}개`, ''));
     }
 
+    // 5) 복사용 텍스트
     const now = new Date().toLocaleString('ko-KR',{hour12:false});
     const lines = [];
     lines.push(`[2025 보름달 상자] 뽑기 결과`);
-    lines.push(`총 ${total}회 | 종류 ${kinds}개${rare>0?` | 희귀 ${rare}회`:''}`);
-    for(const [name,cnt] of ordered) lines.push(`- ${name} x ${cnt}`);
+    lines.push(`총 ${total}회 | 종류 ${orderOfBase.length}개${rareKinds>0?` | 희귀 ${rareKinds}종`:''}`);
+    for(const base of orderOfBase){
+      lines.push(`- ${base} ${Number(merged.get(base)).toLocaleString()}개`);
+    }
     lines.push(`(생성: ${now})`);
     lastCopyText = lines.join('\n');
   }
@@ -201,7 +239,6 @@ export function mountGacha(appRoot){
     navigator.clipboard.writeText(lastCopyText).then(()=>{
       alert('복사 완료! 카톡에 붙여넣기 하세요.');
     }).catch(()=>{
-      // 폴백
       const ta=document.createElement('textarea');
       ta.value=lastCopyText; document.body.appendChild(ta);
       ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
