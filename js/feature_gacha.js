@@ -1,4 +1,5 @@
-// js/feature_gacha.js  (exports mountGacha)
+// js/feature_gacha.js  (v=20251005-10)
+// 가챠 허브: 보름달 상자(맨 위), 부유선 랜덤상자 + ← 홈으로 버튼
 
 import { FleetRandomBox } from './fleet_box.js?v=20251005-9';
 import { FullMoonBox }   from './full_moon_box.js?v=20251005-8';
@@ -96,12 +97,16 @@ function openResultModal({title, pills=[], items=[], copyText=''}) {
 export function mountGacha(root){
   root.innerHTML = `
   <section class="container gacha-card">
+    <div class="gacha-actions" style="justify-content:flex-end; margin-bottom:8px">
+      <button class="gacha-btn" id="btnHome">← 홈으로</button>
+    </div>
+
     <h1>가챠 뽑기</h1>
     <p class="gacha-muted">원하는 상자를 눌러 뽑기 개수를 입력하세요. (최대 100개)</p>
 
     <div class="gacha-tiles">
 
-      <!-- ✅ 2025 보름달 상자 (맨 위) -->
+      <!-- 2025 보름달 상자 (맨 위) -->
       <div class="gacha-tile">
         <img src="./assets/img/full_moon_box.jpg" alt="2025 보름달 상자"/>
         <div>
@@ -128,6 +133,12 @@ export function mountGacha(root){
     </div>
   </section>
   `;
+
+  // ← 홈으로
+  root.querySelector('#btnHome').addEventListener('click', ()=>{
+    // app.js의 navigate와 의존 없이 바로 홈으로
+    location.hash = '';
+  });
 
   // 보름달 상자
   root.querySelector('#btnMoon').addEventListener('click', ()=>{
