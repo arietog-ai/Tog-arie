@@ -5,14 +5,14 @@
     "cat": "암시장티켓",
     "name": "10개=20,000",
     "price": 20000,
-    "times": 10,
+    "times": 5,
     "img": "assets/img/black_market_ticket.jpg"
   },
   {
     "cat": "암시장티켓",
     "name": "10개=20,000",
     "price": 20000,
-    "times": 10,
+    "times": 5,
     "img": "assets/img/black_market_ticket.jpg"
   },
   { "cat": "레볼(초록)", "name": "100개=1,600", "price": 1600, "times": 14, "img": "assets/img/revol_green.jpg" },
