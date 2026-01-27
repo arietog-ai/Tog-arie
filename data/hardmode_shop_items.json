@@ -23,9 +23,9 @@
   { "cat": "시무 주사위", "name": "파랑 1개=4,100", "price": 4100, "times": 30, "img": "assets/img/dice_blue.jpg" },
   { "cat": "시무 주사위", "name": "빨강 1개=29,000", "price": 29000, "times": 10, "img": "assets/img/dice_red.jpg" },
 
-  { "cat": "시무 열쇠", "name": "1개=300", "price": 300, "times": 100, "img": "assets/img/key.jpg" },
+  { "cat": "시무 열쇠", "name": "1개=300", "price": 300, "times": 1000, "img": "assets/img/key.jpg" },
 
-  { "cat": "고급숯돌", "name": "1개=1,500", "price": 1500, "times": 10, "img": "assets/img/whetstone.jpg" },
+  { "cat": "고급숯돌", "name": "1개=1,500", "price": 1500, "times": 30, "img": "assets/img/whetstone.jpg" },
 
   { "cat": "최고급 강화액 상자", "name": "50개=4,000", "price": 4000, "times": 50, "img": "assets/img/potion_sel.jpg" },
 
