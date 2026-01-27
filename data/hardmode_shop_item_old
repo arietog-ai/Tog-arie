@@ -1,1 +1,13 @@
-d
+[
+  //{ "cat": "고급숯돌", "name": "1개=2,100", "price": 2100, "times": 5, "img": "assets/img/whetstone.jpg" },
+
+  //{ "cat": "힘 수정(빨강)", "name": "1개=500", "price": 500, "times": 50, "img": "assets/img/shard_red.jpg" },
+  //{ "cat": "힘 수정(빨강)", "name": "1개=600", "price": 600, "times": 40, "img": "assets/img/shard_red.jpg" },
+
+  //{ "cat": "민 수정(초록)", "name": "1개=500", "price": 500, "times": 50, "img": "assets/img/shard_green.jpg" },
+  //{ "cat": "민 수정(초록)", "name": "1개=600", "price": 600, "times": 40, "img": "assets/img/shard_green.jpg" },
+
+  //{ "cat": "지 수정(파랑)", "name": "1개=500", "price": 500, "times": 50, "img": "assets/img/shard_blue.jpg" },
+  //{ "cat": "지 수정(파랑)", "name": "1개=600", "price": 600, "times": 40, "img": "assets/img/shard_blue.jpg" },
+
+]
