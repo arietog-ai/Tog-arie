@@ -27,16 +27,6 @@
   { "cat": "시무 열쇠", "name": "1개=420", "price": 420, "times": 50, "img": "assets/img/key.jpg" },
 
   { "cat": "고급숯돌", "name": "1개=1,500", "price": 1500, "times": 10, "img": "assets/img/whetstone.jpg" },
-  { "cat": "고급숯돌", "name": "1개=2,100", "price": 2100, "times": 5, "img": "assets/img/whetstone.jpg" },
-
-  { "cat": "힘 수정(빨강)", "name": "1개=500", "price": 500, "times": 50, "img": "assets/img/shard_red.jpg" },
-  { "cat": "힘 수정(빨강)", "name": "1개=600", "price": 600, "times": 40, "img": "assets/img/shard_red.jpg" },
-
-  { "cat": "민 수정(초록)", "name": "1개=500", "price": 500, "times": 50, "img": "assets/img/shard_green.jpg" },
-  { "cat": "민 수정(초록)", "name": "1개=600", "price": 600, "times": 40, "img": "assets/img/shard_green.jpg" },
-
-  { "cat": "지 수정(파랑)", "name": "1개=500", "price": 500, "times": 50, "img": "assets/img/shard_blue.jpg" },
-  { "cat": "지 수정(파랑)", "name": "1개=600", "price": 600, "times": 40, "img": "assets/img/shard_blue.jpg" },
 
   { "cat": "강화액", "name": "파랑 50개=2,000", "price": 2000, "times": 20, "img": "assets/img/potion_blue.jpg" },
   { "cat": "강화액", "name": "노랑 50개=2,500", "price": 2500, "times": 20, "img": "assets/img/potion_yellow.jpg" },
@@ -65,5 +55,15 @@
   { "cat": "클래스 파편", "name": "서포터 100개=4,320", "price": 4320, "times": 5, "img": "assets/img/class_support.jpg" }
 ]
 [
-  //
+  //{ "cat": "고급숯돌", "name": "1개=2,100", "price": 2100, "times": 5, "img": "assets/img/whetstone.jpg" },
+
+  //{ "cat": "힘 수정(빨강)", "name": "1개=500", "price": 500, "times": 50, "img": "assets/img/shard_red.jpg" },
+  //{ "cat": "힘 수정(빨강)", "name": "1개=600", "price": 600, "times": 40, "img": "assets/img/shard_red.jpg" },
+
+  //{ "cat": "민 수정(초록)", "name": "1개=500", "price": 500, "times": 50, "img": "assets/img/shard_green.jpg" },
+  //{ "cat": "민 수정(초록)", "name": "1개=600", "price": 600, "times": 40, "img": "assets/img/shard_green.jpg" },
+
+  //{ "cat": "지 수정(파랑)", "name": "1개=500", "price": 500, "times": 50, "img": "assets/img/shard_blue.jpg" },
+  //{ "cat": "지 수정(파랑)", "name": "1개=600", "price": 600, "times": 40, "img": "assets/img/shard_blue.jpg" },
+
 ]
