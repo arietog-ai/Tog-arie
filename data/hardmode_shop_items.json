@@ -24,7 +24,6 @@
   { "cat": "시무 주사위", "name": "빨강 1개=29,000", "price": 29000, "times": 10, "img": "assets/img/dice_red.jpg" },
 
   { "cat": "시무 열쇠", "name": "1개=300", "price": 300, "times": 100, "img": "assets/img/key.jpg" },
-  { "cat": "시무 열쇠", "name": "1개=420", "price": 420, "times": 50, "img": "assets/img/key.jpg" },
 
   { "cat": "고급숯돌", "name": "1개=1,500", "price": 1500, "times": 10, "img": "assets/img/whetstone.jpg" },
 
