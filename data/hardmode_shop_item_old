@@ -14,5 +14,6 @@
   { "cat": "강화액", "name": "노랑 50개=2,500", "price": 2500, "times": 20, "img": "assets/img/potion_yellow.jpg" },
   { "cat": "강화액", "name": "주황 50개=3,200", "price": 3200, "times": 20, "img": "assets/img/potion_orange.jpg" },
 
+  { "cat": "시무 열쇠", "name": "1개=420", "price": 420, "times": 50, "img": "assets/img/key.jpg" },
 
 ]
