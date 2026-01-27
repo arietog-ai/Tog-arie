@@ -48,11 +48,11 @@
 
   { "cat": "지 수정(파랑)", "name": "1개=500", "price": 500, "times": 50, "img": "assets/img/shard_blue.jpg" },
   { "cat": "지 수정(파랑)", "name": "1개=600", "price": 600, "times": 40, "img": "assets/img/shard_blue.jpg" },
-
+/*
   { "cat": "강화액", "name": "파랑 50개=2,000", "price": 2000, "times": 20, "img": "assets/img/potion_blue.jpg" },
   { "cat": "강화액", "name": "노랑 50개=2,500", "price": 2500, "times": 20, "img": "assets/img/potion_yellow.jpg" },
   { "cat": "강화액", "name": "주황 50개=3,200", "price": 3200, "times": 20, "img": "assets/img/potion_orange.jpg" },
-
+*/
   { "cat": "최고급 강화액 상자", "name": "50개=4,000", "price": 4000, "times": 50, "img": "assets/img/potion_sel.jpg" },
 
   { "cat": "데이터 파편", "name": "100개=2,400", "price": 2400, "times": 30, "img": "assets/img/datapiece.jpg" },
