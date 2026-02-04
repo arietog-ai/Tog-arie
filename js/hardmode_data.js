@@ -24,7 +24,7 @@ export const nf1 = (n)=> new Intl.NumberFormat('ko-KR',{
   전환은 항상 슬롯 경계에서만 발생
 */
 
-export function hourlyFor(floor = 201, zone = 'A'){
+export function hourlyFor(floor = 201, zone = 'A') {
   const f = Number(floor);
   if (!Number.isFinite(f)) return 0;
 
@@ -33,36 +33,46 @@ export function hourlyFor(floor = 201, zone = 'A'){
     zone === 'B' ? 1 :
     zone === 'C' ? 2 : 0;
 
-  // 기준 anchor
+  // 기준: 100-A
   const BASE_FLOOR = 100;
+  const BASE_SLOT = 0;
   const BASE_VALUE = 710.25;
 
-  const slotIndex = Math.max(0, (f - BASE_FLOOR) * 3 + z);
+  // 목표 슬롯 (100-A 기준)
+  const targetSlot = (f - BASE_FLOOR) * 3 + z;
+
   let value = BASE_VALUE;
 
-  for (let i = 0; i < slotIndex; i++){
-    const cf = BASE_FLOOR + Math.floor(i / 3);
-    const cz = i % 3; // 0=A,1=B,2=C
+  // 같은 위치
+  if (targetSlot === BASE_SLOT) {
+    return value;
+  }
 
-    let inc = 0.75;
+  // 증가량 결정 함수 (슬롯 기준)
+  const slotInc = (slot) => {
+    // slot은 "다음으로 넘어가는 슬롯 번호"
+    if (slot >= (200 - 100) * 3 + 1) return 1.68; // 200-B
+    if (slot >= (151 - 100) * 3 + 1) return 1.5;  // 151-B
+    if (slot >= (101 - 100) * 3 + 1) return 1.2;  // 101-B
+    return 0.75;
+  };
 
-    // ✅ 101-B부터
-    if (cf === 101 && cz >= 1) inc = 1.2;
-    if (cf > 101) inc = 1.2;
-
-    // ✅ 151-B부터
-    if (cf === 151 && cz >= 1) inc = 1.5;
-    if (cf > 151) inc = 1.5;
-
-    // ✅ 200-B부터
-    if (cf === 200 && cz >= 1) inc = 1.68;
-    if (cf > 200) inc = 1.68;
-
-    value += inc;
+  // 위로 이동
+  if (targetSlot > BASE_SLOT) {
+    for (let s = BASE_SLOT; s < targetSlot; s++) {
+      value += slotInc(s + 1);
+    }
+  }
+  // 아래로 이동 (100층 미만)
+  else {
+    for (let s = BASE_SLOT; s > targetSlot; s--) {
+      value -= slotInc(s);
+    }
   }
 
   return Number(value.toFixed(2));
 }
+
 
 // 🔧 이미지 경로 검증 (기존 그대로)
 const IMG_WHITELIST_REGEX =
