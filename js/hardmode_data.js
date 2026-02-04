@@ -33,12 +33,11 @@ export function hourlyFor(floor = 201, zone = 'A'){
     zone === 'B' ? 1 :
     zone === 'C' ? 2 : 0;
 
-  // 🔒 기준 anchor: 100-A
+  // 기준 anchor
   const BASE_FLOOR = 100;
   const BASE_VALUE = 710.25;
 
   const slotIndex = Math.max(0, (f - BASE_FLOOR) * 3 + z);
-
   let value = BASE_VALUE;
 
   for (let i = 0; i < slotIndex; i++){
@@ -47,14 +46,17 @@ export function hourlyFor(floor = 201, zone = 'A'){
 
     let inc = 0.75;
 
-    // 101-A → 101-B부터
-    if (cf > 101 || (cf === 101 && cz >= 1)) inc = 1.2;
+    // ✅ 101-B부터
+    if (cf === 101 && cz >= 1) inc = 1.2;
+    if (cf > 101) inc = 1.2;
 
-    // 151-A → 151-B부터
-    if (cf > 151 || (cf === 151 && cz >= 1)) inc = 1.5;
+    // ✅ 151-B부터
+    if (cf === 151 && cz >= 1) inc = 1.5;
+    if (cf > 151) inc = 1.5;
 
-    // 200-A → 200-B부터
-    if (cf > 200 || (cf === 200 && cz >= 1)) inc = 1.68;
+    // ✅ 200-B부터
+    if (cf === 200 && cz >= 1) inc = 1.68;
+    if (cf > 200) inc = 1.68;
 
     value += inc;
   }
