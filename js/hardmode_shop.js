@@ -32,7 +32,7 @@ export async function mountShop(container){
         <div class="grid cols-3">
           <div>
             <label>현재 층수</label>
-            <input id="floor-input" type="number" min="1" max="9999" value="171">
+            <input id="floor-input" type="number" min="1" max="9999" value="201">
           </div>
           <div>
             <label>구역</label>
