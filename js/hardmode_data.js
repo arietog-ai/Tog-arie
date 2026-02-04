@@ -24,33 +24,33 @@ export const nf1 = (n)=> new Intl.NumberFormat('ko-KR',{
   전환은 항상 슬롯 경계에서만 발생
 */
 
-export function hourlyFor(floor = 200, zone = 'A'){
+export function hourlyFor(floor = 201, zone = 'A'){
   const f = Number(floor);
   if (!Number.isFinite(f)) return 0;
 
-  // zone 방어 (undefined / 잘못된 값 대응)
+  // zone 방어
   const z =
     zone === 'A' ? 0 :
     zone === 'B' ? 1 :
     zone === 'C' ? 2 : 0;
 
-  // 기준 anchor
-  const BASE_FLOOR = 100;
-  const BASE_VALUE = 710.25;
+  // ✅ 기준 anchor: 101-A
+  const BASE_FLOOR = 101;
+  const BASE_VALUE = 712.50;
 
-  // 상대 슬롯 인덱스 (음수 방지)
+  // 슬롯 인덱스 (101-A 기준)
   const slotIndex = Math.max(0, (f - BASE_FLOOR) * 3 + z);
 
   let value = BASE_VALUE;
 
   for(let i = 0; i < slotIndex; i++){
-    const cf = BASE_FLOOR + Math.floor(i / 3); // 현재 슬롯 층
-    const cz = i % 3;                          // 0=A,1=B,2=C
+    const cf = BASE_FLOOR + Math.floor(i / 3);
+    const cz = i % 3; // 0=A,1=B,2=C
 
     let inc = 0.75;
 
-    // 100-A → 100-B부터
-    if (cf > 100 || (cf === 100 && cz >= 1)) {
+    // 101-A → 101-B부터
+    if (cf > 101 || (cf === 101 && cz >= 1)) {
       inc = 1.2;
     }
 
