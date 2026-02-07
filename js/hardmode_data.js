@@ -4,8 +4,8 @@ export const TWO_WEEKS = 336;
 
 export const nf  = (n)=> new Intl.NumberFormat('ko-KR').format(Number(n||0));
 export const nf1 = (n)=> new Intl.NumberFormat('ko-KR',{
-  minimumFractionDigits:1,
-  maximumFractionDigits:1
+  minimumFractionDigits:2,
+  maximumFractionDigits:2
 }).format(Number(n||0));
 
 /*
