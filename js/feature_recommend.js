@@ -8,15 +8,14 @@ let currentAttribute = "all";
 
 export async function mountRecommend(container) {
 
-  characters = await fetch("./data/characters.json").then(res => res.json());
-  tiers = await fetch("./data/tiers.json").then(res => res.json());
+  characters = await fetch("./data/characters.json").then(r => r.json());
+  tiers = await fetch("./data/tiers.json").then(r => r.json());
 
   container.innerHTML = `
     <div class="container">
 
       <div class="recommend-header">
-        <button onclick="history.back()">← 뒤로가기</button>
-        <button onclick="location.hash=''">홈</button>
+        <button id="home-btn">홈으로</button>
       </div>
 
       <div class="mode-toggle" id="mode-toggle"></div>
@@ -29,12 +28,18 @@ export async function mountRecommend(container) {
       <div class="modal-content">
         <div class="modal-header">
           <h3>추천 시동무기</h3>
-          <button onclick="closeRecommendModal()">닫기</button>
+          <button id="modal-close">닫기</button>
         </div>
         <div class="modal-body" id="modal-body"></div>
       </div>
     </div>
   `;
+
+  document.getElementById("home-btn")
+    .addEventListener("click", () => location.hash = "");
+
+  document.getElementById("modal-close")
+    .addEventListener("click", closeRecommendModal);
 
   renderModeToggle();
   renderAttributeFilter();
@@ -47,43 +52,41 @@ function renderModeToggle() {
   const el = document.getElementById("mode-toggle");
 
   el.innerHTML = `
-    <button class="mode-btn ${currentMode === "adventure" ? "active" : ""}"
-      onclick="changeMode('adventure')">모험</button>
-
-    <button class="mode-btn ${currentMode === "pvp" ? "active" : ""}"
-      onclick="changeMode('pvp')">PvP</button>
+    <button class="mode-btn ${currentMode==="adventure"?"active":""}" data-mode="adventure">모험</button>
+    <button class="mode-btn ${currentMode==="pvp"?"active":""}" data-mode="pvp">PvP</button>
   `;
+
+  el.querySelectorAll("button").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      currentMode = btn.dataset.mode;
+      renderModeToggle();
+      renderTierTable();
+    });
+  });
 }
 
-window.changeMode = function(mode){
-  currentMode = mode;
-  renderModeToggle();
-  renderTierTable();
-}
-
-/* ================= ATTRIBUTE FILTER ================= */
+/* ================= ATTRIBUTE ================= */
 
 function renderAttributeFilter(){
   const el = document.getElementById("attribute-filter");
-
   const attrs = ["all","황","자","적","청","녹"];
 
-  el.innerHTML = attrs.map(a => `
-    <button 
-      class="attr-btn ${currentAttribute === a ? "active" : ""}"
-      onclick="changeAttribute('${a}')">
-      ${a === "all" ? "전체" : a}
+  el.innerHTML = attrs.map(a=>`
+    <button class="attr-btn ${currentAttribute===a?"active":""}" data-attr="${a}">
+      ${a==="all"?"전체":a}
     </button>
   `).join("");
+
+  el.querySelectorAll("button").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      currentAttribute = btn.dataset.attr;
+      renderAttributeFilter();
+      renderTierTable();
+    });
+  });
 }
 
-window.changeAttribute = function(attr){
-  currentAttribute = attr;
-  renderAttributeFilter();
-  renderTierTable();
-}
-
-/* ================= TIER TABLE ================= */
+/* ================= TIER ================= */
 
 function renderTierTable(){
   const container = document.getElementById("tier-container");
@@ -113,12 +116,13 @@ function renderTierTable(){
 
       const card = document.createElement("div");
       card.className = "character-card";
-      card.onclick = () => openRecommendModal(id);
 
       card.innerHTML = `
         <img src="./assets/img/characters/${char.image}.png" />
         <span>${char.name}</span>
       `;
+
+      card.addEventListener("click", ()=> openRecommendModal(id));
 
       charWrap.appendChild(card);
     });
@@ -135,7 +139,6 @@ function renderTierTable(){
 
 function openRecommendModal(id){
   const char = characters[id];
-
   const modal = document.getElementById("recommend-modal");
   const body = document.getElementById("modal-body");
 
@@ -144,9 +147,6 @@ function openRecommendModal(id){
     <div>
       <h2>${char.name}</h2>
       <p><strong>속성:</strong> ${char.attribute}</p>
-      <p style="margin:6px 0 12px; font-size:13px; color:#aaa;">
-        ※ 캐릭터를 누르면 추천 시동무기가 표시됩니다.
-      </p>
       <pre>${char.recommend || "추천 시동무기 정보 없음"}</pre>
     </div>
   `;
@@ -154,7 +154,7 @@ function openRecommendModal(id){
   modal.classList.remove("modal-hidden");
 }
 
-window.closeRecommendModal = function(){
+function closeRecommendModal(){
   document.getElementById("recommend-modal")
     .classList.add("modal-hidden");
-};
+}
