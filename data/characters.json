@@ -20,6 +20,149 @@
     "attribute": "청"
   },
 
+  "khun_edahn": {
+    "name": "X에드안",
+    "image": "황_X_쿤에드안",
+    "attribute": "황"
+  },
+  "yeon_irang": {
+    "name": "연이랑",
+    "image": "황_위대한가문_연 이랑",
+    "attribute": "황"
+  },
+  "evan": {
+    "name": "에반",
+    "image": "황_빠른배_에반",
+    "attribute": "황"
+  },
+  "deurek": {
+    "name": "데에터우렉마지노",
+    "image": "황_데이터_우렉마지노",
+    "attribute": "황"
+  },
+  "cha": {
+    "name": "차",
+    "image": "황_태초인_차",
+    "attribute": "황"
+  },
+  "mori_calliope": {
+    "name": "모리칼리오페",
+    "image": "황_콜_모리칼리오페",
+    "attribute": "황"
+  },
+  "khun_asensio": {
+    "name": "쿤아센시오",
+    "image": "황_데이터_쿤 아센시오",
+    "attribute": "황"
+  },
+  "chronos_hayuri": {
+    "name": "크로노스하유리",
+    "image": "황_크라노스_하유리",
+    "attribute": "황"
+  },
+  "po_bider_hugo": {
+    "name": "위고",
+    "image": "황_럭셔리_위고",
+    "attribute": "황"
+  },
+  "augusgus": {
+    "name": "아우구스구스",
+    "image": "황_신수그림_아우구스구스",
+    "attribute": "황"
+  },
+  "tokoyami_towa": {
+    "name": "토와",
+    "image": "황_콜_토코야미토와",
+    "attribute": "황"
+  },
+  "ari_bright_sharon": {
+    "name": "샤론",
+    "image": "황_요정검_샤론",
+    "attribute": "황"
+  },
+
+  "evankhell": {
+    "name": "에반켈",
+    "image": "적_지옥의염화_에반켈",
+    "attribute": "적"
+  },
+  "viole": {
+    "name": "비올레",
+    "image": "적_가시_비올레",
+    "attribute": "적"
+  },
+  "hajin": {
+    "name": "X하진성",
+    "image": "적_X_하진성",
+    "attribute": "적"
+  },
+  "albelda": {
+    "name": "알벨다",
+    "image": "적_영혼의조각_알벨다",
+    "attribute": "적"
+  },
+  "yui_jin": {
+    "name": "유이진",
+    "image": "적_콜_입학용병_유이진",
+    "attribute": "적"
+  },
+  "elise": {
+    "name": "엘리스",
+    "image": "적_콜_포레스트_엘리스",
+    "attribute": "적"
+  },
+  "beta": {
+    "name": "베타",
+    "image": "적_이탈자_베타",
+    "attribute": "적"
+  },
+  "gakr": {
+    "name": "각성라크",
+    "image": "적_각성_라크",
+    "attribute": "적"
+  },
+  "spy_siasia": {
+    "name": "시아시아",
+    "image": "적_스파이_시아시아",
+    "attribute": "적"
+  },
+
+  "garam": {
+    "name": "X가람",
+    "image": "청_X_가람",
+    "attribute": "청"
+  },
+  "yama": {
+    "name": "야마",
+    "image": "청_케이지주인_야마",
+    "attribute": "청"
+  },
+  "alpina": {
+    "name": "알피네",
+    "image": "청_그림자인간_알피네",
+    "attribute": "청"
+  },
+  "demache": {
+    "name": "쿤마스체니",
+    "image": "청_데이터_쿤마스체니",
+    "attribute": "청"
+  },
+  "urek_x": {
+    "name": "X우렉마지노",
+    "image": "청_X_우렉마지노",
+    "attribute": "청"
+  },
+  "kaiser": {
+    "name": "X카이저",
+    "image": "청_X_카이저",
+    "attribute": "청"
+  },
+  "escanor": {
+    "name": "에스카노르",
+    "image": "청_콜_더원_에스카노르",
+    "attribute": "청"
+  },
+
   "data_zahard": {
     "name": "자하드",
     "image": "녹_데이터_자하드",
@@ -55,57 +198,19 @@
     "image": "녹_자하드의공주",
     "attribute": "녹"
   },
-
-  "evankhell": {
-    "name": "에반켈",
-    "image": "적_지옥의염화_에반켈",
-    "attribute": "적"
+  "lobadon": {
+    "name": "로바돈",
+    "image": "녹_야전사령관_로바돈",
+    "attribute": "녹"
   },
-  "viole": {
-    "name": "비올레",
-    "image": "적_가시_비올레",
-    "attribute": "적"
+  "lashut": {
+    "name": "라슈트",
+    "image": "녹_키마이라_라슈트",
+    "attribute": "녹"
   },
-  "hajin": {
-    "name": "X하진성",
-    "image": "적_X_하진성",
-    "attribute": "적"
-  },
-  "albelda": {
-    "name": "알벨다",
-    "image": "적_영혼의조각_알벨다",
-    "attribute": "적"
-  },
-
-  "garam": {
-    "name": "X가람",
-    "image": "청_X_가람",
-    "attribute": "청"
-  },
-  "yama": {
-    "name": "야마",
-    "image": "청_케이지주인_야마",
-    "attribute": "청"
-  },
-  "alpina": {
-    "name": "알피네",
-    "image": "청_그림자인간_알피네",
-    "attribute": "청"
-  },
-
-  "khun_edahn": {
-    "name": "X에드안",
-    "image": "황_X_쿤에드안",
-    "attribute": "황"
-  },
-  "yeon_irang": {
-    "name": "연이랑",
-    "image": "황_위대한가문_연 이랑",
-    "attribute": "황"
-  },
-  "evan": {
-    "name": "에반",
-    "image": "황_빠른배_에반",
-    "attribute": "황"
+  "aria": {
+    "name": "아리아",
+    "image": "녹_망가진시간_아리아",
+    "attribute": "녹"
   }
 }
