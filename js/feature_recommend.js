@@ -1,144 +1,161 @@
-// feature_recommend.js
-// 모험 / PvP 티어표 + 캐릭터 클릭 시 추천 세팅 표시
-// characters.json + tiers.json 분리 구조 대응
+// js/feature_recommend.js
+// 🔥 모험/PvP + 속성필터 + 모달 상세창 + 홈버튼 포함 최종본
 
-let CHARACTERS = {};
-let TIERS = {};
+const CHARACTER_PATH = "./assets/img/characters/";
+
+let CHAR_DATA = {};
+let TIER_DATA = {};
 let currentMode = "adventure";
+let currentAttribute = "ALL";
 
-// ================================
-// 초기 로딩
-// ================================
-document.addEventListener("DOMContentLoaded", async () => {
-  await loadData();
-  renderModeToggle();
-  renderTierTable();
-});
+export async function mountRecommend(app){
 
-// ================================
-// 데이터 로드
-// ================================
-async function loadData() {
-  try {
-    const charRes = await fetch("data/characters.json");
-    CHARACTERS = await charRes.json();
+  app.innerHTML = `
+    <section class="container">
 
-    const tierRes = await fetch("data/tiers.json");
-    TIERS = await tierRes.json();
-  } catch (err) {
-    console.error("데이터 로드 실패:", err);
-  }
-}
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button class="hero-btn" id="go-home">🏠 홈</button>
+        <button class="hero-btn" onclick="history.back()">⬅ 뒤로가기</button>
+      </div>
 
-// ================================
-// 모험 / PvP 토글 UI
-// ================================
-function renderModeToggle() {
-  const root = document.getElementById("recommend-root");
+      <div class="recommend-header">
+        <button class="mode-btn active" data-mode="adventure">모험</button>
+        <button class="mode-btn" data-mode="pvp">PvP</button>
+      </div>
 
-  root.innerHTML = `
-    <div class="recommend-header">
-      <button id="btn-adventure" class="mode-btn active">모험</button>
-      <button id="btn-pvp" class="mode-btn">PvP</button>
-    </div>
-    <div id="tier-container"></div>
-    <div id="character-detail" class="character-detail"></div>
+      <div class="attribute-filter">
+        <button class="attr-btn active" data-attr="ALL">전체</button>
+        <button class="attr-btn" data-attr="녹">녹</button>
+        <button class="attr-btn" data-attr="적">적</button>
+        <button class="attr-btn" data-attr="청">청</button>
+        <button class="attr-btn" data-attr="황">황</button>
+        <button class="attr-btn" data-attr="자">자</button>
+      </div>
+
+      <div id="tier-wrapper"></div>
+
+      <div id="character-modal" class="modal-hidden"></div>
+    </section>
   `;
 
-  document.getElementById("btn-adventure").onclick = () => {
-    currentMode = "adventure";
-    updateModeButtons();
-    renderTierTable();
-  };
+  document.getElementById("go-home").onclick = () => location.hash = "";
 
-  document.getElementById("btn-pvp").onclick = () => {
-    currentMode = "pvp";
-    updateModeButtons();
-    renderTierTable();
-  };
+  CHAR_DATA = await fetch("./data/characters.json").then(r=>r.json());
+  TIER_DATA = await fetch("./data/tiers.json").then(r=>r.json());
+
+  bindModeButtons();
+  bindAttributeButtons();
+  renderTiers();
 }
 
-function updateModeButtons() {
-  document.querySelectorAll(".mode-btn").forEach(btn =>
-    btn.classList.remove("active")
-  );
+/* ================= MODE ================= */
 
-  if (currentMode === "adventure") {
-    document.getElementById("btn-adventure").classList.add("active");
-  } else {
-    document.getElementById("btn-pvp").classList.add("active");
-  }
-}
-
-// ================================
-// 티어표 렌더링
-// ================================
-function renderTierTable() {
-  const container = document.getElementById("tier-container");
-  const modeData = TIERS.modes?.[currentMode];
-
-  if (!modeData) {
-    container.innerHTML = "<p>티어 데이터가 없습니다.</p>";
-    return;
-  }
-
-  container.innerHTML = "";
-
-  Object.keys(modeData).forEach(tier => {
-    const tierRow = document.createElement("div");
-    tierRow.className = `tier-row tier-${tier}`;
-
-    const label = document.createElement("div");
-    label.className = "tier-label";
-    label.innerText = tier;
-
-    const characterArea = document.createElement("div");
-    characterArea.className = "tier-characters";
-
-    modeData[tier].forEach(charKey => {
-      const charData = CHARACTERS[charKey];
-      if (!charData) return;
-
-      const card = document.createElement("div");
-      card.className = "character-card";
-      card.innerHTML = `
-        <img src="assets/img/characters/${charData.image}.png" alt="${charData.name}">
-        <span>${charData.name}</span>
-      `;
-
-      card.onclick = () => showCharacterDetail(charKey);
-      characterArea.appendChild(card);
-    });
-
-    tierRow.appendChild(label);
-    tierRow.appendChild(characterArea);
-    container.appendChild(tierRow);
+function bindModeButtons(){
+  document.querySelectorAll(".mode-btn").forEach(btn=>{
+    btn.onclick = ()=>{
+      document.querySelectorAll(".mode-btn").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      currentMode = btn.dataset.mode;
+      renderTiers();
+    };
   });
 }
 
-// ================================
-// 캐릭터 상세 (추천 세팅 표시)
-// ================================
-function showCharacterDetail(charKey) {
-  const detail = document.getElementById("character-detail");
-  const charData = CHARACTERS[charKey];
+/* ================= ATTRIBUTE ================= */
 
-  if (!charData) return;
+function bindAttributeButtons(){
+  document.querySelectorAll(".attr-btn").forEach(btn=>{
+    btn.onclick = ()=>{
+      document.querySelectorAll(".attr-btn").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      currentAttribute = btn.dataset.attr;
+      renderTiers();
+    };
+  });
+}
 
-  detail.style.display = "block";
+/* ================= TIER RENDER ================= */
 
-  detail.innerHTML = `
-    <div class="detail-header">
-      <h2>${charData.name}</h2>
-      <button onclick="closeDetail()">닫기</button>
-    </div>
-    <div class="detail-body">
-      <img src="assets/img/characters/${charData.image}.png">
-      <pre>${charData.recommend || "추천 세팅 정보 없음"}</pre>
+function renderTiers(){
+  const wrapper = document.getElementById("tier-wrapper");
+  wrapper.innerHTML = "";
+
+  const tiers = TIER_DATA.modes[currentMode];
+
+  Object.keys(tiers).forEach(tier=>{
+    const charIds = tiers[tier];
+
+    const filtered = charIds.filter(id=>{
+      if(currentAttribute==="ALL") return true;
+      return CHAR_DATA[id]?.attribute === currentAttribute;
+    });
+
+    if(filtered.length===0) return;
+
+    const row = document.createElement("div");
+    row.className = `tier-row tier-${tier}`;
+
+    row.innerHTML = `
+      <div class="tier-label">${tier}</div>
+      <div class="tier-characters">
+        ${filtered.map(id=>renderCharacterCard(id)).join("")}
+      </div>
+    `;
+
+    wrapper.appendChild(row);
+  });
+
+  bindCharacterClicks();
+}
+
+/* ================= CHARACTER CARD ================= */
+
+function renderCharacterCard(id){
+  const char = CHAR_DATA[id];
+  if(!char) return "";
+
+  return `
+    <div class="character-card" data-id="${id}">
+      <img src="${CHARACTER_PATH}${encodeURI(char.image)}.png">
+      <span>${char.name}</span>
     </div>
   `;
 }
 
-function closeDetail() {
-  document.getElementById("character-detail").style.display = "none";
+/* ================= MODAL ================= */
+
+function bindCharacterClicks(){
+  document.querySelectorAll(".character-card").forEach(card=>{
+    card.onclick = ()=>{
+      openModal(card.dataset.id);
+    };
+  });
 }
+
+function openModal(id){
+  const modal = document.getElementById("character-modal");
+  const char = CHAR_DATA[id];
+
+  modal.className = "modal";
+
+  modal.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>${char.name}</h2>
+        <button onclick="closeModal()">✖</button>
+      </div>
+
+      <div class="modal-body">
+        <img src="${CHARACTER_PATH}${encodeURI(char.image)}.png">
+        <div>
+          <h3>추천 시동무기</h3>
+          <pre>${char.recommend || "정보 없음"}</pre>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+window.closeModal = function(){
+  document.getElementById("character-modal").className="modal-hidden";
+};
