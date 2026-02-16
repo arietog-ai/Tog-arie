@@ -347,9 +347,10 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
 /* 속성 필터 1행 고정 */
 .attribute-filter{
   display:flex;
+  gap:8px;
+  margin-bottom:20px;
+  flex-wrap:nowrap;
   justify-content:space-between;
-  gap:6px;
-  margin-bottom:24px;
 }
 
 .attr-btn{
@@ -358,9 +359,11 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
   border-radius:8px;
   border:1px solid var(--line);
   background:#111726;
+  cursor:pointer;
   font-weight:600;
-  font-size:14px;
+  text-align:center;
 }
+
 
 .attr-btn.active{
   background:#4da6ff;
