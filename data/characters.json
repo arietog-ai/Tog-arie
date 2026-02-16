@@ -1,0 +1,111 @@
+{
+  "luslec": {
+    "name": "루슬렉",
+    "image": "가주_FUG의 수장_루슬렉",
+    "attribute": "녹"
+  },
+  "troymerei": {
+    "name": "트로이메라이",
+    "image": "가주_가문의 주인_트로이메라이",
+    "attribute": "녹"
+  },
+  "gustang": {
+    "name": "구스트앙",
+    "image": "가주_가문의 주인_구스트앙",
+    "attribute": "적"
+  },
+  "urek": {
+    "name": "우렉 마지노",
+    "image": "가주_월하익송_우렉 마지노",
+    "attribute": "청"
+  },
+
+  "data_zahard": {
+    "name": "자하드",
+    "image": "녹_데이터_자하드",
+    "attribute": "녹"
+  },
+  "zahard_x": {
+    "name": "X자하드",
+    "image": "녹_X_자하드",
+    "attribute": "녹"
+  },
+  "ren": {
+    "name": "렌",
+    "image": "녹_처단자_렌",
+    "attribute": "녹"
+  },
+  "rachel": {
+    "name": "레이첼",
+    "image": "녹_콜_불멸의화신_레이첼",
+    "attribute": "녹"
+  },
+  "kallavan": {
+    "name": "칼라반",
+    "image": "녹_무의정수_칼라반",
+    "attribute": "녹"
+  },
+  "yasratcha": {
+    "name": "야스라차",
+    "image": "녹_지략가_야스라챠",
+    "attribute": "녹"
+  },
+  "zahard_princess": {
+    "name": "자하드공주",
+    "image": "녹_자하드의공주",
+    "attribute": "녹"
+  },
+
+  "evankhell": {
+    "name": "에반켈",
+    "image": "적_지옥의염화_에반켈",
+    "attribute": "적"
+  },
+  "viole": {
+    "name": "비올레",
+    "image": "적_가시_비올레",
+    "attribute": "적"
+  },
+  "hajin": {
+    "name": "X하진성",
+    "image": "적_X_하진성",
+    "attribute": "적"
+  },
+  "albelda": {
+    "name": "알벨다",
+    "image": "적_영혼의조각_알벨다",
+    "attribute": "적"
+  },
+
+  "garam": {
+    "name": "X가람",
+    "image": "청_X_가람",
+    "attribute": "청"
+  },
+  "yama": {
+    "name": "야마",
+    "image": "청_케이지주인_야마",
+    "attribute": "청"
+  },
+  "alpina": {
+    "name": "알피네",
+    "image": "청_그림자인간_알피네",
+    "attribute": "청"
+  },
+
+  "khun_edahn": {
+    "name": "X에드안",
+    "image": "황_X_쿤에드안",
+    "attribute": "황"
+  },
+  "yeon_irang": {
+    "name": "연이랑",
+    "image": "황_위대한가문_연 이랑",
+    "attribute": "황"
+  },
+  "evan": {
+    "name": "에반",
+    "image": "황_빠른배_에반",
+    "attribute": "황"
+  }
+}
