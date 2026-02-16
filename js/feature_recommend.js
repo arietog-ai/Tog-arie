@@ -1,10 +1,12 @@
+// js/feature_recommend.js
+
 let characters = {};
 let tiers = {};
 
 let currentMode = "adventure";
 let currentAttribute = "all";
 
-export async function renderRecommendView(container) {
+export async function mountRecommend(container) {
 
   characters = await fetch("./data/characters.json").then(res => res.json());
   tiers = await fetch("./data/tiers.json").then(res => res.json());
@@ -12,22 +14,22 @@ export async function renderRecommendView(container) {
   container.innerHTML = `
     <div class="container">
 
-      <div style="display:flex; gap:10px; margin-bottom:16px;">
-        <button onclick="history.back()">뒤로가기</button>
-        <button onclick="location.hash='#home'">홈</button>
+      <div class="recommend-header">
+        <button onclick="history.back()">← 뒤로가기</button>
+        <button onclick="location.hash=''">홈</button>
       </div>
 
       <div class="mode-toggle" id="mode-toggle"></div>
       <div class="attribute-filter" id="attribute-filter"></div>
-      <div id="tier-container"></div>
 
+      <div id="tier-container"></div>
     </div>
 
     <div id="recommend-modal" class="modal modal-hidden">
       <div class="modal-content">
         <div class="modal-header">
           <h3>추천 시동무기</h3>
-          <button onclick="closeModal()">닫기</button>
+          <button onclick="closeRecommendModal()">닫기</button>
         </div>
         <div class="modal-body" id="modal-body"></div>
       </div>
@@ -42,9 +44,9 @@ export async function renderRecommendView(container) {
 /* ================= MODE ================= */
 
 function renderModeToggle() {
-  const container = document.getElementById("mode-toggle");
+  const el = document.getElementById("mode-toggle");
 
-  container.innerHTML = `
+  el.innerHTML = `
     <button class="mode-btn ${currentMode === "adventure" ? "active" : ""}"
       onclick="changeMode('adventure')">모험</button>
 
@@ -59,18 +61,18 @@ window.changeMode = function(mode){
   renderTierTable();
 }
 
-/* ================= ATTRIBUTE ================= */
+/* ================= ATTRIBUTE FILTER ================= */
 
 function renderAttributeFilter(){
-  const container = document.getElementById("attribute-filter");
+  const el = document.getElementById("attribute-filter");
 
   const attrs = ["all","황","자","적","청","녹"];
 
-  container.innerHTML = attrs.map(attr => `
+  el.innerHTML = attrs.map(a => `
     <button 
-      class="attr-btn ${currentAttribute === attr ? "active" : ""}"
-      onclick="changeAttribute('${attr}')">
-      ${attr === "all" ? "전체" : attr}
+      class="attr-btn ${currentAttribute === a ? "active" : ""}"
+      onclick="changeAttribute('${a}')">
+      ${a === "all" ? "전체" : a}
     </button>
   `).join("");
 }
@@ -85,21 +87,21 @@ window.changeAttribute = function(attr){
 
 function renderTierTable(){
   const container = document.getElementById("tier-container");
-  const modeData = tiers.modes[currentMode];
-
   container.innerHTML = "";
+
+  const modeData = tiers.modes[currentMode];
 
   Object.keys(modeData).forEach(tier => {
 
     const row = document.createElement("div");
-    row.className = "tier-row";
+    row.className = `tier-row tier-${tier}`;
 
     const label = document.createElement("div");
-    label.className = `tier-label tier-${tier}`;
+    label.className = "tier-label";
     label.innerText = tier;
 
-    const list = document.createElement("div");
-    list.className = "tier-list";
+    const charWrap = document.createElement("div");
+    charWrap.className = "tier-characters";
 
     modeData[tier].forEach(id => {
 
@@ -111,19 +113,19 @@ function renderTierTable(){
 
       const card = document.createElement("div");
       card.className = "character-card";
-      card.onclick = () => openModal(id);
+      card.onclick = () => openRecommendModal(id);
 
       card.innerHTML = `
         <img src="./assets/img/characters/${char.image}.png" />
         <span>${char.name}</span>
       `;
 
-      list.appendChild(card);
+      charWrap.appendChild(card);
     });
 
-    if(list.children.length > 0){
+    if(charWrap.children.length > 0){
       row.appendChild(label);
-      row.appendChild(list);
+      row.appendChild(charWrap);
       container.appendChild(row);
     }
   });
@@ -131,7 +133,7 @@ function renderTierTable(){
 
 /* ================= MODAL ================= */
 
-function openModal(id){
+function openRecommendModal(id){
   const char = characters[id];
 
   const modal = document.getElementById("recommend-modal");
@@ -142,6 +144,9 @@ function openModal(id){
     <div>
       <h2>${char.name}</h2>
       <p><strong>속성:</strong> ${char.attribute}</p>
+      <p style="margin:6px 0 12px; font-size:13px; color:#aaa;">
+        ※ 캐릭터를 누르면 추천 시동무기가 표시됩니다.
+      </p>
       <pre>${char.recommend || "추천 시동무기 정보 없음"}</pre>
     </div>
   `;
@@ -149,6 +154,7 @@ function openModal(id){
   modal.classList.remove("modal-hidden");
 }
 
-window.closeModal = function(){
-  document.getElementById("recommend-modal").classList.add("modal-hidden");
-}
+window.closeRecommendModal = function(){
+  document.getElementById("recommend-modal")
+    .classList.add("modal-hidden");
+};
