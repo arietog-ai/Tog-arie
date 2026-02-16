@@ -81,6 +81,47 @@
     "attribute": "황"
   },
 
+  "karaka": {
+    "name": "카라카",
+    "image": "자_철갑주_카라카",
+    "attribute": "자"
+  },
+  "jeonchang": {
+    "name": "전창",
+    "image": "자_전창_쿤마스체니",
+    "attribute": "자"
+  },
+  "deguang": {
+    "name": "데이터구스트앙",
+    "image": "자_데이터_구스트앙",
+    "attribute": "자"
+  },
+  "white": {
+    "name": "화이트",
+    "image": "자_찢겨진권좌_화이트",
+    "attribute": "자"
+  },
+  "hell_joe": {
+    "name": "헬조",
+    "image": "자_명황_헬조",
+    "attribute": "자"
+  },
+  "sp_hayura": {
+    "name": "하유라",
+    "image": "자_FUG간부_하유라",
+    "attribute": "자"
+  },
+  "gaori_rahel": {
+    "name": "가오리라헬",
+    "image": "자_가오리_라헬",
+    "attribute": "자"
+  },
+  "silver_khun": {
+    "name": "은어쿤",
+    "image": "자_연의불꽃_쿤",
+    "attribute": "자"
+  },
+
   "evankhell": {
     "name": "에반켈",
     "image": "적_지옥의염화_에반켈",
