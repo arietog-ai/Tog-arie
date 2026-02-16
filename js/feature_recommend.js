@@ -6,34 +6,36 @@ let tiers = {};
 let currentMode = "adventure";
 let currentAttribute = "all";
 
-/* ================= SAFE JSON LOAD ================= */
-
-async function loadJSON(relativePath) {
-  const url = new URL(relativePath, import.meta.url);
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`JSON load failed: ${res.status}`);
-  }
-  return await res.json();
-}
-
-/* ================= MOUNT ================= */
+let isMounted = false; // 🔥 중복 mount 방지
 
 export async function mountRecommend(container) {
 
+  if (isMounted) return;
+  isMounted = true;
+
   try {
-    characters = await loadJSON("../data/characters.json");
-    tiers = await loadJSON("../data/tiers.json");
+    const [charRes, tierRes] = await Promise.all([
+      fetch("./data/characters.json"),
+      fetch("./data/tiers.json")
+    ]);
+
+    if (!charRes.ok || !tierRes.ok) {
+      throw new Error("JSON load failed");
+    }
+
+    characters = await charRes.json();
+    tiers = await tierRes.json();
+
   } catch (err) {
-    console.error("데이터 로딩 실패:", err);
     container.innerHTML = `
       <div class="container">
         <div class="card">
           <h2>데이터 로딩 실패</h2>
-          <p>JSON 파일 경로 또는 배포 경로를 확인하세요.</p>
+          <p>characters.json / tiers.json 경로 확인</p>
         </div>
       </div>
     `;
+    console.error(err);
     return;
   }
 
@@ -41,32 +43,47 @@ export async function mountRecommend(container) {
     <div class="container">
 
       <div class="recommend-header">
-        <button id="home-btn" class="mode-btn">홈으로</button>
+        <button id="home-btn">홈으로</button>
       </div>
 
-      <div class="recommend-header" id="mode-toggle"></div>
-
+      <div class="mode-toggle" id="mode-toggle"></div>
       <div class="attribute-filter" id="attribute-filter"></div>
-
       <div id="tier-container"></div>
+
     </div>
 
     <div id="recommend-modal" class="modal modal-hidden">
       <div class="modal-content">
         <div class="modal-header">
           <h3>추천 시동무기</h3>
-          <button id="modal-close" class="mode-btn">닫기</button>
+          <button id="modal-close">닫기</button>
         </div>
         <div class="modal-body" id="modal-body"></div>
       </div>
     </div>
   `;
 
+  // 🔥 홈 버튼
   document.getElementById("home-btn")
-    .addEventListener("click", () => location.hash = "");
+    .addEventListener("click", () => {
+      isMounted = false;
+      location.hash = "";
+    });
 
+  // 🔥 모달 닫기 버튼
   document.getElementById("modal-close")
-    .addEventListener("click", closeRecommendModal);
+    .addEventListener("click", closeModal);
+
+  // 🔥 배경 클릭 시 닫기
+  document.getElementById("recommend-modal")
+    .addEventListener("click", e => {
+      if (e.target.id === "recommend-modal") closeModal();
+    });
+
+  // 🔥 ESC 키 닫기
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") closeModal();
+  });
 
   renderModeToggle();
   renderAttributeFilter();
@@ -113,13 +130,14 @@ function renderAttributeFilter(){
   });
 }
 
-/* ================= TIER TABLE ================= */
+/* ================= TIER ================= */
 
 function renderTierTable(){
   const container = document.getElementById("tier-container");
   container.innerHTML = "";
 
-  const modeData = tiers.modes[currentMode];
+  const modeData = tiers.modes?.[currentMode];
+  if (!modeData) return;
 
   Object.keys(modeData).forEach(tier => {
 
@@ -136,25 +154,25 @@ function renderTierTable(){
     modeData[tier].forEach(id => {
 
       const char = characters[id];
-      if(!char) return;
+      if (!char) return;
 
-      if(currentAttribute !== "all" && char.attribute !== currentAttribute)
+      if (currentAttribute !== "all" && char.attribute !== currentAttribute)
         return;
 
       const card = document.createElement("div");
       card.className = "character-card";
 
       card.innerHTML = `
-        <img src="./assets/img/characters/${char.image}.png" />
+        <img src="./assets/img/characters/${char.image}.png" alt="${char.name}">
         <span>${char.name}</span>
       `;
 
-      card.addEventListener("click", ()=> openRecommendModal(id));
+      card.addEventListener("click", ()=> openModal(id));
 
       charWrap.appendChild(card);
     });
 
-    if(charWrap.children.length > 0){
+    if (charWrap.children.length > 0) {
       row.appendChild(label);
       row.appendChild(charWrap);
       container.appendChild(row);
@@ -164,13 +182,15 @@ function renderTierTable(){
 
 /* ================= MODAL ================= */
 
-function openRecommendModal(id){
+function openModal(id){
   const char = characters[id];
+  if (!char) return;
+
   const modal = document.getElementById("recommend-modal");
   const body = document.getElementById("modal-body");
 
   body.innerHTML = `
-    <img src="./assets/img/characters/${char.image}.png" />
+    <img src="./assets/img/characters/${char.image}.png">
     <div>
       <h2>${char.name}</h2>
       <p><strong>속성:</strong> ${char.attribute}</p>
@@ -181,7 +201,8 @@ function openRecommendModal(id){
   modal.classList.remove("modal-hidden");
 }
 
-function closeRecommendModal(){
-  document.getElementById("recommend-modal")
-    .classList.add("modal-hidden");
+function closeModal(){
+  const modal = document.getElementById("recommend-modal");
+  if (!modal) return;
+  modal.classList.add("modal-hidden");
 }
