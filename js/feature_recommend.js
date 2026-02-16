@@ -6,26 +6,32 @@ let tiers = {};
 let currentMode = "adventure";
 let currentAttribute = "all";
 
-/* ================= INIT ================= */
+/* ================= SAFE JSON LOAD ================= */
+
+async function loadJSON(relativePath) {
+  const url = new URL(relativePath, import.meta.url);
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`JSON load failed: ${res.status}`);
+  }
+  return await res.json();
+}
+
+/* ================= MOUNT ================= */
 
 export async function mountRecommend(container) {
 
   try {
-    // 현재 도메인 기준 절대경로
-    const charRes = await fetch("/data/characters.json");
-    const tierRes = await fetch("/data/tiers.json");
-
-    if (!charRes.ok || !tierRes.ok) throw new Error("JSON load failed");
-
-    characters = await charRes.json();
-    tiers = await tierRes.json();
-
+    characters = await loadJSON("../data/characters.json");
+    tiers = await loadJSON("../data/tiers.json");
   } catch (err) {
     console.error("데이터 로딩 실패:", err);
     container.innerHTML = `
       <div class="container">
-        <h2>데이터 로딩 실패</h2>
-        <p>반드시 로컬 서버로 실행하세요 (Live Server 등)</p>
+        <div class="card">
+          <h2>데이터 로딩 실패</h2>
+          <p>JSON 파일 경로 또는 배포 경로를 확인하세요.</p>
+        </div>
       </div>
     `;
     return;
@@ -38,7 +44,8 @@ export async function mountRecommend(container) {
         <button id="home-btn" class="mode-btn">홈으로</button>
       </div>
 
-      <div class="mode-toggle" id="mode-toggle"></div>
+      <div class="recommend-header" id="mode-toggle"></div>
+
       <div class="attribute-filter" id="attribute-filter"></div>
 
       <div id="tier-container"></div>
@@ -66,7 +73,6 @@ export async function mountRecommend(container) {
   renderTierTable();
 }
 
-
 /* ================= MODE ================= */
 
 function renderModeToggle() {
@@ -85,7 +91,6 @@ function renderModeToggle() {
     });
   });
 }
-
 
 /* ================= ATTRIBUTE ================= */
 
@@ -108,8 +113,7 @@ function renderAttributeFilter(){
   });
 }
 
-
-/* ================= TIER ================= */
+/* ================= TIER TABLE ================= */
 
 function renderTierTable(){
   const container = document.getElementById("tier-container");
@@ -141,7 +145,7 @@ function renderTierTable(){
       card.className = "character-card";
 
       card.innerHTML = `
-        <img src="/assets/img/characters/${char.image}.png" alt="${char.name}" />
+        <img src="./assets/img/characters/${char.image}.png" />
         <span>${char.name}</span>
       `;
 
@@ -158,7 +162,6 @@ function renderTierTable(){
   });
 }
 
-
 /* ================= MODAL ================= */
 
 function openRecommendModal(id){
@@ -167,7 +170,7 @@ function openRecommendModal(id){
   const body = document.getElementById("modal-body");
 
   body.innerHTML = `
-    <img src="/assets/img/characters/${char.image}.png" />
+    <img src="./assets/img/characters/${char.image}.png" />
     <div>
       <h2>${char.name}</h2>
       <p><strong>속성:</strong> ${char.attribute}</p>
