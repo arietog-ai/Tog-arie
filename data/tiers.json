@@ -1,0 +1,164 @@
+{
+  "luslec": {
+    "recommend": "PvP 바리 세팅 (효적, 마관)\n압그 세팅 (효적, 마관)"
+  },
+  "troymerei": {
+    "recommend": "바리(★) 4세트\n옵션: 효적, 마관\n보조: 룬다 4세트 (옵션: 효적, 마관)"
+  },
+  "gustang": {
+    "recommend": "바리(★) 4세트\n옵션: 효적, 물관"
+  },
+  "urek": {
+    "recommend": "바리(★) / 도리스 4세트\n옵션: 효적, 물관"
+  },
+
+  /* ================= 황 ================= */
+
+  "khun_edahn": {
+    "recommend": "바리(★) / 엘 4\n옵션: 효적, 마관"
+  },
+  "yeon_irang": {
+    "recommend": "도리스(★) 4\n옵션: 치댐증, 마관"
+  },
+  "evan": {
+    "recommend": "바리(★) / 룬다 4\n옵션: 효저, 물저"
+  },
+  "deurek": {
+    "recommend": "바리 4\n옵션: 효저, 저항"
+  },
+  "cha": {
+    "recommend": "바리(★) 4\n옵션: 효적, 물관"
+  },
+  "mori_calliope": {
+    "recommend": "바리(★) 4\n옵션: 치댐증, 물리 관통"
+  },
+  "khun_asensio": {
+    "recommend": "바리 4\n옵션: 마저, 물리 관통 / 물저"
+  },
+  "chronos_hayuri": {
+    "recommend": "라이 / 바리 4\n옵션: 치댐증, 마법 관통"
+  },
+  "po_bider_hugo": {
+    "recommend": "바리(★) 4\n옵션: 효저, 물리 관통"
+  },
+  "augusgus": {
+    "recommend": "바리 4\n옵션: 치댐증, 물리 관통"
+  },
+  "tokoyami_towa": {
+    "recommend": "바리(★) / 룬다 4\n옵션: 효적/효저, 물저"
+  },
+  "ari_bright_sharon": {
+    "recommend": "바리(★) / 룬다 4\n옵션: 효저, 물저"
+  },
+
+  /* ================= 자 ================= */
+
+  "karaka": {
+    "recommend": "명월 / 바리 4\n옵션: 저항"
+  },
+  "jeonchang": {
+    "recommend": "바리(★) / 엘 / 선댄스 4\n옵션: 효적, 마관"
+  },
+  "deguang": {
+    "recommend": "바리(★) 4\n옵션: 효저, 물리 저항"
+  },
+  "white": {
+    "recommend": "바리 4\n옵션: 치댐증/효저, 마법 관통"
+  },
+  "hell_joe": {
+    "recommend": "바리 4\n옵션: 치댐증/효적, 물리 관통"
+  },
+  "sp_hayura": {
+    "recommend": "바리(★) / 룬다 / 도리스 4\n옵션: 효저/물저"
+  },
+  "gaori_rahel": {
+    "recommend": "엘 / 바리 4\n옵션: 치댐증/효적, 마법 관통"
+  },
+  "silver_khun": {
+    "recommend": "도리스(★) / 룬다 / 바리 4 / 라이마고22(보스용)\n옵션: 효저/마저, 물저"
+  },
+
+  /* ================= 적 ================= */
+
+  "evankhell": {
+    "recommend": "바리 4\n옵션: 치댐증/효적, 마법 관통/저항"
+  },
+  "viole": {
+    "recommend": "선댄스 4\n옵션: 치댐증, 마법 관통"
+  },
+  "hajin": {
+    "recommend": "라이 / 바리 4\n옵션: 치댐증, 물리 관통"
+  },
+  "gakr": {
+    "recommend": "명월 / 바리 4\n옵션: 효저, 물저"
+  },
+  "albelda": {
+    "recommend": "바리(★) / 라이마고22 4\n옵션: 효저, 물저"
+  },
+  "yui_jin": {
+    "recommend": "알로 4\n옵션: 마저, 물리 관통"
+  },
+  "elise": {
+    "recommend": "엘 / 압그(★) 4\n옵션: 저항/치댐증/마저, 마법 관통"
+  },
+  "spy_siasia": {
+    "recommend": "바리 / 룬다(★) / 도리스 4\n옵션: 효저/물저"
+  },
+  "beta": {
+    "recommend": "라이마고22 / 라이안나 4\n옵션: 치댐증, 마법 관통"
+  },
+
+  /* ================= 청 ================= */
+
+  "demache": {
+    "recommend": "라이마고22(★) / 라플 4\n옵션: 치댐증/효저, 마법 관통"
+  },
+  "urek_x": {
+    "recommend": "저돌파 바리 4 (저항) / 5레볼↑ 바리 4\n옵션: 마저/치댐증, 물리 관통"
+  },
+  "kaiser": {
+    "recommend": "선댄스 4\n옵션: 치댐증, 물리 관통"
+  },
+  "escanor": {
+    "recommend": "바리(★) / 명월 / 라이안나 4\n옵션: 저항"
+  },
+  "garam": {
+    "recommend": "바리(★) / 룬다 / 엘 4\n옵션: 마저/효적, 물저/마법 관통"
+  },
+  "yama": {
+    "recommend": "바리 4\n옵션: 저항"
+  },
+  "alpina": {
+    "recommend": "바리 4\n옵션: 효적, 물저"
+  },
+
+  /* ================= 녹 ================= */
+
+  "data_zahard": {
+    "recommend": "알로 / 바리 4\n옵션: 마저, 물리 관통"
+  },
+  "ren": {
+    "recommend": "엘 4\n옵션: 저항(62.5%), 치댐증, 마법 관통"
+  },
+  "rachel": {
+    "recommend": "엘 4\n옵션: 마법 관통"
+  },
+  "kallavan": {
+    "recommend": "딜: 알로 / 바리 4\n탱: 바리 4\n옵션: 딜(마저/치댐증, 물리 관통) / 탱(저항)"
+  },
+  "yasratcha": {
+    "recommend": "바리 4\n옵션: 마저/효적(★)/치댐증, 마법 관통"
+  },
+  "zahard_princess": {
+    "recommend": "모험: 바리 4\n보스: 라이마고22\nPvP: 알로 4\n옵션: 모험(치댐증, 물리 관통) / 보스(치댐증, 물리 관통) / PvP(효저, 물리 관통)"
+  },
+  "aria": {
+    "recommend": "바리(★) / 알로 4\n옵션: 효적/치댐증, 물리 관통"
+  },
+  "lashut": {
+    "recommend": "바리(★) / 엘 4\n옵션: 효적, 마법 관통"
+  },
+  "lobadon": {
+    "recommend": "룬다 / 도리스 4\n옵션: 효적, 물저/물리 관통"
+  }
+}
