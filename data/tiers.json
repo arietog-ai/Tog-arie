@@ -1,68 +1,80 @@
 {
   "modes": {
     "adventure": {
+
       "SS": [
-        "troymerei",
-        "gustang",
+        "luslec",
         "urek",
-        "luslec"
-      ],
-      "S": [
+        "troymerei",
         "khun_edahn",
-        "yeon_irang",
-        "evan",
-        "deurek",
+        "sp_hayura",
+        "khun_edahn",
+        "gustang",
+        "chronos_hayuri",
+        "lobadon",
+        "ari_bright_sharon",
         "cha"
       ],
+
+      "S": [
+        "tokoyami_towa",
+        "lashut",
+        "sp_hayura",
+        "alpina",
+        "aria",
+        "evan",
+        "augusgus",
+        "jeonchang",
+        "khun_edahn",
+        "albelda",
+        "po_bider_hugo"
+      ],
+
       "A": [
+        "gaori_rahel",
+        "garam",
+        "demache",
+        "beta",
+        "yasratcha",
+        "zahard_x",
+        "data_zahard",
+        "hell_joe",
+        "zahard_princess",
+        "chronos_hayuri",
+        "yeon_irang"
+      ],
+
+      "B": [
+        "kallavan",
+        "gakr",
         "karaka",
         "white",
-        "hell_joe",
-        "sp_hayura",
-        "albelda",
-        "demache"
+        "khun_asensio",
+        "yui_jin",
+        "yama",
+        "evankhell",
+        "hajin",
+        "jeonchang"
       ],
-      "B": [
-        "ren",
-        "rachel",
-        "kallavan",
-        "yasratcha",
-        "garam",
-        "yama"
-      ],
+
       "F": [
-        "beta"
+        "escanor",
+        "ren",
+        "kaiser",
+        "urek_x",
+        "deguang",
+        "rachel",
+        "urek",
+        "mori_calliope"
       ]
     },
 
     "pvp": {
-      "SS": [
-        "luslec",
-        "troymerei"
-      ],
-      "S": [
-        "khun_edahn",
-        "cha",
-        "white",
-        "hajin",
-        "albelda"
-      ],
-      "A": [
-        "karaka",
-        "sp_hayura",
-        "evankhell",
-        "demache",
-        "urek_x"
-      ],
-      "B": [
-        "ren",
-        "rachel",
-        "garam",
-        "alpina"
-      ],
-      "F": [
-        "beta"
-      ]
+      "SS": [],
+      "S": [],
+      "A": [],
+      "B": [],
+      "F": []
     }
   }
 }
