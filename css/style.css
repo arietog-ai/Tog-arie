@@ -428,9 +428,6 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
 }
 
 /* ===== MODAL ===== */
-
-.modal-hidden{ display:none; }
-
 .modal{
   position:fixed;
   inset:0;
@@ -440,6 +437,12 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
   align-items:center;
   z-index:5000;
 }
+
+/* 🔥 반드시 modal 아래에 둬라 */
+.modal.modal-hidden{
+  display:none !important;
+}
+
 
 .modal-content{
   width:min(800px,90%);
