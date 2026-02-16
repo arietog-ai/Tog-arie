@@ -6,16 +6,36 @@ let tiers = {};
 let currentMode = "adventure";
 let currentAttribute = "all";
 
+/* ================= INIT ================= */
+
 export async function mountRecommend(container) {
 
-  characters = await fetch("./data/characters.json").then(r => r.json());
-  tiers = await fetch("./data/tiers.json").then(r => r.json());
+  try {
+    // 현재 도메인 기준 절대경로
+    const charRes = await fetch("/data/characters.json");
+    const tierRes = await fetch("/data/tiers.json");
+
+    if (!charRes.ok || !tierRes.ok) throw new Error("JSON load failed");
+
+    characters = await charRes.json();
+    tiers = await tierRes.json();
+
+  } catch (err) {
+    console.error("데이터 로딩 실패:", err);
+    container.innerHTML = `
+      <div class="container">
+        <h2>데이터 로딩 실패</h2>
+        <p>반드시 로컬 서버로 실행하세요 (Live Server 등)</p>
+      </div>
+    `;
+    return;
+  }
 
   container.innerHTML = `
     <div class="container">
 
       <div class="recommend-header">
-        <button id="home-btn">홈으로</button>
+        <button id="home-btn" class="mode-btn">홈으로</button>
       </div>
 
       <div class="mode-toggle" id="mode-toggle"></div>
@@ -28,7 +48,7 @@ export async function mountRecommend(container) {
       <div class="modal-content">
         <div class="modal-header">
           <h3>추천 시동무기</h3>
-          <button id="modal-close">닫기</button>
+          <button id="modal-close" class="mode-btn">닫기</button>
         </div>
         <div class="modal-body" id="modal-body"></div>
       </div>
@@ -45,6 +65,7 @@ export async function mountRecommend(container) {
   renderAttributeFilter();
   renderTierTable();
 }
+
 
 /* ================= MODE ================= */
 
@@ -64,6 +85,7 @@ function renderModeToggle() {
     });
   });
 }
+
 
 /* ================= ATTRIBUTE ================= */
 
@@ -85,6 +107,7 @@ function renderAttributeFilter(){
     });
   });
 }
+
 
 /* ================= TIER ================= */
 
@@ -118,7 +141,7 @@ function renderTierTable(){
       card.className = "character-card";
 
       card.innerHTML = `
-        <img src="./assets/img/characters/${char.image}.png" />
+        <img src="/assets/img/characters/${char.image}.png" alt="${char.name}" />
         <span>${char.name}</span>
       `;
 
@@ -144,7 +167,7 @@ function openRecommendModal(id){
   const body = document.getElementById("modal-body");
 
   body.innerHTML = `
-    <img src="./assets/img/characters/${char.image}.png" />
+    <img src="/assets/img/characters/${char.image}.png" />
     <div>
       <h2>${char.name}</h2>
       <p><strong>속성:</strong> ${char.attribute}</p>
