@@ -12,8 +12,6 @@ import { mountGacha } from './feature_gacha.js?v=20251005-8';
 // ✅ 캐릭터 추천정보 라우트
 import { mountRecommend } from './feature_recommend.js';
 
-//import { mountRecommend } from './feature_recommend.js?v=20251123-2';
-
 const app = document.getElementById('app');
 
 function scrollTop(){
