@@ -538,5 +538,47 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
     font-size:13px;
   }
 
+  /* ===================================================== */
+/* ============== RECOMMEND MODAL MOBILE FIX =========== */
+/* ===================================================== */
+
+@media (max-width:768px){
+
+  .modal{
+    align-items:flex-end;   /* 🔥 중앙 → 아래 */
+    padding:12px;
+  }
+
+  .modal-content{
+    width:100%;
+    max-height:80vh;        /* 🔥 화면 덜 차게 */
+    padding:16px;
+    border-radius:20px 20px 0 0;  /* 바텀시트 느낌 */
+    display:flex;
+    flex-direction:column;
+  }
+
+  .modal-header{
+    position:sticky;        /* 🔥 닫기 버튼 항상 보이게 */
+    top:0;
+    background:#111826;
+    padding-bottom:10px;
+    z-index:10;
+  }
+
+  .modal-body{
+    flex:1;
+    overflow:auto;          /* 🔥 내부 스크롤 */
+    gap:16px;
+  }
+
+  .modal-body img{
+    width:70%;              /* 🔥 이미지 작게 */
+    margin:0 auto;
+  }
+
+}
+
+  
 }
 
