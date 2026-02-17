@@ -1,80 +1,158 @@
 {
   "modes": {
     "adventure": {
-
       "SS": [
-        "luslec",
-        "urek",
-        "troymerei",
-        "khun_edahn",
-        "sp_hayura",
-        "khun_edahn",
-        "gustang",
-        "chronos_hayuri",
-        "lobadon",
+        "god_luslec",
+        "god_urek",
+        "god_troymerei",
+        "god_gustang",
+        "x_khun_edahn",
         "ari_bright_sharon",
-        "cha"
+        "cha",
+        "hwang_ryeon",
+        "silver_khun",
+        "spy_siasia",
+        "lobadon"
       ],
-
       "S": [
         "tokoyami_towa",
-        "lashut",
-        "sp_hayura",
-        "alpina",
-        "aria",
+        "evelyn",
         "evan",
         "augusgus",
-        "jeonchang",
         "khun_edahn",
+        "po_bider_hugo",
+        "jeonchang",
+        "sp_hayura",
+        "azmo",
         "albelda",
-        "po_bider_hugo"
+        "tiara",
+        "leviathan_bam",
+        "alpina",
+        "soo",
+        "aria",
+        "chiihwa",
+        "lashut"
       ],
-
       "A": [
-        "gaori_rahel",
-        "garam",
-        "demache",
-        "beta",
-        "yasratcha",
-        "zahard_x",
-        "data_zahard",
         "hell_joe",
-        "zahard_princess",
+        "gaori_rahel",
         "chronos_hayuri",
-        "yeon_irang"
+        "yeon_irang",
+        "beta",
+        "demache",
+        "x_garam",
+        "garam",
+        "horn_bam",
+        "x_dowon",
+        "dowon",
+        "yasratcha",
+        "x_zahard",
+        "dezahard",
+        "zahard_princess"
       ],
-
       "B": [
-        "kallavan",
-        "gakr",
+        "khun_asensio",
         "karaka",
         "white",
-        "khun_asensio",
-        "yui_jin",
-        "yama",
-        "evankhell",
+        "x_jeonchang",
+        "gakr",
+        "x_hajin",
         "hajin",
-        "jeonchang"
+        "yui_jin",
+        "evankhell",
+        "yama",
+        "kallavan"      
       ],
-
       "F": [
+        "deguang",
+        "mori_calliope",
+        "urek",
+        "x_urek",
+        "x_kaiser",
+        "kaiser",
         "escanor",
         "ren",
-        "kaiser",
-        "urek_x",
-        "deguang",
-        "rachel",
-        "urek",
-        "mori_calliope"
+        "rachel"
       ]
     },
 
     "pvp": {
-      "SS": [],
-      "S": [],
-      "A": [],
-      "B": [],
-      "F": []
+      "SS": [
+        "god_luslec",
+        "god_urek",
+        "god_troymerei",
+        "cha",
+        "silver_khun",
+        "azmo",
+        "spy_siasia",
+        "lobadon",
+        "lashut"
+      ],
+      "S": [
+        "god_gustang",
+        "hwang_ryeon",
+        "tokoyami_towa",
+        "po_bider_hugo",
+        "augusgus",
+        "evelyn",
+        "ari_bright_sharon",
+        "evan",
+        "sp_hayura",
+        "tiara",
+        "albelda",
+        "alpina",
+        "soo",
+        "aria",
+        "chiihwa"
+      ],
+      "A": [
+        "khun_asensio",
+        "gaori_rahel",
+        "beta",
+        "horn_bam",
+        "x_garam",
+        "garam",
+        "demache",
+        "kallavan",
+        "dezahard",
+        "x_zahard",
+        "zahard_princess"
+      ],
+      "B": [
+        "x_khun_edahn",
+        "khun_edahn",
+        "yeon_irang",
+        "hell_joe",
+        "jeonchang",
+        "gakr",
+        "leviathan_bam",
+        "yasratcha"
+      ],
+      "F": [
+        "yui_jin",
+        "dowon",
+        "x_dowon",
+        "chronos_hayuri",
+        "escanor",
+        "ren",
+        "kaiser",
+        "x_kaiser",
+        "deguang",
+        "viole",
+        "hayuri",
+        "rachel",
+        "deurek",
+        "x_urek",
+        "urek",
+        "mori_calliope",
+        "yama",
+        "karaka",
+        "white",
+        "x_hajin",
+        "evankhell",
+        "hajin",
+        "x_jeonchang"
+      ]
     }
   }
 }
