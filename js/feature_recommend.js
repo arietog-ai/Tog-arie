@@ -163,7 +163,7 @@ function renderTierTable(){
       card.className = "character-card";
 
       card.innerHTML = `
-        <img src="./assets/img/characters/${char.image}" alt="${char.name}">
+        <img src="./assets/img/characters/${char.image}.png" alt="${char.name}">
         <span>${char.name}</span>
       `;
 
@@ -190,7 +190,7 @@ function openModal(id){
   const body = document.getElementById("modal-body");
 
   body.innerHTML = `
-    <img src="./assets/img/characters/${char.image}">
+    <img src="./assets/img/characters/${char.image}.png">
     <div>
       <h2>${char.name}</h2>
       <p><strong>속성:</strong> ${char.attribute}</p>
