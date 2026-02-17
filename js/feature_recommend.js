@@ -14,18 +14,18 @@ export async function mountRecommend(container) {
   isMounted = true;
 
   try {
-    const [charRes, tierRes] = await Promise.all([
-      fetch("./data/characters.json"),
-      fetch("./data/tiers.json")
-    ]);
+  const [charRes, tierRes] = await Promise.all([
+    fetch("/Tog-arie/data/characters.json"),
+    fetch("/Tog-arie/data/tiers.json")
+  ]);
 
-    if (!charRes.ok || !tierRes.ok) {
-      throw new Error("JSON load failed");
-    }
+  if (!charRes.ok || !tierRes.ok) {
+    throw new Error("JSON load failed");
+  }
 
-    characters = await charRes.json();
-    tiers = await tierRes.json();
-
+  characters = await charRes.json();
+  tiers = await tierRes.json();
+  
   } catch (err) {
     container.innerHTML = `
       <div class="container">
