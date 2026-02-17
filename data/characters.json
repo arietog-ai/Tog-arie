@@ -1,34 +1,33 @@
 {
-  "luslec": {
-    "name": "루슬렉",
-    "image": "가주_FUG의 수장_루슬렉",
-    "attribute": "녹",
-    "recommend": "PvP 바리 세팅 (효적, 마관)\n압그 세팅 (효적, 마관)"
+  "god_luslec": {
+  "name": "가주 루슬렉",
+  "image": "가주_FUG의 수장_루슬렉",
+  "attribute": "녹",
+  "recommend": "PvP 바리 세팅 (효적, 마관)\n압그 세팅 (효적, 마관)"
   },
-  "troymerei": {
-    "name": "트로이메라이",
-    "image": "가주_가문의 주인_트로이메라이",
-    "attribute": "녹",
-    "recommend": "바리(★) 4세트\n옵션: 효적, 마관\n보조: 룬다 4세트 (옵션: 효적, 마관)"
+  "god_troymerei": {
+  "name": "가주 트로이메라이",
+  "image": "가주_가문의 주인_트로이메라이",
+  "attribute": "녹",
+  "recommend": "바리(★) 4세트\n옵션: 효적, 마관\n보조: 룬다 4세트"
   },
-  "gustang": {
-    "name": "구스트앙",
-    "image": "가주_가문의 주인_구스트앙",
-    "attribute": "적",
-    "recommend": "바리(★) 4세트\n옵션: 효적, 물관"
+  "god_gustang": {
+  "name": "가주 구스트앙",
+  "image": "가주_가문의 주인_구스트앙",
+  "attribute": "적",
+  "recommend": "바리(★) 4세트\n옵션: 효적, 물관"
   },
-  "urek": {
-    "name": "우렉 마지노",
-    "image": "가주_월하익송_우렉 마지노",
-    "attribute": "청",
-    "recommend": "바리(★) / 도리스 4세트\n옵션: 효적, 물관"
+  "god_urek": {
+  "name": "가주 우렉 마지노",
+  "image": "가주_월하익송_우렉 마지노",
+  "attribute": "청",
+  "recommend": "바리(★) / 도리스 4세트\n옵션: 효적, 물관"
   },
-
-  "khun_edahn": {
-    "name": "X에드안",
-    "image": "황_X_쿤에드안",
-    "attribute": "황",
-    "recommend": "바리(★) / 엘 4\n옵션: 효적, 마관"
+  "x_khun_edahn": {
+  "name": "X 에드안",
+  "image": "황_X_쿤에드안",
+  "attribute": "황",
+  "recommend": "바리(★) / 엘 4\n옵션: 효적, 마관"
   },
   "yeon_irang": {
     "name": "연이랑",
@@ -96,7 +95,6 @@
     "attribute": "황",
     "recommend": "바리(★) / 룬다 4\n옵션: 효저, 물저"
   },
-
   "karaka": {
     "name": "카라카",
     "image": "자_철갑주_카라카",
@@ -121,8 +119,7 @@
     "attribute": "자",
     "recommend": "바리 4\n옵션: 치댐증/효저, 마법 관통"
   },
-
-    "hell_joe": {
+  "hell_joe": {
     "name": "헬조",
     "image": "자_명황_헬조",
     "attribute": "자",
@@ -146,7 +143,6 @@
     "attribute": "자",
     "recommend": "도리스(★) / 룬다 / 바리 4 / 라이마고22(보스용)\n옵션: 효저/마저, 물저"
   },
-
   "evankhell": {
     "name": "에반켈",
     "image": "적_지옥의염화_에반켈",
@@ -159,7 +155,7 @@
     "attribute": "적",
     "recommend": "선댄스 4\n옵션: 치댐증, 마법 관통"
   },
-  "hajin": {
+  "x_hajin": {
     "name": "X하진성",
     "image": "적_X_하진성",
     "attribute": "적",
@@ -201,8 +197,7 @@
     "attribute": "적",
     "recommend": "바리 / 룬다(★) / 도리스 4\n옵션: 효저/물저"
   },
-
-  "garam": {
+  "x_garam": {
     "name": "X가람",
     "image": "청_X_가람",
     "attribute": "청",
@@ -226,13 +221,13 @@
     "attribute": "청",
     "recommend": "라이마고22(★) / 라플 4\n옵션: 치댐증/효저, 마법 관통"
   },
-  "urek_x": {
+  "x_urek": {
     "name": "X우렉마지노",
     "image": "청_X_우렉마지노",
     "attribute": "청",
     "recommend": "저돌파 바리 4 (저항) / 5레볼↑ 바리 4\n옵션: 마저/치댐증, 물리 관통"
   },
-  "kaiser": {
+  "x_kaiser": {
     "name": "X카이저",
     "image": "청_X_카이저",
     "attribute": "청",
@@ -244,14 +239,13 @@
     "attribute": "청",
     "recommend": "바리(★) / 명월 / 라이안나 4\n옵션: 저항"
   },
-
-  "data_zahard": {
+  "dezahard": {
     "name": "자하드",
     "image": "녹_데이터_자하드",
     "attribute": "녹",
     "recommend": "알로 / 바리 4\n옵션: 마저, 물리 관통"
   },
-  "zahard_x": {
+  "x_zahard": {
     "name": "X자하드",
     "image": "녹_X_자하드",
     "attribute": "녹"
@@ -303,6 +297,81 @@
     "image": "녹_망가진시간_아리아",
     "attribute": "녹",
     "recommend": "바리(★) / 알로 4\n옵션: 효적/치댐증, 물리 관통"
-  }
+  },
 
+  "khun_edahn": {
+    "name": "쿤에드안",
+    "image": "황_쿤에드안",
+    "attribute": "황"
+  },
+  "evelyn": {
+    "name": "에블린",
+    "image": "황_에블린",
+    "attribute": "황"
+  },
+  "azmo": {
+    "name": "아즈모",
+    "image": "자_아즈모",
+    "attribute": "자"
+  },
+  "tiara": {
+    "name": "티아라",
+    "image": "적_티아라",
+    "attribute": "적"
+  },
+  "soo": {
+    "name": "소오",
+    "image": "청_소오",
+    "attribute": "청"
+  },
+  "chiihwa": {
+    "name": "치이화",
+    "image": "녹_치이화",
+    "attribute": "녹"
+  },
+  "hwang_ryeon": {
+    "name": "황련",
+    "image": "황_황련",
+    "attribute": "황"
+  },
+  "leviathan_bam": {
+    "name": "리바이던밤",
+    "image": "청_리바이던밤",
+    "attribute": "청"
+  },
+  "horn_bam": {
+    "name": "뿔밤",
+    "image": "청_뿔밤",
+    "attribute": "청"
+  },
+  "dowon": {
+    "name": "도원",
+    "image": "청_도원",
+    "attribute": "청"
+  },
+  "x_dowon": {
+    "name": "X도원",
+    "image": "청_X_도원",
+    "attribute": "청"
+  },
+  "hajin": {
+    "name": "하진성",
+    "image": "적_하진성",
+    "attribute": "적"
+  },
+  "x_jeonchang": {
+    "name": "X전창",
+    "image": "자_X_전창",
+    "attribute": "자"
+  },
+  "kaiser": {
+    "name": "카이저",
+    "image": "청_카이저",
+    "attribute": "청"
+  },
+  "urek": {
+    "name": "우렉",
+    "image": "청_우렉",
+    "attribute": "청"
+  }
 }
