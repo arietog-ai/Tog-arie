@@ -23,7 +23,6 @@
   "attribute": "청",
   "recommend": "바리(★) / 도리스 4세트\n옵션: 효적, 물관"
   },
-  
   "x_khun_edahn": {
   "name": "X 에드안",
   "image": "황_X_쿤에드안",
@@ -114,7 +113,6 @@
     "attribute": "황",
     "recommend": "바리(★) 4\n옵션: 효적, 물관"
   },
-
   "sp_hayura": {
     "name": "하유라",
     "image": "자_FUG간부_하유라",
@@ -175,7 +173,6 @@
     "attribute": "자",
     "recommend": "명월 / 바리 4\n옵션: 저항"
   },
-
   "x_hajin": {
     "name": "X하진성",
     "image": "적_X_하진성",
@@ -242,7 +239,6 @@
     "attribute": "적",
     "recommend": "엘 / 압그(★) 4\n옵션: 저항/치댐증/마저, 마법 관통"
   },
-  
   "x_garam": {
     "name": "X가람",
     "image": "청_X_가람",
@@ -327,7 +323,6 @@
     "attribute": "청",
     "recommend": "바리(★) / 명월 / 라이안나 4\n옵션: 저항"
   },
-
   "x_zahard": {
     "name": "X자하드",
     "image": "녹_X_자하드",
@@ -386,7 +381,6 @@
     "name": "치이화",
     "image": "녹_치유의불꽃_연이화",
     "attribute": "녹",
-    
   },
   "rachel": {
     "name": "레이첼",
