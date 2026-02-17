@@ -305,6 +305,12 @@
     "attribute": "청",
     "recommend": "-준비중-"
   },
+  "garam": {
+    "name": "가람",
+    "image": "청_은둔자_가람",
+    "attribute": "청",
+    "recommend": "바리(★) / 룬다 / 엘 4\n옵션: 마저/효적, 물저/마법 관통"
+  },  
   "kaiser": {
     "name": "카이저",
     "image": "청_지배자_카이저",
