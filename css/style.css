@@ -488,3 +488,55 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
   }
 }
 
+/* ========================================= */
+/* ========== RECOMMEND MOBILE FIX ========= */
+/* ========================================= */
+
+@media (max-width: 768px){
+
+  /* 카드 자동 정렬 */
+  .tier-characters{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px,1fr));
+    gap:10px;
+  }
+
+  .character-card{
+    width:100%; /* 🔥 고정폭 제거 */
+  }
+
+  .character-card img{
+    aspect-ratio:1/1;
+    object-fit:cover;
+  }
+
+  /* 티어 라벨 */
+  .tier-label{
+    width:100%;
+    padding:6px 0;
+    font-size:18px;
+  }
+
+  /* 모달 */
+  .modal-content{
+    width:95%;
+    padding:18px;
+  }
+
+  .modal-body{
+    flex-direction:column;
+    gap:16px;
+  }
+
+  .modal-body img{
+    width:100%;
+    max-width:280px;
+    margin:auto;
+  }
+
+  .modal-body pre{
+    font-size:13px;
+  }
+
+}
+
