@@ -344,13 +344,12 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
   border:0;
 }
 
-/* 속성 필터 1행 고정 */
+/* 속성 필터 */
 .attribute-filter{
   display:flex;
   gap:8px;
   margin-bottom:20px;
   flex-wrap:nowrap;
-  justify-content:space-between;
 }
 
 .attr-btn{
@@ -361,9 +360,7 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
   background:#111726;
   cursor:pointer;
   font-weight:600;
-  text-align:center;
 }
-
 
 .attr-btn.active{
   background:#4da6ff;
@@ -371,7 +368,8 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
   border:0;
 }
 
-/* 티어 */
+/* ===== TIER ===== */
+
 .tier-row{
   display:flex;
   margin-bottom:20px;
@@ -428,6 +426,7 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
 }
 
 /* ===== MODAL ===== */
+
 .modal{
   position:fixed;
   inset:0;
@@ -442,12 +441,13 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
   display:none !important;
 }
 
-
 .modal-content{
   width:min(800px,90%);
   background:#111826;
   border-radius:16px;
   padding:24px;
+  display:flex;
+  flex-direction:column;
 }
 
 .modal-header{
@@ -476,23 +476,11 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
   flex:1;
 }
 
-@media(max-width:768px){
-  .tier-row{
-    flex-direction:column;
-  }
-  .modal-body{
-    flex-direction:column;
-  }
-  .modal-body img{
-    width:100%;
-  }
-}
+/* ===================================================== */
+/* =================== MOBILE ========================== */
+/* ===================================================== */
 
-/* ========================================= */
-/* ========== RECOMMEND MOBILE FIX ========= */
-/* ========================================= */
-
-@media (max-width: 768px){
+@media (max-width:768px){
 
   /* 카드 자동 정렬 */
   .tier-characters{
@@ -502,79 +490,43 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
   }
 
   .character-card{
-    width:100%; /* 🔥 고정폭 제거 */
+    width:100%;
   }
 
-  .character-card img{
-    aspect-ratio:1/1;
-    object-fit:cover;
+  .tier-row{
+    flex-direction:column;
   }
 
-  /* 티어 라벨 */
   .tier-label{
     width:100%;
     padding:6px 0;
     font-size:18px;
   }
 
-  /* 모달 */
+  /* ===== 모달 반응형 (스크롤 없음) ===== */
+
   .modal-content{
-    width:95%;
-    padding:18px;
+    width:94%;
+    padding:16px;
   }
 
   .modal-body{
     flex-direction:column;
-    gap:16px;
+    gap:14px;
   }
 
+  /* 🔥 핵심: 화면 높이 기준 */
   .modal-body img{
-    width:100%;
-    max-width:280px;
-    margin:auto;
+    max-height:35dvh;
+    width:auto;
+    height:auto;
+    object-fit:contain;
+    margin:0 auto;
   }
 
   .modal-body pre{
-    font-size:13px;
-  }
-
-  /* ===================================================== */
-/* ============== RECOMMEND MODAL MOBILE FIX =========== */
-/* ===================================================== */
-
-@media (max-width:768px){
-
-  .modal{
-    align-items:flex-end;   /* 🔥 중앙 → 아래 */
-    padding:12px;
-  }
-
-  .modal-content{
-    width:100%;
-    max-height:80vh;        /* 🔥 화면 덜 차게 */
-    padding:16px;
-    border-radius:20px 20px 0 0;  /* 바텀시트 느낌 */
-    display:flex;
-    flex-direction:column;
-  }
-
-  .modal-header{
-    position:sticky;        /* 🔥 닫기 버튼 항상 보이게 */
-    top:0;
-    background:#111826;
-    padding-bottom:10px;
-    z-index:10;
-  }
-
-  .modal-body{
-    flex:1;
-    overflow:auto;          /* 🔥 내부 스크롤 */
-    gap:16px;
-  }
-
-  .modal-body img{
-    width:70%;              /* 🔥 이미지 작게 */
-    margin:0 auto;
+    font-size:clamp(12px,3.5vw,14px);
+    padding:clamp(10px,3vw,14px);
   }
 
 }
