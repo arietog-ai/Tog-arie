@@ -1,403 +1,403 @@
 {
   "god_luslec": {
   "name": "가주 루슬렉",
-  "image": "가주_FUG의 수장_루슬렉",
+  "image": "god_luslec",
   "attribute": "자",
   "recommend": "PvP 바리 세팅 (효적, 마관)\n압그 세팅 (효적, 마관)"
   },
   "god_troymerei": {
   "name": "가주 트로이메라이",
-  "image": "가주_가문의 주인_트로이메라이",
+  "image": "god_troymerei",
   "attribute": "녹",
   "recommend": "바리(★) 4세트\n옵션: 효적, 마관\n보조: 룬다 4세트"
   },
   "god_gustang": {
   "name": "가주 구스트앙",
-  "image": "가주_가문의 주인_구스트앙",
+  "image": "god_gustang",
   "attribute": "적",
   "recommend": "바리(★) 4세트\n옵션: 효적, 물관"
   },
   "god_urek": {
   "name": "가주 우렉 마지노",
-  "image": "가주_월하익송_우렉 마지노",
+  "image": "god_urek_mazino",
   "attribute": "청",
   "recommend": "바리(★) / 도리스 4세트\n옵션: 효적, 물관"
   },
   "x_khun_edahn": {
   "name": "X 에드안",
-  "image": "황_X_쿤에드안",
+  "image": "yellow_x_khun_edahn",
   "attribute": "황",
   "recommend": "바리(★) / 엘 4\n옵션: 효적, 마관"
   },
   "deurek": {
     "name": "데에터우렉마지노",
-    "image": "황_데이터_우렉마지노",
+    "image": "yellow_data_urek",
     "attribute": "황",
     "recommend": "바리 4\n옵션: 효저, 저항"
   },
   "khun_asensio": {
     "name": "쿤아센시오",
-    "image": "황_데이터_쿤 아센시오",
+    "image": "yellow_data_khun_asensio",
     "attribute": "황",
     "recommend": "바리 4\n옵션: 마저, 물리 관통 / 물저"
   },
   "khun_edahn": {
     "name": "쿤에드안",
-    "image": "황_데이터_쿤 에드안",
+    "image": "yellow_data_khun_edahn",
     "attribute": "황",
     "recommend": "바리(★) / 엘 4\n옵션: 효적, 마관"
   },
   "po_bider_hugo": {
     "name": "위고",
-    "image": "황_럭셔리_위고",
+    "image": "yellow_po_bider_hugo",
     "attribute": "황",
     "recommend": "바리(★) 4\n옵션: 효저, 물리 관통"
   },
   "hwang_ryeon": {
     "name": "황련",
-    "image": "황_붉은머리마녀_화련",
+    "image": "yellow_hwang_ryeon",
     "attribute": "황",
     "recommend": "-준비중-"
   },
   "evelyn": {
     "name": "에블린",
-    "image": "황_비운의부리미_에블린",
+    "image": "yellow_evelyn",
     "attribute": "황",
     "recommend": "-준비중-"
   },
   "evan": {
     "name": "에반",
-    "image": "황_빠른배_에반",
+    "image": "yellow_evan",
     "attribute": "황",
     "recommend": "바리(★) / 룬다 4\n옵션: 효저, 물저"
   },
   "augusgus": {
     "name": "아우구스구스",
-    "image": "황_신수그림_아우구스구스",
+    "image": "yellow_augusgus",
     "attribute": "황",
     "recommend": "바리 4\n옵션: 치댐증, 물리 관통"
   },
   "ari_bright_sharon": {
     "name": "샤론",
-    "image": "황_요정검_샤론",
+    "image": "yellow_sharon",
     "attribute": "황",
     "recommend": "바리(★) / 룬다 4\n옵션: 효저, 물저"
   },  
   "yeon_irang": {
     "name": "연이랑",
-    "image": "황_위대한가문_연 이랑",
+    "image": "yellow_yeon_irang",
     "attribute": "황",
     "recommend": "도리스(★) 4\n옵션: 치댐증, 마관"
   },
   "mori_calliope": {
     "name": "모리칼리오페",
-    "image": "황_콜_모리칼리오페",
+    "image": "yellow_mori_calliope",
     "attribute": "황",
     "recommend": "바리(★) 4\n옵션: 치댐증, 물리 관통"
   },
   "tokoyami_towa": {
     "name": "토와",
-    "image": "황_콜_토코야미토와",
+    "image": "yellow_tokoyami_towa",
     "attribute": "황",
     "recommend": "바리(★) / 룬다 4\n옵션: 효적/효저, 물저"
   },
   "chronos_hayuri": {
     "name": "크로노스하유리",
-    "image": "황_크라노스_하유리",
+    "image": "yellow_chronos_hayuri",
     "attribute": "황",
     "recommend": "라이 / 바리 4\n옵션: 치댐증, 마법 관통"
   },
   "cha": {
     "name": "차",
-    "image": "황_태초인_차",
+    "image": "yellow_cha",
     "attribute": "황",
     "recommend": "바리(★) 4\n옵션: 효적, 물관"
   },
   "sp_hayura": {
     "name": "하유라",
-    "image": "자_FUG간부_하유라",
+    "image": "purple_sp_hayura",
     "attribute": "자",
     "recommend": "바리(★) / 룬다 / 도리스 4\n옵션: 효저/물저"
   },
   "x_jeonchang": {
     "name": "X전창",
-    "image": "자_X_쿤마스체니",
+    "image": "purple_x_maschenny",
     "attribute": "자",
     "recommend": "바리(★) / 엘 / 선댄스 4\n옵션: 효적, 마관"
   },
   "gaori_rahel": {
     "name": "가오리라헬",
-    "image": "자_가오리_라헬",
+    "image": "purple_gaori_rahel",
     "attribute": "자",
     "recommend": "엘 / 바리 4\n옵션: 치댐증/효적, 마법 관통"
   },
   "deguang": {
     "name": "데이터구스트앙",
-    "image": "자_데이터_구스트앙",
+    "image": "purple_data_gustang",
     "attribute": "자",
     "recommend": "바리(★) 4\n옵션: 효저, 물리 저항"
   },
   "hell_joe": {
     "name": "헬조",
-    "image": "자_명황_헬조",
+    "image": "purple_hell_joe",
     "attribute": "자",
     "recommend": "바리 4\n옵션: 치댐증/효적, 물리 관통"
   },
   "silver_khun": {
     "name": "은어쿤",
-    "image": "자_연의불꽃_쿤",
+    "image": "purple_silver_khun",
     "attribute": "자",
     "recommend": "도리스(★) / 룬다 / 바리 4 / 라이마고22(보스용)\n옵션: 효저/마저, 물저"
   },
   "azmo": {
     "name": "아즈모",
-    "image": "자_왕관을버린자_아므즈",
+    "image": "purple_azmo",
     "attribute": "자",
     "recommend": "-준비중-"
   },
   "jeonchang": {
     "name": "전창",
-    "image": "자_전창_쿤마스체니",
+    "image": "purple_jeonchang",
     "attribute": "자",
     "recommend": "바리(★) / 엘 / 선댄스 4\n옵션: 효적, 마관"
   },
   "white": {
     "name": "화이트",
-    "image": "자_찢겨진권좌_화이트",
+    "image": "purple_white",
     "attribute": "자",
     "recommend": "바리 4\n옵션: 치댐증/효저, 마법 관통"
   },
   "karaka": {
     "name": "카라카",
-    "image": "자_철갑주_카라카",
+    "image": "purple_karaka",
     "attribute": "자",
     "recommend": "명월 / 바리 4\n옵션: 저항"
   },
   "x_hajin": {
     "name": "X하진성",
-    "image": "적_X_하진성",
+    "image": "red_x_hajin",
     "attribute": "적",
     "recommend": "라이 / 바리 4\n옵션: 치댐증, 물리 관통"
   },
   "viole": {
     "name": "비올레",
-    "image": "적_가시_비올레",
+    "image": "red_viole",
     "attribute": "적",
     "recommend": "선댄스 4\n옵션: 치댐증, 마법 관통"
   },
   "gakr": {
     "name": "각성라크",
-    "image": "적_각성_라크",
+    "image": "red_awakened_rak",
     "attribute": "적",
     "recommend": "명월 / 바리 4\n옵션: 효저, 물저"
   },
   "hajin": {
     "name": "하진성",
-    "image": "적_고대의괴물_하진성",
+    "image": "red_hajin",
     "attribute": "적",
     "recommend": "라이 / 바리 4\n옵션: 치댐증, 물리 관통"
   },
   "tiara": {
     "name": "티아라",
-    "image": "적_미치광이_티아라",
+    "image": "red_tiara",
     "attribute": "적",
     "recommend": "-준비중-"
   },  
   "spy_siasia": {
     "name": "시아시아",
-    "image": "적_스파이_시아시아",
+    "image": "red_spy_siasia",
     "attribute": "적",
     "recommend": "바리 / 룬다(★) / 도리스 4\n옵션: 효저/물저"
   },
   "albelda": {
     "name": "알벨다",
-    "image": "적_영혼의조각_알벨다",
+    "image": "red_albelda",
     "attribute": "적",
     "recommend": "바리(★) / 라이마고22 4\n옵션: 효저, 물저"
   },
   "beta": {
     "name": "베타",
-    "image": "적_이탈자_베타",
+    "image": "red_beta",
     "attribute": "적",
     "recommend": "라이마고22 / 라이안나 4\n옵션: 치댐증, 마법 관통"
   },
   "evankhell": {
     "name": "에반켈",
-    "image": "적_지옥의염화_에반켈",
+    "image": "red_evankhell",
     "attribute": "적",
     "recommend": "바리 4\n옵션: 치댐증/효적, 마법 관통/저항"
   },
   "yui_jin": {
     "name": "유이진",
-    "image": "적_콜_입학용병_유이진",
+    "image": "red_yui_jin",
     "attribute": "적",
     "recommend": "알로 4\n옵션: 마저, 물리 관통"
   },
   "elise": {
     "name": "엘리스",
-    "image": "적_콜_포레스트_엘리스",
+    "image": "red_elise",
     "attribute": "적",
     "recommend": "엘 / 압그(★) 4\n옵션: 저항/치댐증/마저, 마법 관통"
   },
   "x_garam": {
     "name": "X가람",
-    "image": "청_X_가람",
+    "image": "blue_x_garam",
     "attribute": "청",
     "recommend": "바리(★) / 룬다 / 엘 4\n옵션: 마저/효적, 물저/마법 관통"
   },
   "x_dowon": {
     "name": "X도원",
-    "image": "청_X_도원",
+    "image": "blue_x_dowon",
     "attribute": "청",
-    "recommend":"-준비중-"
+    "recommend": "바리(★) \n옵션: 효저/마관"
   },  
   "x_urek": {
     "name": "X우렉마지노",
-    "image": "청_X_우렉마지노",
+    "image": "blue_x_urek",
     "attribute": "청",
     "recommend": "저돌파 바리 4 (저항) / 5레볼↑ 바리 4\n옵션: 마저/치댐증, 물리 관통"
   },
   "x_kaiser": {
     "name": "X카이저",
-    "image": "청_X_카이저",
+    "image": "blue_x_kaiser",
     "attribute": "청",
     "recommend": "선댄스 4\n옵션: 치댐증, 물리 관통"
   },
   "alpina": {
     "name": "알피네",
-    "image": "청_그림자인간_알피네",
+    "image": "blue_alpina",
     "attribute": "청",
     "recommend": "바리 4\n옵션: 효적, 물저"
   },
   "demache": {
     "name": "쿤마스체니",
-    "image": "청_데이터_쿤마스체니",
+    "image": "blue_data_maschenny",
     "attribute": "청",
     "recommend": "라이마고22(★) / 라플 4\n옵션: 치댐증/효저, 마법 관통"
   },
   "horn_bam": {
     "name": "뿔밤",
-    "image": "청_레볼루션_스물다섯번째밤",
+    "image": "blue_horn_bam",
     "attribute": "청",
     "recommend": "-준비중-"
   },
   "leviathan_bam": {
     "name": "리바이던밤",
-    "image": "청_리바이던_밤",
+    "image": "blue_leviathan_bam",
     "attribute": "청",
     "recommend": "선댄 4\n옵션: 치뎀, 마관"
   },
   "dowon": {
     "name": "도원",
-    "image": "청_물망초_도원",
+    "image": "blue_dowon",
     "attribute": "청",
-    "recommend": "-준비중-"
+    "recommend": "바리(★) \n옵션: 효저/마관"
   },
   "urek": {
     "name": "우렉",
-    "image": "청_비상_우렉마지노",
+    "image": "blue_urek_mazino",
     "attribute": "청",
     "recommend": "-준비중-"
   },
   "soo": {
     "name": "소오",
-    "image": "청_운명마녀_소오",
+    "image": "blue_soo",
     "attribute": "청",
     "recommend": "-준비중-"
   },
   "garam": {
     "name": "가람",
-    "image": "청_은둔자_가람",
+    "image": "blue_garam",
     "attribute": "청",
     "recommend": "바리(★) / 룬다 / 엘 4\n옵션: 마저/효적, 물저/마법 관통"
   },  
   "kaiser": {
     "name": "카이저",
-    "image": "청_지배자_카이저",
+    "image": "blue_kaiser",
     "attribute": "청",
     "recommend": "선댄스 4\n옵션: 치댐증, 물리 관통"
   },
   "yama": {
     "name": "야마",
-    "image": "청_케이지주인_야마",
+    "image": "blue_yama",
     "attribute": "청",
     "recommend": "바리 4\n옵션: 저항"
   },
   "escanor": {
     "name": "에스카노르",
-    "image": "청_콜_더원_에스카노르",
+    "image": "blue_escanor",
     "attribute": "청",
     "recommend": "바리(★) / 명월 / 라이안나 4\n옵션: 저항"
   },
   "x_zahard": {
     "name": "X자하드",
-    "image": "녹_X_자하드",
+    "image": "green_x_zahard",
     "attribute": "녹",
     "recommend": "-준비중-"
   },
   "dezahard": {
     "name": "자하드",
-    "image": "녹_데이터_자하드",
+    "image": "green_data_zahard",
     "attribute": "녹",
     "recommend": "알로 / 바리 4\n옵션: 마저, 물리 관통"
   },
   "aria": {
     "name": "아리아",
-    "image": "녹_망가진시간_아리아",
+    "image": "green_broken_time_aria",
     "attribute": "녹",
     "recommend": "바리(★) / 알로 4\n옵션: 효적/치댐증, 물리 관통"
   },
   "kallavan": {
     "name": "칼라반",
-    "image": "녹_무의정수_칼라반",
+    "image": "green_kallavan",
     "attribute": "녹",
     "recommend": "딜: 알로 / 바리 4\n탱: 바리 4\n옵션: 딜(마저/치댐증, 물리 관통) / 탱(저항)"
   },
   "hayuri": {
     "name": "잼유리",
-    "image": "녹_선별인원_하유리",
+    "image": "green_selector_hayuri",
     "attribute": "녹",
     "recommend": "-준비중-"
   },
   "lobadon": {
     "name": "로바돈",
-    "image": "녹_야전사령관_로바돈",
+    "image": "green_lobadon",
     "attribute": "녹",
     "recommend": "룬다 / 도리스 4\n옵션: 효적, 물저/물리 관통"
   },
   "zahard_princess": {
     "name": "자하드공주",
-    "image": "녹_자하드의공주",
+    "image": "green_zahard_princess",
     "attribute": "녹",
     "recommend": "모험: 바리 4\n보스: 라이마고22\nPvP: 알로 4\n옵션: 모험(치댐증, 물리 관통) / 보스(치댐증, 물리 관통) / PvP(효저, 물리 관통)"
   },
   "yasratcha": {
     "name": "야스라차",
-    "image": "녹_지략가_야스라챠",
+    "image": "green_yasratcha",
     "attribute": "녹",
     "recommend": "바리 4\n옵션: 마저/효적(★)/치댐증, 마법 관통"
   },  
   "ren": {
     "name": "렌",
-    "image": "녹_처단자_렌",
+    "image": "green_ren",
     "attribute": "녹",
     "recommend": "엘 4\n옵션: 저항(62.5%), 치댐증, 마법 관통"
   },
   "chiihwa": {
     "name": "치이화",
-    "image": "녹_치유의불꽃_연이화",
+    "image": "green_chiihwa",
     "attribute": "녹",
     "recommend": "-준비중-"
   },
   "rachel": {
     "name": "레이첼",
-    "image": "녹_콜_불멸의화신_레이첼",
+    "image": "green_rachel",
     "attribute": "녹",
     "recommend": "엘 4\n옵션: 마법 관통"
   },
   "lashut": {
     "name": "라슈트",
-    "image": "녹_키마이라_라슈트",
+    "image": "green_lashut",
     "attribute": "녹",
     "recommend": "바리(★) / 엘 4\n옵션: 효적, 마법 관통"
   }
