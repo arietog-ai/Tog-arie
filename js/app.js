@@ -28,7 +28,7 @@ function renderHome(){
         <button class="hero-btn" data-route="gear">시동무기</button>
         <button class="hero-btn" data-route="gacha">가챠 뽑기</button>
         <button class="hero-btn" data-route="recommend">캐릭터 추천정보</button>
-        <button class="hero-btn" disabled>기능생성예정1</button>
+        <button class="hero-btn" data-route="pack">과금효율계산기(준비중)</button>
         <button class="hero-btn" disabled>기능생성예정2</button>
         <button class="hero-btn" disabled>기능생성예정3</button>
         <button class="hero-btn" disabled>기능생성예정4</button>
@@ -75,6 +75,7 @@ export function navigate(route){
   else if(route==='starter/reforge')  location.hash = '#starter/reforge';
   else if(route==='gacha')            location.hash = '#gacha';
   else if(route==='recommend')        location.hash = '#recommend';
+  else if(route==='pack')             location.hash = '#pack';
   else                                location.hash = ''; // home
 }
 
@@ -96,6 +97,8 @@ function renderFromHash(){
       app.innerHTML=''; mountGacha(app); break;
     case '#recommend':
       app.innerHTML=''; mountRecommend(app); break;
+    case '#pack':
+      app.innerHTML=''; mountPackValueAnalysis(app); break;
     case '':
     case '#':
       renderHome(); break;
