@@ -8,9 +8,10 @@ import { mountDraw, resetDrawSession } from './feature_draw.js?v=20251005-3';
 
 // ✅ 가챠 라우트
 import { mountGacha } from './feature_gacha.js?v=20251005-8';
-
 // ✅ 캐릭터 추천정보 라우트
 import { mountRecommend } from './feature_recommend.js';
+// ✅ 과금상품 효율계산
+import { mountPackValueAnalysis } from './feature_pack_value_analysis.js?v=20260201-1';
 
 const app = document.getElementById('app');
 
