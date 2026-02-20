@@ -7,7 +7,7 @@ export async function mountPackValueAnalysis(app){
 
   app.innerHTML = `
     <section class="container">
-      <div class="card">
+      <div class="card" style="max-width:720px; margin:0 auto;">
         <h2>Pack Value Analysis</h2>
 
         <label>상품 가격 (원)</label>
