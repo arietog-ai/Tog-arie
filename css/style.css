@@ -528,7 +528,67 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
     font-size:clamp(12px,3.5vw,14px);
     padding:clamp(10px,3vw,14px);
   }
+}
 
+/* ===============================
+   Pack Rank Table Styling
+================================ */
+
+.rank-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+  font-size: 14px; /* 글씨 약간 작게 */
+}
+
+.rank-table thead {
+  background: #1b2230;
+  font-weight: 600;
+}
+
+.rank-table th,
+.rank-table td {
+  padding: 10px 8px;
+  text-align: center;
+}
+
+.rank-table th {
+  color: #e8eef6;
+  border-bottom: 2px solid #2d3648;
+}
+
+.rank-table td {
+  border-bottom: 1px solid #222b3a;
+  color: #d6deea;
+}
+
+.rank-table td:nth-child(2) {
+  text-align: left;
+  padding-left: 14px;
+}
+
+.rank-table tbody tr:hover {
+  background: #182030;
+}
+
+.rank-positive {
+  color: #7cf29a;
+  font-weight: 600;
+}
+
+.rank-negative {
+  color: #ff8a8a;
+  font-weight: 600;
+}
+
+.rank-card-title {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.rank-subtitle {
+  font-size: 13px;
+  opacity: 0.6;
 }
 
   
