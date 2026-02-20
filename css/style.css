@@ -590,6 +590,24 @@ button[disabled]{ opacity:.45; cursor:not-allowed !important; filter:saturate(.6
   font-size: 13px;
   opacity: 0.6;
 }
+/* ===============================
+   Efficiency Color Levels
+================================ */
+
+.rank-negative {
+  color: #ff6b6b;
+  font-weight: 600;
+}
+
+.rank-mid {
+  color: #facc15; /* 노랑 */
+  font-weight: 600;
+}
+
+.rank-high {
+  color: #7cf29a; /* 초록 */
+  font-weight: 700;
+}
 
   
 }
