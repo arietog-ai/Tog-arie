@@ -7,37 +7,42 @@ export async function mountPackValueAnalysis(app){
 
   const anchor = data.anchor_price;
 
-  const ranked = data.packs.map(pack => {
-    const efficiency = (1 - (pack.ticket_unit_price / anchor)) * 100;
-    return { ...pack, efficiency };
-  }).sort((a, b) => b.efficiency - a.efficiency);
+  // 🔥 이득율 계산 + 정렬
+  const ranked = data.packs
+    .map(pack => {
+      const efficiency =
+        (1 - (pack.ticket_unit_price / anchor)) * 100;
+      return { ...pack, efficiency };
+    })
+    .sort((a, b) => b.efficiency - a.efficiency);
 
-let rows = ranked.map((pack, idx) => {
+  // 🔥 테이블 행 생성
+  const rows = ranked.map((pack, idx) => {
 
-  let className = '';
+    let className = '';
 
-  if (pack.efficiency < 0) {
-    className = 'rank-negative';
-  } else if (pack.efficiency >= 80) {
-    className = 'rank-high';
-  } else if (pack.efficiency >= 50) {
-    className = 'rank-mid';
-  }
+    if (pack.efficiency < 0) {
+      className = 'rank-negative';       // 🔴 마이너스
+    } else if (pack.efficiency >= 80) {
+      className = 'rank-high';           // 🟢 80% 이상
+    } else if (pack.efficiency >= 50) {
+      className = 'rank-mid';            // 🟡 50% 이상
+    }
 
-  return `
-    <tr>
-      <td>${idx + 1}</td>
-      <td>${pack.name}</td>
-      <td>${pack.price.toLocaleString()}원</td>
-      <td>${pack.ticket_unit_price.toLocaleString()}원</td>
-      <td class="${className}">
-        ${pack.efficiency.toFixed(1)}%
-      </td>
-    </tr>
-  `;
-}).join('');
+    return `
+      <tr>
+        <td>${idx + 1}</td>
+        <td>${pack.name}</td>
+        <td>${pack.price.toLocaleString()}원</td>
+        <td>${pack.ticket_unit_price.toLocaleString()}원</td>
+        <td class="${className}">
+          ${pack.efficiency.toFixed(1)}%
+        </td>
+      </tr>
+    `;
+  }).join('');
 
-
+  // 🔥 HTML 렌더
   app.innerHTML = `
     <section class="container">
       <div class="card" style="max-width:1000px;margin:0 auto;">
@@ -64,11 +69,19 @@ let rows = ranked.map((pack, idx) => {
         </table>
 
         <div style="text-align:center;margin-top:24px;">
-          <button onclick="location.hash=''">
+          <button id="goHomeBtn">
             ← 홈으로
           </button>
         </div>
       </div>
     </section>
   `;
+
+  // 🔥 CSP 대응 (inline onclick 제거)
+  const homeBtn = document.getElementById('goHomeBtn');
+  if (homeBtn) {
+    homeBtn.addEventListener('click', () => {
+      location.hash = '';
+    });
+  }
 }
