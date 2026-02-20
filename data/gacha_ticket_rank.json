@@ -1,0 +1,17 @@
+{
+  "anchor_price": 2085,
+  "packs": [
+    { "name": "잠재력 개방 스텝업4", "price": 143000, "ticket_unit_price": 619 },
+    { "name": "포 비더 잠재력 출석 패스", "price": 55000, "ticket_unit_price": 972 },
+    { "name": "잠재력 개방 스텝업2", "price": 55000, "ticket_unit_price": 999 },
+    { "name": "기원 특별팩1", "price": 6000, "ticket_unit_price": 1090 },
+    { "name": "강림 기원팩3", "price": 88000, "ticket_unit_price": 1230 },
+    { "name": "강림 기원팩2", "price": 55000, "ticket_unit_price": 1428 },
+    { "name": "강림 기원팩1", "price": 33000, "ticket_unit_price": 1500 },
+    { "name": "잠재력 특별팩", "price": 33000, "ticket_unit_price": 1499 },
+    { "name": "기원 특별팩3", "price": 55000, "ticket_unit_price": 1666 },
+    { "name": "기원 혼합팩", "price": 33000, "ticket_unit_price": 1749 },
+    { "name": "기원 특별팩2", "price": 33000, "ticket_unit_price": 2000 },
+    { "name": "기원 티켓팩", "price": 25000, "ticket_unit_price": 2273 }
+  ]
+}
