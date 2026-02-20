@@ -1,16 +1,14 @@
-// js/app.js  (v=20251123-1)
+// js/app.js  (v=20260201-1)
 
 import { mountShop } from './hardmode_shop.js?v=20251005-3';
 import { mountStarter } from './feature_starter.js?v=20251005-6';
 import { mountStarterEstimator } from './feature_starter_estimator.js?v=20251005-6';
 import { mountStarterReforge } from './feature_starter_reforge.js?v=20251005-6';
 import { mountDraw, resetDrawSession } from './feature_draw.js?v=20251005-3';
-
-// ✅ 가챠 라우트
 import { mountGacha } from './feature_gacha.js?v=20251005-8';
-// ✅ 캐릭터 추천정보 라우트
-import { mountRecommend } from './feature_recommend.js';
-// ✅ 과금상품 효율계산
+import { mountRecommend } from './feature_recommend.js?v=20251005-1';
+
+// 🔥 신규 기능
 import { mountPackValueAnalysis } from './feature_pack_value_analysis.js?v=20260201-1';
 
 const app = document.getElementById('app');
@@ -28,20 +26,16 @@ function renderHome(){
         <button class="hero-btn" data-route="gear">시동무기</button>
         <button class="hero-btn" data-route="gacha">가챠 뽑기</button>
         <button class="hero-btn" data-route="recommend">캐릭터 추천정보</button>
-        <button class="hero-btn" data-route="pack">과금효율계산기(준비중)</button>
-        <button class="hero-btn" disabled>기능생성예정2</button>
-        <button class="hero-btn" disabled>기능생성예정3</button>
-        <button class="hero-btn" disabled>기능생성예정4</button>
-        <button class="hero-btn" disabled>기능생성예정5</button>
-        <button class="hero-btn" disabled>기능생성예정6</button>
-        <button class="hero-btn" disabled>기능생성예정7</button>
+        <button class="hero-btn" data-route="pack">과금효율계산기</button>
       </div>
     </section>
   `;
+
   app.querySelector('[data-route="shop"]').addEventListener('click', ()=> navigate('shop'));
   app.querySelector('[data-route="gear"]').addEventListener('click', ()=> navigate('gear'));
   app.querySelector('[data-route="gacha"]').addEventListener('click', ()=> navigate('gacha'));
   app.querySelector('[data-route="recommend"]').addEventListener('click', ()=> navigate('recommend'));
+  app.querySelector('[data-route="pack"]').addEventListener('click', ()=> navigate('pack'));
 }
 
 function renderGearHub(){
@@ -49,7 +43,6 @@ function renderGearHub(){
     <section class="hero container">
       <div class="card" style="max-width:720px; width:100%; margin:0 auto">
         <h2 style="margin-top:0">시동무기</h2>
-        <p class="muted" style="margin:6px 0 14px">원하는 기능을 선택하세요.</p>
         <div class="btn-wrap">
           <button class="hero-btn" data-route="draw">시동무기 뽑기</button>
           <button class="hero-btn" data-route="starter">시동무기 강화</button>
@@ -58,6 +51,7 @@ function renderGearHub(){
       </div>
     </section>
   `;
+
   app.querySelector('[data-route="draw"]').addEventListener('click', ()=> {
     resetDrawSession();
     navigate('draw');
@@ -67,16 +61,16 @@ function renderGearHub(){
 }
 
 export function navigate(route){
-  if(route==='shop')                   location.hash = '#shop';
-  else if(route==='gear')             location.hash = '#gear';
-  else if(route==='draw')             location.hash = '#draw';
-  else if(route==='starter')          location.hash = '#starter';
-  else if(route==='starter/estimator')location.hash = '#starter/estimator';
-  else if(route==='starter/reforge')  location.hash = '#starter/reforge';
-  else if(route==='gacha')            location.hash = '#gacha';
-  else if(route==='recommend')        location.hash = '#recommend';
-  else if(route==='pack')             location.hash = '#pack';
-  else                                location.hash = ''; // home
+  if(route==='shop') location.hash = '#shop';
+  else if(route==='gear') location.hash = '#gear';
+  else if(route==='draw') location.hash = '#draw';
+  else if(route==='starter') location.hash = '#starter';
+  else if(route==='starter/estimator') location.hash = '#starter/estimator';
+  else if(route==='starter/reforge') location.hash = '#starter/reforge';
+  else if(route==='gacha') location.hash = '#gacha';
+  else if(route==='recommend') location.hash = '#recommend';
+  else if(route==='pack') location.hash = '#pack';
+  else location.hash = '';
 }
 
 function renderFromHash(){
@@ -99,11 +93,8 @@ function renderFromHash(){
       app.innerHTML=''; mountRecommend(app); break;
     case '#pack':
       app.innerHTML=''; mountPackValueAnalysis(app); break;
-    case '':
-    case '#':
-      renderHome(); break;
     default:
-      location.hash=''; return;
+      renderHome(); break;
   }
   scrollTop();
 }
