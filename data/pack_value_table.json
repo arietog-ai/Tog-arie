@@ -1,6 +1,40 @@
 {
-  "base_unit_price": 100,
-  "items": {
-    "boost": 400
+  "anchors": {
+    "stone": {
+      "name": "부유석",
+      "unit_price": 1.82
+    },
+    "black_market_ticket": {
+      "name": "암시장 티켓",
+      "unit_price": 417
+    },
+    "normal_summon_ticket": {
+      "name": "일반소환 티켓",
+      "unit_price": 250
+    },
+    "gacha_ticket": {
+      "name": "기원 티켓",
+      "unit_price": 2085
+    },
+    "loot_boost_24h": {
+      "name": "전리품증폭 24h",
+      "unit_price": 1000
+    },
+    "loot_boost_1h": {
+      "name": "전리품증폭 1h",
+      "unit_price": 41.67
+    },
+    "essence": {
+      "name": "삼색정수",
+      "unit_price": 0.108
+    },
+    "revolution_shard": {
+      "name": "빛나는 레볼루션 조각",
+      "unit_price": 9.88
+    },
+    "soul_dice": {
+      "name": "영혼주사위",
+      "unit_price": 910
+    }
   }
 }
