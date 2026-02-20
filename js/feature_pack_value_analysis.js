@@ -12,25 +12,31 @@ export async function mountPackValueAnalysis(app){
     return { ...pack, efficiency };
   }).sort((a, b) => b.efficiency - a.efficiency);
 
-  let rows = ranked.map((pack, idx) => {
+let rows = ranked.map((pack, idx) => {
 
-    const className =
-      pack.efficiency >= 0
-        ? 'rank-positive'
-        : 'rank-negative';
+  let className = '';
 
-    return `
-      <tr>
-        <td>${idx + 1}</td>
-        <td>${pack.name}</td>
-        <td>${pack.price.toLocaleString()}원</td>
-        <td>${pack.ticket_unit_price.toLocaleString()}원</td>
-        <td class="${className}">
-          ${pack.efficiency.toFixed(1)}%
-        </td>
-      </tr>
-    `;
-  }).join('');
+  if (pack.efficiency < 0) {
+    className = 'rank-negative';
+  } else if (pack.efficiency >= 80) {
+    className = 'rank-high';
+  } else if (pack.efficiency >= 50) {
+    className = 'rank-mid';
+  }
+
+  return `
+    <tr>
+      <td>${idx + 1}</td>
+      <td>${pack.name}</td>
+      <td>${pack.price.toLocaleString()}원</td>
+      <td>${pack.ticket_unit_price.toLocaleString()}원</td>
+      <td class="${className}">
+        ${pack.efficiency.toFixed(1)}%
+      </td>
+    </tr>
+  `;
+}).join('');
+
 
   app.innerHTML = `
     <section class="container">
