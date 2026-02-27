@@ -236,7 +236,7 @@ export function mountEelDamage(app) {
         </td>
         <td style="padding:8px 6px;text-align:right;
                    color:var(--ok);font-weight:800;">
-          ${r.con > 0 ? nf4(r.con) : '—'}
+          ${r.con > 0 ? nf(r.con) : '—'}
         </td>
       </tr>`).join('');
 
@@ -256,7 +256,7 @@ export function mountEelDamage(app) {
             <td style="padding:8px 6px;text-align:center;">합계</td>
             <td style="padding:8px 6px;text-align:right;">${nf(totalDmg)}</td>
             <td style="padding:8px 6px;text-align:right;color:var(--ok);">
-              ${nf4(totalCon)}
+              ${nf(totalCon)}
             </td>
           </tr>
         </tfoot>
@@ -289,11 +289,11 @@ export function mountEelDamage(app) {
         .filter(r => r.dmg > 0)
         .map(r =>
           `${r.day}일차 ${r.turn}회  ` +
-          `데미지 ${formatWithUnit(r.dmg, r.unit)}  →  기여도 ${nf4(r.con)}`
+          `데미지 ${formatWithUnit(r.dmg, r.unit)}  →  기여도 ${nf(r.con)}`
         ),
       '',
       `총 데미지: ${nf(totalDmg)}`,
-      `총 기여도: ${nf4(totalCon)}`,
+      `총 기여도: ${nf(totalCon)}`,
     ].join('\n');
 
     byId('eel-copy-d2c').onclick = () =>
