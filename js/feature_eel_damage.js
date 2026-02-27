@@ -1,4 +1,4 @@
-// js/feature_eel_damage.js  v20260227-1
+// js/feature_eel_damage.js  v20260227-2
 // 🐟 장어 데미지-기여도 계산기
 // 1일 2회 × 3일 = 총 6회
 // 환산 기본값: 1억당 1.001 기여도
@@ -23,10 +23,12 @@ function parseDmg(str, unit) {
   return n * (UNIT_FACTORS[unit] ?? 1);
 }
 
-function formatWithUnit(rawDmg, unit) {
+function formatWithUnit(rawDmg, unit, floor = false) {
   const factor = UNIT_FACTORS[unit] ?? 1;
-  if (factor === 1) return nf(rawDmg);
-  return nf4(rawDmg / factor) + ' ' + unit;
+  const val    = floor ? Math.floor(rawDmg) : rawDmg;
+  if (factor === 1) return nf(val);
+  const divided = floor ? Math.floor(val / factor) : val / factor;
+  return nf4(divided) + ' ' + unit;
 }
 
 function getRatio() {
@@ -69,17 +71,15 @@ export function mountEelDamage(app) {
     <span class="pill">🐟 장어 데미지-기여도 계산</span>
   </div>
 
-  <!-- 안내 -->
+  <!-- 안내 (환산 비율 문구 제거) -->
   <div class="card" style="margin-bottom:12px;font-size:13px;line-height:1.8;">
     <b>장어 컨텐츠 안내</b><br/>
     참여 횟수: <b class="ok">1일 2회 × 3일 = 총 6회</b><br/>
     단위: <b>M</b>(×백만) &nbsp;·&nbsp; <b>G</b>(×십억) &nbsp;·&nbsp;
-          <b>T</b>(×조) &nbsp;·&nbsp; 단위없음(원본 숫자 그대로)<br/>
-    기본 환산: <b class="ok">1억 데미지 → 기여도 1.001</b>
-    <span class="muted">(수정 가능)</span>
+          <b>T</b>(×조) &nbsp;·&nbsp; 단위없음(원본 숫자 그대로)
   </div>
 
-  <!-- 환산 비율 -->
+  <!-- 환산 비율 (입력란만, 설명 문구 없음) -->
   <div class="card" style="margin-bottom:12px;">
     <div style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;">
       <div style="flex:0 0 auto;">
@@ -129,6 +129,7 @@ export function mountEelDamage(app) {
   <div id="eel-panel-c2d" style="display:none;">
     <div class="card">
       <h2 style="margin-top:0;font-size:16px;">기여도 → 필요 데미지 역산</h2>
+
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;">
         <div>
           <label>목표 기여도</label>
@@ -145,6 +146,28 @@ export function mountEelDamage(app) {
           </select>
         </div>
       </div>
+
+      <!-- 🔥 회차 선택 -->
+      <div style="margin-bottom:12px;">
+        <label>참여 회차 수</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;"
+             id="eel-attempt-sel">
+          ${[1,2,3,4,5,6].map(n => {
+            const day  = Math.ceil(n / 2);
+            const turn = n % 2 === 1 ? 1 : 2;
+            return `
+              <button class="filter-chip eel-att-btn${n === 6 ? ' active' : ''}"
+                      data-n="${n}" style="font-size:13px;">
+                ${n}회<span class="muted" style="font-size:11px;margin-left:3px;">
+                  (${day}일 ${turn}회차까지)</span>
+              </button>`;
+          }).join('')}
+        </div>
+        <div class="muted" style="font-size:12px;margin-top:6px;">
+          선택한 회차 수로 균등 분배합니다.
+        </div>
+      </div>
+
       <div style="text-align:right;">
         <button class="hero-btn" id="eel-calc-c2d"
                 style="width:auto;padding:10px 22px;">⚡ 계산하기</button>
@@ -179,6 +202,17 @@ export function mountEelDamage(app) {
     byId('eel-panel-c2d').style.display = mode === 'c2d' ? '' : 'none';
   });
 
+  /* ── 회차 선택 토글 ── */
+  let selectedAttempts = 6;
+  byId('eel-attempt-sel').addEventListener('click', e => {
+    const btn = e.target.closest('.eel-att-btn');
+    if (!btn) return;
+    selectedAttempts = parseInt(btn.dataset.n, 10);
+    byId('eel-attempt-sel').querySelectorAll('.eel-att-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.n === btn.dataset.n)
+    );
+  });
+
   /* ════════════════════════════════════════
      A. 데미지 → 기여도
   ════════════════════════════════════════ */
@@ -201,7 +235,6 @@ export function mountEelDamage(app) {
     }
     const totalCon = totalDmg * ratio;
 
-    /* 테이블 */
     const tbody = rows.map(r => `
       <tr style="border-bottom:1px solid var(--line);
                  ${r.dmg === 0 ? 'opacity:.32' : ''}">
@@ -255,18 +288,12 @@ export function mountEelDamage(app) {
             ${nf4(totalCon)}
           </div>
         </div>
-      </div>
-
-      <div style="margin-top:8px;font-size:12px;color:var(--muted);">
-        환산 비율: 1억당 ${byId('eel-ratio').value} 기여도
       </div>`;
 
     byId('eel-res-d2c').style.display = '';
 
-    /* 복사 텍스트 */
     const copyText = [
       '[🐟 장어 데미지→기여도 계산]',
-      `환산: 1억당 ${byId('eel-ratio').value} 기여도`,
       '',
       ...rows
         .filter(r => r.dmg > 0)
@@ -285,7 +312,7 @@ export function mountEelDamage(app) {
   });
 
   /* ════════════════════════════════════════
-     B. 기여도 → 데미지 역산
+     B. 기여도 → 데미지 역산  (소수점 버림)
   ════════════════════════════════════════ */
   byId('eel-calc-c2d').addEventListener('click', () => {
     const ratio  = getRatio();
@@ -298,11 +325,13 @@ export function mountEelDamage(app) {
     }
 
     const resUnit    = byId('eel-res-unit').value;
-    const totalDmg   = conVal / ratio;
-    const perAttempt = totalDmg / 6;
+    const totalDmg   = Math.floor(conVal / ratio);        // 🔥 소수점 버림
+    const perAttempt = Math.floor(totalDmg / selectedAttempts); // 🔥 소수점 버림
 
-    const tbody = [1,2,3,4,5,6].map(i => {
-      const day = Math.ceil(i/2), turn = i%2===1?1:2;
+    const tbody = Array.from({ length: selectedAttempts }, (_, idx) => {
+      const i    = idx + 1;
+      const day  = Math.ceil(i / 2);
+      const turn = i % 2 === 1 ? 1 : 2;
       return `
         <tr style="border-bottom:1px solid var(--line);">
           <td style="padding:8px 6px;text-align:center;">
@@ -310,7 +339,7 @@ export function mountEelDamage(app) {
           </td>
           <td style="padding:8px 6px;text-align:right;
                      color:var(--ok);font-weight:700;">
-            ${formatWithUnit(perAttempt, resUnit)}
+            ${formatWithUnit(perAttempt, resUnit, true)}
           </td>
         </tr>`;
     }).join('');
@@ -330,9 +359,15 @@ export function mountEelDamage(app) {
           <div style="font-size:12px;color:var(--muted);">필요 총 데미지</div>
           <div style="font-size:20px;font-weight:800;
                       color:var(--ok);margin-top:4px;">
-            ${formatWithUnit(totalDmg, resUnit)}
+            ${formatWithUnit(totalDmg, resUnit, true)}
           </div>
         </div>
+      </div>
+
+      <div style="margin-bottom:10px;font-size:13px;">
+        <span class="pill">참여 회차: ${selectedAttempts}회</span>
+        &nbsp;
+        <span class="muted">회차당 균등 분배</span>
       </div>
 
       <table style="width:100%;border-collapse:collapse;
@@ -341,7 +376,7 @@ export function mountEelDamage(app) {
           <tr style="background:#1b2230;">
             <th style="padding:8px 6px;text-align:center;">회차</th>
             <th style="padding:8px 6px;text-align:right;">
-              회차당 필요 데미지 (6회 균등)
+              필요 데미지 (균등)
             </th>
           </tr>
         </thead>
@@ -350,14 +385,14 @@ export function mountEelDamage(app) {
           <tr style="background:#1b2230;font-weight:800;">
             <td style="padding:8px 6px;text-align:center;">합계</td>
             <td style="padding:8px 6px;text-align:right;">
-              ${formatWithUnit(totalDmg, resUnit)}
+              ${formatWithUnit(totalDmg, resUnit, true)}
             </td>
           </tr>
         </tfoot>
       </table>
 
       <div style="font-size:12px;color:var(--muted);">
-        환산 비율: 1억당 ${byId('eel-ratio').value} 기여도 · 6회 균등 분배 기준
+        ※ 소수점 이하 버림 처리
       </div>`;
 
     byId('eel-res-c2d').style.display = '';
@@ -365,9 +400,9 @@ export function mountEelDamage(app) {
     const copyText = [
       '[🐟 장어 기여도→데미지 역산]',
       `목표 기여도: ${nf(conVal)}`,
-      `필요 총 데미지: ${formatWithUnit(totalDmg, resUnit)}`,
-      `회차당 (6회 균등): ${formatWithUnit(perAttempt, resUnit)} / 회`,
-      `환산 비율: 1억당 ${byId('eel-ratio').value} 기여도`,
+      `참여 회차: ${selectedAttempts}회`,
+      `필요 총 데미지: ${formatWithUnit(totalDmg, resUnit, true)}`,
+      `회차당 (균등): ${formatWithUnit(perAttempt, resUnit, true)} / 회`,
     ].join('\n');
 
     byId('eel-copy-c2d').onclick = () =>
