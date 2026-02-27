@@ -275,7 +275,7 @@ export function mountEelDamage(app) {
           <div style="font-size:12px;color:var(--muted);">총 기여도</div>
           <div style="font-size:20px;font-weight:800;
                       color:var(--ok);margin-top:4px;">
-            ${nf4(totalCon)}
+            ${nf(totalCon)}
           </div>
         </div>
       </div>`;
