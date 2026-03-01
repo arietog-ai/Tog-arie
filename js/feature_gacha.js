@@ -1,137 +1,113 @@
 // js/feature_gacha.js  v20260301-2
 
-import { FleetRandomBox } from './fleet_box.js?v=20251005-9';
-import { FullMoonBox }    from './full_moon_box.js?v=20251005-8';
-import { copyToClipboard } from './utils.js?v=20260301-2';
+import { FleetRandomBox } from './fleet_box.js';
+import { FullMoonBox }    from './full_moon_box.js';
 
-function el(html) {
-  const t = document.createElement('template');
-  t.innerHTML = html.trim();
-  return t.content.firstElementChild;
+function el(tag, props = {}, ...children) {
+  const e = Object.assign(document.createElement(tag), props);
+  children.forEach(c => typeof c === 'string' ? e.append(c) : e.appendChild(c));
+  return e;
 }
-function pillsHTML(list) { return list.map(x => `<span class="gacha-pill">${x}</span>`).join(''); }
-function itemRowHTML(it) {
-  if (it.type === 'section') return `<div class="gacha-section">${it.text}</div>`;
+function pillsHTML(pills) {
+  return pills.map(p => `<span class="gacha-pill">${p}</span>`).join('');
+}
+function itemRowHTML(item) {
+  if (item.type === 'section') {
+    return `<div class="gacha-section">${item.text}</div>`;
+  }
   return `
     <div class="gacha-row">
       <div class="gacha-item">
-        ${it.img ? `<img class="gacha-icon" src="${it.img}" alt="" loading="lazy" />` : ''}
-        <span>${it.name}</span>
+        ${item.img ? `<img class="gacha-icon" src="${item.img}" alt="${item.name}" loading="lazy">` : ''}
+        <span>${item.name}</span>
       </div>
-      <strong>${(it.qty ?? 0).toLocaleString()}개</strong>
+      <span class="pill">${item.qty.toLocaleString()}개</span>
     </div>`;
 }
 
-function openInputModal({ title, subtitle, max = 100, onSubmit }) {
-  const $back = el(`<div class="gacha-backdrop" style="display:flex"></div>`);
-  const $modal = el(`
-    <div class="gacha-modal">
-      <header>
-        <h2>${title}</h2>
-        <p class="gacha-muted">${subtitle || '한 번에 최대 100개까지 가능합니다.'}</p>
-      </header>
-      <div class="gacha-field" style="margin:6px 0 10px">
-        <label class="muted" style="min-width:44px">개수</label>
-        <input class="gacha-input" id="gachaCount" inputmode="numeric" placeholder="예: 10" />
-      </div>
-      <div class="gacha-footer">
-        <button class="gacha-btn" id="btnCancel">취소</button>
-        <button class="gacha-btn gacha-btn-primary" id="btnRun">뽑기 실행</button>
-      </div>
-    </div>`);
-  $back.appendChild($modal);
-  document.body.appendChild($back);
-
-  const $in = $modal.querySelector('#gachaCount');
-  setTimeout(() => $in.focus(), 20);
-
-  const close = () => $back.remove();
-  $modal.querySelector('#btnCancel').addEventListener('click', close);
-  $back.addEventListener('click', e => { if (e.target === $back) close(); });
-  $modal.querySelector('#btnRun').addEventListener('click', () => {
-    let n = parseInt(($in.value || '').replace(/\D/g, ''), 10);
-    if (!Number.isFinite(n) || n <= 0) n = 1;
-    if (n > max) n = max;
-    close();
-    onSubmit(n);
+function openInputModal(title, onSubmit) {
+  const backdrop = el('div', { className: 'gacha-backdrop' });
+  backdrop.style.display = 'flex';
+  const modal = el('div', { className: 'gacha-modal' });
+  modal.innerHTML = `
+    <header>
+      <h2>${title}</h2>
+    </header>
+    <div class="gacha-field" style="margin-bottom:12px;">
+      <span>뽑기 횟수 (최대 100회)</span>
+      <input class="gacha-input" type="number" min="1" max="100" value="10" id="gacha-n-input" />
+    </div>
+    <div class="gacha-footer">
+      <button class="gacha-btn" id="gacha-modal-cancel">취소</button>
+      <button class="gacha-btn gacha-btn-primary" id="gacha-modal-ok">뽑기 시작</button>
+    </div>`;
+  backdrop.appendChild(modal);
+  document.body.appendChild(backdrop);
+  const cleanup = () => backdrop.remove();
+  modal.querySelector('#gacha-modal-cancel').addEventListener('click', cleanup);
+  modal.querySelector('#gacha-modal-ok').addEventListener('click', () => {
+    const n = parseInt(modal.querySelector('#gacha-n-input').value, 10);
+    if (!n || n < 1 || n > 100) { alert('1~100 사이의 숫자를 입력하세요.'); return; }
+    cleanup(); onSubmit(n);
   });
+  backdrop.addEventListener('click', e => { if (e.target === backdrop) cleanup(); });
 }
 
-function openResultModal({ title, pills = [], items = [], copyText = '' }) {
-  const $back = el(`<div class="gacha-backdrop" style="display:flex"></div>`);
-  const $modal = el(`
-    <div class="gacha-modal">
-      <header>
-        <h2>${title} 결과</h2>
-        <p class="gacha-muted">"복사"를 눌러 카톡에 붙여넣기 하세요.</p>
-        <div class="gacha-pills">${pillsHTML(pills)}</div>
-      </header>
-      <div class="gacha-list">${items.map(itemRowHTML).join('')}</div>
-      <div class="gacha-footer">
-        <button class="gacha-btn" id="btnClose">닫기</button>
-        <button class="gacha-btn gacha-btn-primary" id="btnCopy">복사</button>
-      </div>
-    </div>`);
-  $back.appendChild($modal);
-  document.body.appendChild($back);
-
-  const close = () => $back.remove();
-  $modal.querySelector('#btnClose').addEventListener('click', close);
-  $back.addEventListener('click', e => { if (e.target === $back) close(); });
-  $modal.querySelector('#btnCopy').addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(copyText);
-      $modal.querySelector('#btnCopy').textContent = '복사됨';
-      setTimeout(() => { $modal.querySelector('#btnCopy').textContent = '복사'; }, 1200);
-    } catch (_) { alert('클립보드 복사에 실패했습니다.'); }
+function openResultModal(title, result) {
+  const backdrop = el('div', { className: 'gacha-backdrop' });
+  backdrop.style.display = 'flex';
+  const modal = el('div', { className: 'gacha-modal' });
+  modal.innerHTML = `
+    <header>
+      <h2>${title}</h2>
+      <div class="gacha-pills">${pillsHTML(result.pills)}</div>
+    </header>
+    <div class="gacha-list">${result.items.map(itemRowHTML).join('')}</div>
+    <div class="gacha-footer">
+      <button class="gacha-btn gacha-btn-primary" id="gacha-copy">📋 복사</button>
+      <button class="gacha-btn" id="gacha-close">닫기</button>
+    </div>`;
+  backdrop.appendChild(modal);
+  document.body.appendChild(backdrop);
+  const cleanup = () => backdrop.remove();
+  modal.querySelector('#gacha-close').addEventListener('click', cleanup);
+  modal.querySelector('#gacha-copy').addEventListener('click', () => {
+    navigator.clipboard.writeText(result.copy).then(() => alert('복사되었습니다!'));
   });
+  backdrop.addEventListener('click', e => { if (e.target === backdrop) cleanup(); });
 }
 
 export function mountGacha(root) {
   root.innerHTML = `
-    <section class="container gacha-card">
-      <div class="gacha-actions" style="justify-content:flex-end;margin-bottom:8px">
-        <button class="gacha-btn" id="btnHome">← 홈으로</button>
-      </div>
+    <div class="gacha-card">
       <h1>가챠 뽑기</h1>
-      <p class="gacha-muted">원하는 상자를 눌러 뽑기 개수를 입력하세요. (최대 100개)</p>
-      <div class="gacha-tiles">
-        <div class="gacha-tile">
-          <img src="./assets/img/full_moon_box.jpg" alt="2025 보름달 상자" loading="lazy"/>
-          <div>
-            <h3 style="margin:0 0 6px">2025 보름달 상자</h3>
-            <p class="gacha-muted" style="margin:0 0 10px">확률형 보상 시뮬레이터</p>
-            <div class="gacha-actions">
-              <button class="gacha-btn gacha-btn-primary" id="btnMoon">뽑기 시작</button>
-            </div>
-          </div>
-        </div>
-        <div class="gacha-tile">
-          <img src="./assets/img/fleet_random_box.jpg" alt="부유선 랜덤상자" loading="lazy"/>
-          <div>
-            <h3 style="margin:0 0 6px">부유선 랜덤상자</h3>
-            <p class="gacha-muted" style="margin:0 0 10px">제작도 → 부유선 2단계 추첨</p>
-            <div class="gacha-actions">
-              <button class="gacha-btn gacha-btn-primary" id="btnFleet">뽑기 시작</button>
-            </div>
-          </div>
-        </div>
+      <p class="gacha-muted">상자를 선택해 뽑기를 시작하세요.</p>
+      <div class="gacha-tiles" id="gacha-tiles"></div>
+      <div style="margin-top:16px;text-align:left;">
+        <button class="gacha-btn" id="gacha-home">← 홈으로</button>
       </div>
-    </section>`;
+    </div>`;
 
-  root.querySelector('#btnHome').addEventListener('click', () => { location.hash = ''; });
+  root.querySelector('#gacha-home').addEventListener('click', () => { location.hash = ''; });
 
-  root.querySelector('#btnMoon').addEventListener('click', () => {
-    openInputModal({ title: '뽑기 개수 입력', max: 100, onSubmit(n) {
-      const { items, pills, copy } = FullMoonBox.run(n);
-      openResultModal({ title: '2025 보름달 상자', pills, items, copyText: copy });
-    }});
-  });
-
-  root.querySelector('#btnFleet').addEventListener('click', () => {
-    openInputModal({ title: '뽑기 개수 입력', max: 100, onSubmit(n) {
-      const { items, pills, copy } = FleetRandomBox.run(n);
-      openResultModal({ title: '부유선 랜덤상자', pills, items, copyText: copy });
-    }});
+  const tilesEl = root.querySelector('#gacha-tiles');
+  [FullMoonBox, FleetRandomBox].forEach(box => {
+    const tile = el('div', { className: 'gacha-tile' });
+    tile.innerHTML = `
+      <img src="${box.thumb}" alt="${box.title}" loading="lazy" />
+      <div>
+        <div style="font-weight:800;font-size:16px;margin-bottom:6px">${box.title}</div>
+        <div class="gacha-muted" style="font-size:13px;margin-bottom:10px">${box.description}</div>
+        <div class="gacha-actions">
+          <button class="gacha-btn gacha-btn-primary gacha-start">뽑기 시작</button>
+        </div>
+      </div>`;
+    tile.querySelector('.gacha-start').addEventListener('click', () => {
+      openInputModal(box.title, n => {
+        const result = box.run(n);
+        openResultModal(box.title, result);
+      });
+    });
+    tilesEl.appendChild(tile);
   });
 }
