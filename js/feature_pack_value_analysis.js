@@ -1,6 +1,6 @@
-// js/feature_pack_value_analysis.js  v20260301-2
+// js/feature_pack_value_analysis.js
 
-import { copyToClipboard } from './utils.js?v=20260301-2';
+import { copyText } from './utils.js';
 
 export async function mountPackValueAnalysis(app) {
   app.innerHTML = `
@@ -29,16 +29,12 @@ export async function mountPackValueAnalysis(app) {
   }
 
   const anchor = data.anchor_price;
-
   const ranked = data.packs
     .map(pack => ({ ...pack, efficiency: (1 - pack.ticket_unit_price / anchor) * 100 }))
     .sort((a, b) => b.efficiency - a.efficiency);
 
   const rows = ranked.map((pack, idx) => {
-    const cls = pack.efficiency < 0  ? 'rank-negative'
-              : pack.efficiency >= 80 ? 'rank-high'
-              : pack.efficiency >= 50 ? 'rank-mid'
-              : '';
+    const cls = pack.efficiency < 0 ? 'rank-negative' : pack.efficiency >= 80 ? 'rank-high' : pack.efficiency >= 50 ? 'rank-mid' : '';
     return `
       <tr>
         <td>${idx + 1}</td>
