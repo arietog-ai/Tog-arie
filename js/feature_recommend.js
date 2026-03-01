@@ -15,8 +15,8 @@ export async function mountRecommend(container) {
 
   try {
   const [charRes, tierRes] = await Promise.all([
-    fetch("/Tog-arie/data/characters.json"),
-    fetch("/Tog-arie/data/tiers.json")
+    fetch("./data/characters.json"),
+    fetch("./data/tiers.json")
   ]);
 
   if (!charRes.ok || !tierRes.ok) {
