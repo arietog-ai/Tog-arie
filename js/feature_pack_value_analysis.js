@@ -1,9 +1,34 @@
 // js/feature_pack_value_analysis.js
 
-export async function mountPackValueAnalysis(app){
+export async function mountPackValueAnalysis(app) {
 
-  const res = await fetch('./data/gacha_ticket_rank.json');
-  const data = await res.json();
+  // ✅ 로딩 중 표시
+  app.innerHTML = `
+    <section class="container">
+      <div class="card" style="text-align:center;padding:40px;">
+        <p>⏳ 데이터 불러오는 중...</p>
+      </div>
+    </section>`;
+
+  let data;
+  try {
+    const res = await fetch('./data/gacha_ticket_rank.json');
+    if (!res.ok) throw new Error(`HTTP ${res.status} — 파일을 찾을 수 없습니다`);
+    data = await res.json();
+  } catch (err) {
+    // ✅ 에러 UI
+    app.innerHTML = `
+      <section class="container">
+        <div class="card">
+          <h2>⚠️ 데이터 로딩 실패</h2>
+          <p style="color:var(--muted);">${err.message}</p>
+          <button class="hero-btn" id="goHomeBtn" style="margin-top:16px;">← 홈으로</button>
+        </div>
+      </section>`;
+    document.getElementById('goHomeBtn')
+      ?.addEventListener('click', () => { location.hash = ''; });
+    return;
+  }
 
   const anchor = data.anchor_price;
 
@@ -77,11 +102,7 @@ export async function mountPackValueAnalysis(app){
     </section>
   `;
 
-  // 🔥 CSP 대응 (inline onclick 제거)
-  const homeBtn = document.getElementById('goHomeBtn');
-  if (homeBtn) {
-    homeBtn.addEventListener('click', () => {
-      location.hash = '';
-    });
-  }
+  // 🔥 홈 버튼
+  document.getElementById('goHomeBtn')
+    ?.addEventListener('click', () => { location.hash = ''; });
 }
