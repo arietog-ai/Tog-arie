@@ -1,34 +1,32 @@
-// js/feature_starter_reforge.js  v20260301-2
-// 세공하자 — 공통 상수 starter_config.js에서 import
+// js/feature_starter_reforge.js
 
-import { byId } from './utils.js?v=20260301-2';
-import { PERCENT_SET, INIT_VALUES, STEPS, fmt } from './starter_config.js?v=20260301-2';
+import { byId } from './utils.js';
+import {
+  INIT_VALUES, PERCENT_SET, STEPS,
+  fmt, roundP,
+} from './starter_config.js';
 
-/* ===== 유틸 ===== */
-function roundP(opt, v) { return PERCENT_SET.has(opt) ? Math.round(v * 2) / 2 : Math.round(v); }
-function rollBase(opt)  { const a = INIT_VALUES[opt]; return a[(Math.random() * a.length) | 0]; }
+/* ── 주사위 헬퍼 ── */
+function rollBase(opt)            { const a = INIT_VALUES[opt]; return a[(Math.random() * a.length) | 0]; }
 function applyIncrements(opt, base, k) {
-  let v = base;
-  const incs = INIT_VALUES[opt];
+  let v = base; const incs = INIT_VALUES[opt];
   for (let i = 0; i < k; i++) v = roundP(opt, v + incs[(Math.random() * incs.length) | 0]);
   return v;
 }
 function rangeFor(opt, k) {
   const b = INIT_VALUES[opt];
-  const min = roundP(opt, Math.min(...b) + k * Math.min(...b));
-  const max = roundP(opt, Math.max(...b) + k * Math.max(...b));
-  return { min, max };
+  return {
+    min: roundP(opt, Math.min(...b) + k * Math.min(...b)),
+    max: roundP(opt, Math.max(...b) + k * Math.max(...b)),
+  };
 }
-
-/* ===== 주사위 롤 ===== */
 function rerollBlue(names) {
   const ks = [0, 0, 0, 0];
   for (let i = 0; i < STEPS; i++) ks[(Math.random() * 4) | 0]++;
   const base = {}, final = {}, counts = {};
   names.forEach((opt, i) => {
-    base[opt]   = rollBase(opt);
-    counts[opt] = ks[i];
-    final[opt]  = applyIncrements(opt, base[opt], ks[i]);
+    base[opt] = rollBase(opt); counts[opt] = ks[i];
+    final[opt] = applyIncrements(opt, base[opt], ks[i]);
   });
   return { base, final, counts };
 }
@@ -36,20 +34,19 @@ function rerollRed(names, countsFixed) {
   const base = {}, final = {};
   names.forEach(opt => {
     const k = countsFixed[opt] || 0;
-    base[opt]  = rollBase(opt);
-    final[opt] = applyIncrements(opt, base[opt], k);
+    base[opt] = rollBase(opt); final[opt] = applyIncrements(opt, base[opt], k);
   });
   return { base, final };
 }
 
-/* ===== 강화 점 셀 ===== */
+/* ── K점 렌더 ── */
 function kDotsCell(k) {
-  let s = '<div class="kdots">';
+  let s = '<div class="kdots" aria-label="강화 단계">';
   for (let i = 0; i < 5; i++) s += `<span class="${i < k ? 'on' : ''}"></span>`;
   return s + '</div>';
 }
 
-/* ===== 메인 ===== */
+/* ── 메인 ── */
 export function mountStarterReforge(app) {
   let item;
   try { item = JSON.parse(sessionStorage.getItem('starter_item') || 'null'); } catch { item = null; }
@@ -68,37 +65,34 @@ export function mountStarterReforge(app) {
   }
 
   const names = item.names;
-  let counts = { ...item.counts };
-  let base = {}, final = {};
-  names.forEach(opt => {
-    base[opt]  = rollBase(opt);
-    final[opt] = applyIncrements(opt, base[opt], counts[opt] || 0);
-  });
+  let counts  = { ...item.counts };
+  let base    = {};
+  let final   = {};
+  names.forEach(opt => { base[opt] = rollBase(opt); final[opt] = applyIncrements(opt, base[opt], counts[opt] || 0); });
+
   let blueUsed = 0, redUsed = 0;
 
   const renderTable = () => `
     <div class="table-wrap">
       <table class="gear-compact">
-        <tbody>
-          ${names.map(opt => {
-            const k   = counts[opt] || 0;
-            const rng = rangeFor(opt, k);
-            return `
-              <tr data-opt="${opt}">
-                <td class="kcell">${kDotsCell(k)}</td>
-                <td class="optcell">${opt}</td>
-                <td class="valcell"><b>${fmt(opt, final[opt])}</b></td>
-                <td class="rangecell">${fmt(opt, rng.min)} ~ ${fmt(opt, rng.max)}</td>
-              </tr>`;
-          }).join('')}
-        </tbody>
+        <tbody>${names.map(opt => {
+          const k   = counts[opt] || 0;
+          const rng = rangeFor(opt, k);
+          return `
+            <tr data-opt="${opt}">
+              <td class="kcell">${kDotsCell(k)}</td>
+              <td class="optcell">${opt}</td>
+              <td class="valcell"><b>${fmt(opt, final[opt])}</b></td>
+              <td class="rangecell">${fmt(opt, rng.min)} ~ ${fmt(opt, rng.max)}</td>
+            </tr>`;
+        }).join('')}</tbody>
       </table>
     </div>`;
 
   function render() {
     app.innerHTML = `
       <section class="container reforge">
-        <div class="toprow">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
           <button class="hero-btn" id="back">← 강화로</button>
           <span class="pill">세공하자</span>
           <span class="badge" style="margin-left:auto">
@@ -126,7 +120,6 @@ export function mountStarterReforge(app) {
 
     byId('back').addEventListener('click', () => { location.hash = '#starter'; });
 
-    /* 파랑: k+수치 재분배 */
     byId('roll-blue').addEventListener('click', () => {
       const r = rerollBlue(names);
       base = r.base; final = r.final; counts = r.counts; blueUsed++;
@@ -135,7 +128,6 @@ export function mountStarterReforge(app) {
       triggerFlashIfHighK();
     });
 
-    /* 빨강: k 유지, 수치만 재분배 */
     byId('roll-red').addEventListener('click', () => {
       const r = rerollRed(names, counts);
       base = r.base; final = r.final; redUsed++;
@@ -145,8 +137,8 @@ export function mountStarterReforge(app) {
   }
 
   function triggerFlashIfHighK() {
-    const rows = Array.from(app.querySelectorAll('.reforge .gear-compact tbody tr'));
-    let hasHigh = false;
+    const rows   = Array.from(app.querySelectorAll('.reforge .gear-compact tbody tr'));
+    let hasHigh  = false;
     names.forEach((opt, i) => {
       const k = counts[opt] || 0;
       if (k >= 4 && rows[i]) {
@@ -163,12 +155,8 @@ export function mountStarterReforge(app) {
     if (hasHigh) {
       [byId('roll-blue'), byId('roll-red')].forEach(btn => {
         btn.classList.add('disabled'); btn.disabled = true;
+        setTimeout(() => { btn.classList.remove('disabled'); btn.disabled = false; }, 1500);
       });
-      setTimeout(() => {
-        [byId('roll-blue'), byId('roll-red')].forEach(btn => {
-          btn.classList.remove('disabled'); btn.disabled = false;
-        });
-      }, 1500);
     }
   }
 
