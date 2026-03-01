@@ -16,17 +16,15 @@ export async function onRequestPost(context) {
 
     /* ── A. 데미지 → 기여도 ── */
     if (mode === 'd2c') {
-      const damages = body.damages; // number[] (단위 적용된 raw 숫자)
+      const damages = body.damages;
       if (!Array.isArray(damages)) {
         return new Response(JSON.stringify({ error: 'damages 배열 필요' }), {
           status: 400, headers: JSON_HEADERS,
         });
       }
-
       const contributions = damages.map(dmg => Math.floor(dmg * RATIO));
       const totalDmg      = damages.reduce((a, b) => a + b, 0);
       const totalCon      = Math.floor(totalDmg * RATIO);
-
       return new Response(JSON.stringify({ contributions, totalDmg, totalCon }), {
         headers: JSON_HEADERS,
       });
@@ -40,10 +38,8 @@ export async function onRequestPost(context) {
           status: 400, headers: JSON_HEADERS,
         });
       }
-
       const totalDmg   = Math.floor(contribution / RATIO);
       const perAttempt = Math.floor(totalDmg / attempts);
-
       return new Response(JSON.stringify({ totalDmg, perAttempt }), {
         headers: JSON_HEADERS,
       });
@@ -60,7 +56,7 @@ export async function onRequestPost(context) {
   }
 }
 
-// CORS preflight 처리
+// CORS preflight
 export async function onRequestOptions() {
   return new Response(null, {
     headers: {
