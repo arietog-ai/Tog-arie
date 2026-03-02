@@ -183,7 +183,7 @@ body {
   position: relative;
   width: 100%;
   height: clamp(160px, 28vw, 280px);
-  background: url('./assets/img/blur_guild.png') center/cover no-repeat;
+  background: url('../assets/img/blur_guild.png') center/cover no-repeat;
   overflow: hidden;
 }
 .home-hero-overlay {
