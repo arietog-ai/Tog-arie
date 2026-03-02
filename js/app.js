@@ -16,7 +16,7 @@ root.innerHTML = `
   <div class="layout">
     <nav class="sidebar" id="sidebar">
       <div class="sidebar-logo">
-        <img src="./assets/img/blur_guild.png" alt="블러연합" class="sidebar-guild-img" />
+        <img src="./assets/img/dogjuk.png" alt="블러연합" class="sidebar-guild-img" />
         <span class="sidebar-title">블러연합용 Info</span>
         <span class="sidebar-ver">v2.8.1</span>
       </div>
